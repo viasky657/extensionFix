@@ -14,10 +14,28 @@
   "contributes": {
     "commands": [
       {
-        "command": "extension.helloWorld",
-        "title": "Hello World"
+        "command": "extension.start",
+        "title": "Start SōtaPR"
       }
-    ]
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "sota-pr",
+          "title": "SōtaPR",
+          "icon": "./src/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "sota-pr": [
+        {
+          "type": "webview",
+          "id": "sota-pr-panel",
+          "name": "SōtaPR"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
@@ -34,16 +52,27 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.95.0",
+    "@tailwindcss/forms": "^0.5.9",
     "@types/mocha": "^10.0.9",
     "@types/node": "20.x",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@types/vscode": "^1.95.0",
     "@typescript-eslint/eslint-plugin": "^8.10.0",
     "@typescript-eslint/parser": "^8.7.0",
-    "eslint": "^9.13.0",
-    "esbuild": "^0.24.0",
-    "npm-run-all": "^4.1.5",
-    "typescript": "^5.6.3",
     "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.4.1"
+    "@vscode/test-electron": "^2.4.1",
+    "autoprefixer": "^10.4.20",
+    "esbuild": "^0.24.0",
+    "esbuild-style-plugin": "^1.6.3",
+    "eslint": "^9.13.0",
+    "npm-run-all": "^4.1.5",
+    "tailwindcss": "^3.4.14",
+    "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "@vscode-elements/elements": "^1.8.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   }
 }
