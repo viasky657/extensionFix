@@ -1,49 +1,44 @@
-
-import * as vscode from 'vscode';
-import { getNonce } from './utils';
+import * as vscode from "vscode";
+import { getNonce } from "./utils";
 
 export class PanelProvider implements vscode.WebviewViewProvider {
-  constructor(
-      private readonly _extensionUri: vscode.Uri,
-  ) { }
+  constructor(private readonly _extensionUri: vscode.Uri) {}
 
   public resolveWebviewView(
-      webviewView: vscode.WebviewView,
-      context: vscode.WebviewViewResolveContext,
-      _token: vscode.CancellationToken,
+    webviewView: vscode.WebviewView,
+    context: vscode.WebviewViewResolveContext,
+    _token: vscode.CancellationToken
   ) {
-      webviewView.webview.options = {
-          enableScripts: true,
-          localResourceRoots: [
-              this._extensionUri
-          ]
-      };
+    webviewView.webview.options = {
+      enableScripts: true,
+      localResourceRoots: [this._extensionUri],
+    };
 
-      webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
+    webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
-      // Handle messages from the webview
-      webviewView.webview.onDidReceiveMessage(data => {
-        console.log('message from webview', data);
-          switch (data.type) {
-            case 'init':
-                webviewView.webview.postMessage({ command: 'init' });
-                break;
-          }
-      });
+    // Handle messages from the webview
+    webviewView.webview.onDidReceiveMessage((data) => {
+      console.log("Message from webview", data);
+      switch (data.type) {
+        case "init":
+          webviewView.webview.postMessage({ command: "init" });
+          break;
+      }
+    });
   }
 
   private _getHtmlForWebview(webview: vscode.Webview) {
-      const scriptUri = webview.asWebviewUri(
-        vscode.Uri.joinPath(this._extensionUri, "dist", "index.js")
-      );
+    const scriptUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this._extensionUri, "dist", "index.js")
+    );
 
-      const styleUri = webview.asWebviewUri(
-       vscode.Uri.joinPath(this._extensionUri, "dist", "style.css")
-     );
+    const styleUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this._extensionUri, "dist", "style.css")
+    );
 
-      const nonce = getNonce();
+    const nonce = getNonce();
 
-      return `<!DOCTYPE html>
+    return `<!DOCTYPE html>
           <html lang="en">
           <head>
               <meta charset="UTF-8">
@@ -66,4 +61,3 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     </html>`;
   }
 }
-

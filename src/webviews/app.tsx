@@ -1,4 +1,6 @@
-import * as React from 'react';
+import * as React from "react";
+import { Event, ViewType, Task, View } from "model";
+import { TaskView } from "@task/view";
 
 interface vscode {
   postMessage(message: Record<string, any>): void;
@@ -6,34 +8,86 @@ interface vscode {
 
 declare const vscode: vscode;
 
-const sendMessage = () => {
-  console.log('button clicked')
-  vscode.postMessage({ command: 'testing' });
+function onMessage(event: React.FormEvent<HTMLFormElement>) {
+  const form = event.currentTarget;
+  const data = Object.fromEntries(new FormData(form));
+  vscode.postMessage({ request: "new-request", data });
 }
 
+// Move this somewhere else
+interface State {
+  extensionReady: boolean;
+  view: ViewType;
+  currentTask?: Task;
+  loadedTasks: Map<string, Task>;
+}
+
+const initialState: State = {
+  extensionReady: false,
+  view: View.Task,
+  loadedTasks: new Map(),
+};
+
+function reducer(state: State, action: Event) {
+  const newState = structuredClone(state);
+
+  if (action.type === "init") {
+    newState.extensionReady = true;
+  } else if (action.type === "open-task") {
+    const task = action.task;
+    if (!newState.loadedTasks.has(task.sessionId)) {
+      newState.loadedTasks.set(task.sessionId, task);
+    }
+    newState.view = View.Task;
+    newState.currentTask = task;
+  }
+  return newState;
+}
 
 const App = () => {
-  const [buttonText, setButtonText] = React.useState('The brain is pending');
-    
+  const [state, dispatch] = React.useReducer(reducer, initialState);
+
   React.useEffect(() => {
-      window.addEventListener('message', (event) => {
-        console.log('message from extension');
-        const message = event.data; // The json data that the extension sent
-        switch (message.command) {
-          case 'init':
-            setButtonText('The brain is working');
-            break;
-        }
-      });
-    }, []);
-  
+    const handleMessage = (event: MessageEvent<Event>) => {
+      dispatch(event.data);
+    };
+    window.addEventListener("message", handleMessage);
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
+  }, []);
+
   return (
     <div>
-      <h1 className='bg-green-600'>Functional Components Work!</h1>
-      <vscode-button id="button-1">Button</vscode-button>
-      <button onClick={sendMessage}>{buttonText}</button>
+      <h1>Functional Components Work!</h1>
+      <nav>
+        <ul>
+          <li>
+            <button type="button">New</button>
+          </li>
+          <li>
+            <button type="button">History</button>
+          </li>
+          <li>
+            <button type="button">Settings</button>
+          </li>
+        </ul>
+      </nav>
+      {renderView(state)}
     </div>
   );
 };
+
+function renderView(state: State) {
+  switch (state.view) {
+    case "task":
+      if (!state.currentTask) {
+        return "Error"; // Implement better fallback
+      }
+      return <TaskView task={state.currentTask} onSubmit={onMessage} />;
+    default:
+      return "View not implemented";
+  }
+}
 
 export default App;
