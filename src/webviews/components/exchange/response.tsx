@@ -3,11 +3,12 @@ import { Response, ResponsePart } from "../../../model";
 import MarkdownRenderer from "../markdown-renderer";
 import { ContextSummary } from "../context-summary";
 import { Exchange, ExchangeHeader, ExchangeContent } from "./exchange-base";
+import { VSCodeButton } from "vscode-elements/button";
 
 export function ResponseViewItem(props: Response) {
   const { parts, context } = props;
   return (
-    <Exchange className="text-foreground">
+    <Exchange>
       <ExchangeHeader className="text-textLink-foreground">
         SōtaPR
       </ExchangeHeader>
@@ -19,15 +20,20 @@ export function ResponseViewItem(props: Response) {
   );
 }
 
-function renderPart(part: ResponsePart) {
+function renderPart(part: ResponsePart, index: number) {
   switch (part.type) {
     case "markdown":
-      return <MarkdownRenderer rawMarkdown={part.rawMarkdown} />;
+      return (
+        <MarkdownRenderer
+          key={`${part.type}-${index}`}
+          rawMarkdown={part.rawMarkdown}
+        />
+      );
     case "commandGroup":
       return (
-        <div>
+        <div key={`${part.type}-${index}`}>
           {part.commands.map((command) => (
-            <vscode-button key={command.command}>{command.title}</vscode-button>
+            <VSCodeButton key={command.command}>{command.title}</VSCodeButton>
           ))}
         </div>
       );

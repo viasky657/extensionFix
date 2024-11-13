@@ -99,21 +99,21 @@ function renderUsagePart(entry: ObjectEntry<Usage>) {
   switch (key) {
     case "outputTokens":
       return (
-        <li>
+        <li key={key}>
           <span aria-hidden className="codicon codicon-arrow-down" />
           {formatNumber(value)} <span className="sr-ony">tokens</span> output
         </li>
       );
     case "inputTokens":
       return (
-        <li>
+        <li key={key}>
           <span aria-hidden className="codicon codicon-arrow-up" />
           {formatNumber(value)} <span className="sr-ony">tokens</span> input
         </li>
       );
     case "cacheReads":
       return (
-        <li>
+        <li key={key}>
           <span aria-hidden className="codicon codicon-dashboard" />
           {formatNumber(value)} <span className="sr-ony">tokens in</span> cache
           reads
@@ -121,7 +121,7 @@ function renderUsagePart(entry: ObjectEntry<Usage>) {
       );
     case "cacheWrites":
       return (
-        <li>
+        <li key={key}>
           <span aria-hidden className="codicon codicon-database" />
           {formatNumber(value)} <span className="sr-ony">tokens in</span> cache
           writes
