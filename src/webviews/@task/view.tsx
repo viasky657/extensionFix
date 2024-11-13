@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ObjectEntry } from "../../utils/types";
+import { ObjectEntry } from "../utils/types";
 import { Exchange, Task, Usage } from "../../model";
 import { ResponseViewItem } from "components/exchange/response";
 import { RequestViewItem } from "components/exchange/request";

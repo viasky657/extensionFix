@@ -5,15 +5,15 @@ import { ContextSummary } from "../context-summary";
 import { Exchange, ExchangeHeader, ExchangeContent } from "./exchange-base";
 
 export function ResponseViewItem(props: Response) {
-  const { username, parts, context } = props;
+  const { parts, context } = props;
   return (
     <Exchange className="text-foreground">
       <ExchangeHeader className="text-textLink-foreground">
-        {username}
+        SōtaPR
       </ExchangeHeader>
       <ExchangeContent>
         {parts.map(renderPart)}
-        {context && <ContextSummary context={context} />}
+        {context.length > 0 && <ContextSummary context={context} />}
       </ExchangeContent>
     </Exchange>
   );
@@ -22,7 +22,7 @@ export function ResponseViewItem(props: Response) {
 function renderPart(part: ResponsePart) {
   switch (part.type) {
     case "markdown":
-      return <MarkdownRenderer rawMarkdown={part.markdown.value} />;
+      return <MarkdownRenderer rawMarkdown={part.rawMarkdown} />;
     case "commandGroup":
       return (
         <div>

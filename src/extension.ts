@@ -10,8 +10,8 @@ export let SIDECAR_CLIENT: SideCarClient | null = null;
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
-  const sidecarUrl = await startSidecarBinary(context.globalStorageUri.fsPath, vscode.env.appRoot);
-  console.log('sidecarUrl', sidecarUrl);
+  const sidecarUrl = await startSidecarBinary(context.globalStorageUri.fsPath); // vscode.env.appRoot second argument
+  console.log("sidecarUrl", sidecarUrl);
 
   const sidecarClient = new SideCarClient(sidecarUrl);
 

@@ -1,4 +1,4 @@
-import { SimpleHTMLElementProps } from "../../../utils/types";
+import { SimpleHTMLElementProps } from "../../utils/types";
 
 export function Exchange(props: SimpleHTMLElementProps<HTMLDivElement>) {
   const { children, ...rest } = props;
@@ -13,7 +13,11 @@ export function ExchangeHeader(
   props: SimpleHTMLElementProps<HTMLParagraphElement>
 ) {
   const { children, ...rest } = props;
-  return <p {...rest}>{children}</p>;
+  return (
+    <p className="font-medium" {...rest}>
+      {children}
+    </p>
+  );
 }
 
 export function ExchangeContent(props: SimpleHTMLElementProps<HTMLDivElement>) {

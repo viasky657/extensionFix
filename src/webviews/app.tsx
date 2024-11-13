@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Event, ViewType, Task, View } from "../model";
 import { TaskView } from "@task/view";
+import { mockTask } from "mock/task";
 
 interface vscode {
   postMessage(message: Record<string, any>): void;
@@ -22,10 +23,14 @@ interface State {
   loadedTasks: Map<string, Task>;
 }
 
+const mockLoadedTasks = new Map();
+mockLoadedTasks.set(mockTask.sessionId, mockTask);
+
 const initialState: State = {
   extensionReady: false,
   view: View.Task,
-  loadedTasks: new Map(),
+  currentTask: mockTask,
+  loadedTasks: mockLoadedTasks, // new Map(),
 };
 
 function reducer(state: State, action: Event) {

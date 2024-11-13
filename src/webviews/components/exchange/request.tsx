@@ -6,10 +6,10 @@ export function RequestViewItem(props: Request) {
   const { username, message, context } = props;
   return (
     <Exchange>
-      <ExchangeHeader className="font-medium">{username}</ExchangeHeader>
+      <ExchangeHeader>{username}</ExchangeHeader>
       <ExchangeContent>
         <p>{message}</p>
-        {context && <ContextSummary context={context} />}
+        {context.length > 0 && <ContextSummary context={context} />}
       </ExchangeContent>
     </Exchange>
   );

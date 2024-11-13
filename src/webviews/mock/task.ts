@@ -1,5 +1,4 @@
-import { Task } from "model";
-import { MarkdownString } from "vscode";
+import { Task } from "../../model";
 
 export const mockTask: Task = {
   summary: "Example task demonstrating a user request and responses",
@@ -33,6 +32,7 @@ export const mockTask: Task = {
       exchangeId: "exchange_1",
       sessionId: "session_12345",
       message: "What is the capital of France?",
+      context: [],
     },
     {
       type: "response",
@@ -42,9 +42,10 @@ export const mockTask: Task = {
       parts: [
         {
           type: "markdown",
-          markdown: new MarkdownString("The capital of France is Paris."),
+          rawMarkdown: "The capital of France is Paris.",
         },
       ],
+      context: [],
     },
     {
       type: "request",
@@ -52,6 +53,7 @@ export const mockTask: Task = {
       exchangeId: "exchange_2",
       sessionId: "session_12345",
       message: "Can you tell me more about Paris?",
+      context: [],
     },
     {
       type: "response",
@@ -61,11 +63,11 @@ export const mockTask: Task = {
       parts: [
         {
           type: "markdown",
-          markdown: new MarkdownString(
-            "Paris is the capital city of France, known for its art, fashion, and culture. Famous landmarks include the Eiffel Tower, the Louvre Museum, and Notre-Dame Cathedral."
-          ),
+          rawMarkdown:
+            "Paris is the capital city of France, known for its art, fashion, and culture. Famous landmarks include the Eiffel Tower, the Louvre Museum, and Notre-Dame Cathedral.",
         },
       ],
+      context: [],
     },
   ],
 };
