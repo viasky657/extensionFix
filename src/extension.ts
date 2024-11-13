@@ -2,7 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import { PanelProvider } from "./PanelProvider";
-import { SideCarClient } from "./sidecar/client";
+import { RepoRef, RepoRefBackend, SideCarClient } from "./sidecar/client";
 import { startSidecarBinary } from "./utilities/setupSidecarBinary";
 
 export let SIDECAR_CLIENT: SideCarClient | null = null;
@@ -16,7 +16,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const sidecarClient = new SideCarClient(sidecarUrl);
 
   const healthCheck = await sidecarClient.healthCheck();
-  console.log('healthCheck', healthCheck);
+  console.log('Sidecar health check', healthCheck);
 
   const panelProvider = new PanelProvider(context.extensionUri);
 
