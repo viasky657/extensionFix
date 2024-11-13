@@ -61,6 +61,7 @@ export interface Task {
   summary: string;
   preset: Preset;
   originalQuery: string;
+  cost: number;
   usage: Record<string, number>; // metric, number of tokens
   context: any[]; // temporary,
   exchanges: Exchange[];

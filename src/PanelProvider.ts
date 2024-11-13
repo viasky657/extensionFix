@@ -2,6 +2,8 @@ import * as vscode from "vscode";
 import { getNonce } from "./utils";
 
 export class PanelProvider implements vscode.WebviewViewProvider {
+  private _view?: vscode.WebviewView;
+
   constructor(private readonly _extensionUri: vscode.Uri) {}
 
   public resolveWebviewView(
@@ -9,6 +11,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     context: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken
   ) {
+    this._view = webviewView;
     webviewView.webview.options = {
       enableScripts: true,
       localResourceRoots: [this._extensionUri],
@@ -25,6 +28,11 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           break;
       }
     });
+  }
+
+  public sendEvent(message: Record<string, string>) {
+    if (this._view) {
+    }
   }
 
   private _getHtmlForWebview(webview: vscode.Webview) {

@@ -2,7 +2,6 @@ import { Task } from "model";
 import { MarkdownString } from "vscode";
 
 export const mockTask: Task = {
-  sessionId: "session_12345",
   summary: "Example task demonstrating a user request and responses",
   preset: {
     provider: "anthropic",
@@ -16,12 +15,15 @@ export const mockTask: Task = {
     customInstructions: "Answer as concisely as possible",
     name: "claude-sonnet-3.5",
   },
-  originalQuery: "What is the capital of France?",
   usage: {
     inputTokens: 10,
     outputTokens: 50,
   },
+  cost: 1,
+  // MVP
   context: [],
+  sessionId: "session_12345",
+  originalQuery: "What is the capital of France?",
   exchanges: [
     {
       type: "request",
