@@ -74,6 +74,14 @@ export class SideCarClient {
 		this._userId = getUserId();
 	}
 
+	async healthCheck() {
+		const baseUrl = new URL(this._url);
+		baseUrl.pathname = '/api/health';
+		const url = baseUrl.toString();
+		const response = await fetch(url);
+		return response.json();
+	}
+
 	updateModelConfiguration(modelConfiguration: vscode.ModelSelection) {
 		this._modelConfiguration = modelConfiguration;
 		console.log('updated model configuration', this._modelConfiguration);
