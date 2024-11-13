@@ -16,7 +16,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const sidecarClient = new SideCarClient(sidecarUrl);
 
   const healthCheck = await sidecarClient.healthCheck();
-  console.log("healthCheck", healthCheck);
+  console.log('Sidecar health check', healthCheck);
 
   const panelProvider = new PanelProvider(context.extensionUri);
 
@@ -40,4 +40,4 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 // This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }

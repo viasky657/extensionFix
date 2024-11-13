@@ -20,6 +20,7 @@ import { getUserId } from '../utilities/uniqueId';
 import { detectDefaultShell } from './default-shell';
 import { callServerEventStreamingBufferedGET, callServerEventStreamingBufferedPOST } from './ssestream';
 import { ConversationMessage, EditFileResponse, getSideCarModelConfiguration, IdentifierNodeType, InEditorRequest, InEditorTreeSitterDocumentationQuery, InEditorTreeSitterDocumentationReply, InLineAgentMessage, PlanResponse, RepoStatus, SemanticSearchResponse, SidecarVariableType, SidecarVariableTypes, SnippetInformation, SyncUpdate, TextDocument } from './types';
+import { MockModelSelection } from '../utilities/modelSelection';
 
 export enum CompletionStopReason {
 	/**
@@ -148,7 +149,7 @@ export class SideCarClient {
 		const baseUrl = new URL(this._url);
 		baseUrl.pathname = '/api/in_editor/answer';
 		const url = baseUrl.toString();
-		const sideCarModelConfiguration = await getSideCarModelConfiguration(await vscode.modelSelection.getConfiguration());
+		const sideCarModelConfiguration = await getSideCarModelConfiguration(await MockModelSelection.getConfiguration());
 		const finalContext = {
 			...context,
 			modelConfig: sideCarModelConfiguration,
@@ -197,7 +198,7 @@ export class SideCarClient {
 		const baseUrl = new URL(this._url);
 		baseUrl.pathname = '/api/file/edit_file';
 		const url = baseUrl.toString();
-		const sideCarModelConfiguration = await getSideCarModelConfiguration(await vscode.modelSelection.getConfiguration());
+		const sideCarModelConfiguration = await getSideCarModelConfiguration(await MockModelSelection.getConfiguration());
 		const body = {
 			file_path: filePath,
 			file_content: fileContent,
@@ -444,7 +445,7 @@ export class SideCarClient {
 		baseUrl.pathname = '/api/agent/followup_chat';
 		const url = baseUrl.toString();
 		const activeWindowData = getCurrentActiveWindow();
-		const sideCarModelConfiguration = await getSideCarModelConfiguration(await vscode.modelSelection.getConfiguration());
+		const sideCarModelConfiguration = await getSideCarModelConfiguration(await MockModelSelection.getConfiguration());
 		const userContext = await convertVSCodeVariableToSidecarHackingForPlan(variables, query);
 		// starts the plan timer at this point if we are at plan generation step
 		if (userContext.is_plan_generation) {
@@ -580,7 +581,7 @@ export class SideCarClient {
 	): AsyncIterable<StreamCompletionResponseUpdates> {
 		const baseUrl = new URL(this._url);
 		const sideCarModelConfiguration = await getSideCarModelConfiguration(
-			await vscode.modelSelection.getConfiguration()
+			await MockModelSelection.getConfiguration()
 		);
 		// console.log('sidecar.model_configuration');
 		// console.log(JSON.stringify(sideCarModelConfiguration));
@@ -713,7 +714,7 @@ export class SideCarClient {
 	): AsyncIterable<StreamCompletionResponse> {
 		const baseUrl = new URL(this._url);
 		const sideCarModelConfiguration = await getSideCarModelConfiguration(
-			await vscode.modelSelection.getConfiguration()
+			await MockModelSelection.getConfiguration()
 		);
 		baseUrl.pathname = '/api/inline_completion/inline_completion';
 
@@ -903,7 +904,7 @@ export class SideCarClient {
 	): AsyncIterable<CompletionResponse> {
 		const baseUrl = new URL(this._url);
 		const sideCarModelConfiguration = await getSideCarModelConfiguration(
-			await vscode.modelSelection.getConfiguration()
+			await MockModelSelection.getConfiguration()
 		);
 		baseUrl.pathname = '/api/inline_completion/inline_completion';
 
@@ -1071,7 +1072,7 @@ export class SideCarClient {
 		workosAccessToken: string,
 	): AsyncIterableIterator<SideCarAgentEvent> {
 		const baseUrl = new URL(this._url);
-		const sideCarModelConfiguration = await getSideCarModelConfiguration(await vscode.modelSelection.getConfiguration(), workosAccessToken);
+		const sideCarModelConfiguration = await getSideCarModelConfiguration(await MockModelSelection.getConfiguration(), workosAccessToken);
 		const allFiles = vscode.workspace.textDocuments.map((textDocument) => {
 			return textDocument.uri.fsPath;
 		});
@@ -1134,7 +1135,7 @@ export class SideCarClient {
 			exchange_id: exchangeId,
 			editor_url: editorUrl,
 			access_token: accessToken,
-			model_configuration: await getSideCarModelConfiguration(await vscode.modelSelection.getConfiguration(), accessToken),
+			model_configuration: await getSideCarModelConfiguration(await MockModelSelection.getConfiguration(), accessToken),
 		};
 		const asyncIterableResponse = callServerEventStreamingBufferedPOST(url, body);
 		for await (const line of asyncIterableResponse) {
@@ -1169,7 +1170,7 @@ export class SideCarClient {
 			return textDocument.document.uri.fsPath;
 		});
 		const currentShell = detectDefaultShell();
-		const sideCarModelConfiguration = await getSideCarModelConfiguration(await vscode.modelSelection.getConfiguration());
+		const sideCarModelConfiguration = await getSideCarModelConfiguration(await MockModelSelection.getConfiguration());
 		baseUrl.pathname = '/api/agentic/agent_session_edit_agentic';
 		const url = baseUrl.toString();
 		const body = {
@@ -1222,7 +1223,7 @@ export class SideCarClient {
 			return textDocument.document.uri.fsPath;
 		});
 		const currentShell = detectDefaultShell();
-		const sideCarModelConfiguration = await getSideCarModelConfiguration(await vscode.modelSelection.getConfiguration(), workosAccessToken);
+		const sideCarModelConfiguration = await getSideCarModelConfiguration(await MockModelSelection.getConfiguration(), workosAccessToken);
 		baseUrl.pathname = '/api/agentic/agent_session_plan_iterate';
 		const url = baseUrl.toString();
 		const body = {
@@ -1269,7 +1270,7 @@ export class SideCarClient {
 		workosAccessToken: string,
 	): AsyncIterableIterator<SideCarAgentEvent> {
 		const baseUrl = new URL(this._url);
-		const sideCarModelConfiguration = await getSideCarModelConfiguration(await vscode.modelSelection.getConfiguration(), workosAccessToken);
+		const sideCarModelConfiguration = await getSideCarModelConfiguration(await MockModelSelection.getConfiguration(), workosAccessToken);
 		const allFiles = vscode.workspace.textDocuments.map((textDocument) => {
 			return textDocument.uri.fsPath;
 		});
@@ -1343,7 +1344,7 @@ export class SideCarClient {
 	): AsyncIterableIterator<SideCarAgentEvent> {
 		const baseUrl = new URL(this._url);
 		baseUrl.pathname = '/api/agentic/user_feedback_on_exchange';
-		const sideCarModelConfiguration = await getSideCarModelConfiguration(await vscode.modelSelection.getConfiguration());
+		const sideCarModelConfiguration = await getSideCarModelConfiguration(await MockModelSelection.getConfiguration());
 		const url = baseUrl.toString();
 		const body = {
 			session_id: sessionId,
@@ -1393,7 +1394,8 @@ export class SideCarClient {
 			return textDocument.document.uri.fsPath;
 		});
 		const currentShell = detectDefaultShell();
-		const sideCarModelConfiguration = await getSideCarModelConfiguration(await vscode.modelSelection.getConfiguration(), workosAccessToken);
+		const sideCarModelConfiguration = await getSideCarModelConfiguration(await MockModelSelection.getConfiguration(), workosAccessToken);
+		console.log('sideCarModelConfiguration', sideCarModelConfiguration);
 		baseUrl.pathname = '/api/agentic/agent_session_chat';
 		const url = baseUrl.toString();
 		const body = {
@@ -1452,7 +1454,7 @@ export class SideCarClient {
 				language: activeWindowData.language,
 			};
 		}
-		const sideCarModelConfiguration = await getSideCarModelConfiguration(await vscode.modelSelection.getConfiguration());
+		const sideCarModelConfiguration = await getSideCarModelConfiguration(await MockModelSelection.getConfiguration());
 		const body: ProbeAgentBody = {
 			query,
 			editor_url: editorUrl,
