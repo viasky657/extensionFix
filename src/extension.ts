@@ -3,16 +3,18 @@
 import * as vscode from "vscode";
 import { PanelProvider } from "./PanelProvider";
 import { SideCarClient } from "./sidecar/client";
+import { startSidecarBinary } from "./utilities/setupSidecarBinary";
 
 export let SIDECAR_CLIENT: SideCarClient | null = null;
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
-  // const sidecarUrl = await startSidecarBinary(context.globalStorageUri.fsPath, vscode.env.appRoot);
-  // console.log('sidecarUrl', sidecarUrl);
+  const sidecarUrl = await startSidecarBinary(context.globalStorageUri.fsPath, vscode.env.appRoot);
+  console.log('sidecarUrl', sidecarUrl);
 
-  // const sidecarClient = new SideCarClient(sidecarUrl, modelConfiguration);
+  const modelConfiguration = await vscode.modelSelection.getConfiguration();
+  const sidecarClient = new SideCarClient(sidecarUrl, modelConfiguration);
 
   const panelProvider = new PanelProvider(context.extensionUri);
 
