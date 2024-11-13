@@ -4,11 +4,11 @@ import { getNonce } from "./utils";
 export class PanelProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
 
-  constructor(private readonly _extensionUri: vscode.Uri) {}
+  constructor(private readonly _extensionUri: vscode.Uri) { }
 
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
-    context: vscode.WebviewViewResolveContext,
+    _context: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken
   ) {
     this._view = webviewView;
@@ -30,7 +30,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     });
   }
 
-  public sendEvent(message: Record<string, string>) {
+  public sendEvent(_message: Record<string, string>) {
     if (this._view) {
     }
   }

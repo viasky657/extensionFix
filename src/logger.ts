@@ -16,8 +16,8 @@ const logger = createLogger({
 	level: 'info',
 	format: format.combine(
 		format.splat(),
-		format.printf(({ message }: { message: string }) => {
-			return message;
+		format.printf((info: any) => {
+			return info.message;
 		}),
 		format.errors({ stack: true })
 	),
