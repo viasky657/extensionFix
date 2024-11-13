@@ -93,5 +93,23 @@
     "web-tree-sitter": "^0.20.8",
     "winston": "^3.10.0",
     "winston-vscode": "^1.0.0"
-  }
+  },
+  "enabledApiProposals": [
+    "aideAgent",
+    "aideGetCodeLensProvider",
+    "aideGetInlayHintsProvider",
+    "chatParticipantAdditions",
+    "chatParticipantPrivate",
+    "chatProvider",
+    "chatVariableResolver",
+    "csAuthentication",
+    "csevents",
+    "defaultChatParticipant",
+    "inlineCompletionsAdditions",
+    "interactive",
+    "mappedEditsProvider",
+    "modelSelection",
+    "terminalSelection",
+    "textSearchProviderNew"
+  ]
 }

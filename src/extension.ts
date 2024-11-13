@@ -13,14 +13,10 @@ export async function activate(context: vscode.ExtensionContext) {
   const sidecarUrl = await startSidecarBinary(context.globalStorageUri.fsPath, vscode.env.appRoot);
   console.log('sidecarUrl', sidecarUrl);
 
-  // console.log(vscode.modelSelection);
+  const sidecarClient = new SideCarClient(sidecarUrl);
 
-  // const modelConfiguration = await vscode.modelSelection.getConfiguration();
-  // console.log('modelConfiguration', modelConfiguration);
-  // const sidecarClient = new SideCarClient(sidecarUrl, modelConfiguration);
-
-  // const healthCheck = await sidecarClient.healthCheck();
-  // console.log('healthCheck', healthCheck);
+  const healthCheck = await sidecarClient.healthCheck();
+  console.log('healthCheck', healthCheck);
 
   const panelProvider = new PanelProvider(context.extensionUri);
 

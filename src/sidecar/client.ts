@@ -62,15 +62,12 @@ export class RepoRef {
 
 export class SideCarClient {
 	private _url: string;
-	private _modelConfiguration: vscode.ModelSelection;
 	private _userId: string | null;
 
 	constructor(
 		url: string,
-		modelConfiguration: vscode.ModelSelection,
 	) {
 		this._url = url;
-		this._modelConfiguration = modelConfiguration;
 		this._userId = getUserId();
 	}
 
@@ -82,10 +79,11 @@ export class SideCarClient {
 		return response.json();
 	}
 
-	updateModelConfiguration(modelConfiguration: vscode.ModelSelection) {
-		this._modelConfiguration = modelConfiguration;
-		console.log('updated model configuration', this._modelConfiguration);
-	}
+	// zi: removing model configuration as it doesn't seem to be used
+	// updateModelConfiguration(modelConfiguration: vscode.ModelSelection) {
+	// 	this._modelConfiguration = modelConfiguration;
+	// 	console.log('updated model configuration', this._modelConfiguration);
+	// }
 
 	getRepoListUrl(): string {
 		const baseUrl = new URL(this._url);
