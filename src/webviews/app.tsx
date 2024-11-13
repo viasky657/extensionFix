@@ -63,21 +63,22 @@ const App = () => {
   }, []);
 
   return (
-    <div>
+    <div className="h-full flex flex-col">
       <nav>
-        <ul>
+        {/* Move these in the extension */}
+        <ul className="flex justify-end gap-1">
           <li>
             <button className="codicon codicon-add" type="button">
               <span className="sr-only">New</span>
             </button>
           </li>
           <li>
-            <button type="button">
+            <button className="codicon codicon-history" type="button">
               <span className="sr-only">History</span>
             </button>
           </li>
           <li>
-            <button type="button">
+            <button className="codicon codicon-settings-gear" type="button">
               <span className="sr-only">Settings</span>
             </button>
           </li>

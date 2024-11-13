@@ -4,6 +4,9 @@ import { Exchange, Task, Usage } from "../../model";
 import { ResponseViewItem } from "components/exchange/response";
 import { RequestViewItem } from "components/exchange/request";
 import { TaskDL, TaskDT, TaskDD } from "components/task-definition-list";
+import { VSCodeTextArea } from "vscode-elements/textarea";
+import { VSCodeButton } from "vscode-elements/button";
+import { VSCodeBadge } from "vscode-elements/badge";
 
 export interface TaskViewProps {
   task: Task;
@@ -17,18 +20,22 @@ export function TaskView({ task, onSubmit }: TaskViewProps) {
   const showUsage = Object.keys(usage).length > 0; // usageKeys.some((key) => key in usage);
 
   return (
-    <main>
+    <main className="flex flex-col flex-grow">
       <header>
         <details>
           <summary>
             <h2>{summary}</h2>
-            <dl>
+            <dl className="flex items-baseline">
               <dt className="sr-only">Preset</dt>
-              <dd>{preset.name}</dd>
+              <dd className="text-descriptionForeground mr-auto">
+                {preset.name}
+              </dd>
               {cost && (
                 <React.Fragment>
                   <dt className="sr-only">API cost</dt>
-                  <dd>{cost}</dd>
+                  <dd>
+                    <VSCodeBadge variant="counter">{cost}$</VSCodeBadge>
+                  </dd>
                 </React.Fragment>
               )}
             </dl>
@@ -59,7 +66,7 @@ export function TaskView({ task, onSubmit }: TaskViewProps) {
           </TaskDL>
         </details>
       </header>
-      <section>
+      <section className="flex-grow">
         {exchanges && (
           <ol>
             {exchanges.map((exchange) => (
@@ -69,8 +76,8 @@ export function TaskView({ task, onSubmit }: TaskViewProps) {
         )}
       </section>
       <form onSubmit={onSubmit}>
-        <vscode-textarea></vscode-textarea>
-        <vscode-button type="submit">Send</vscode-button>
+        <VSCodeTextArea className="w-full" />
+        <VSCodeButton type="submit">Send</VSCodeButton>
       </form>
     </main>
   );
