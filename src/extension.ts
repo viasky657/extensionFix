@@ -16,9 +16,25 @@ export async function activate(context: vscode.ExtensionContext) {
   const sidecarClient = new SideCarClient(sidecarUrl);
 
   const healthCheck = await sidecarClient.healthCheck();
-  console.log('Sidecar health check', healthCheck);
+  console.log("Sidecar health check", healthCheck);
 
   const panelProvider = new PanelProvider(context.extensionUri);
+
+  context.subscriptions.push(
+    panelProvider.onMessageFromWebview((message) => {
+      if (message.type === "new-request") {
+        console.log(message.query);
+        // @theskcd we will ping sindecar here
+      }
+    })
+  );
+
+  context.subscriptions.push(
+    panelProvider.onDidWebviewBecomeVisible(() => {
+      // @theskcd we update the view state here
+      panelProvider.updateState();
+    })
+  );
 
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider("sota-pr-panel", panelProvider)
@@ -40,4 +56,4 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 // This method is called when your extension is deactivated
-export function deactivate() { }
+export function deactivate() {}

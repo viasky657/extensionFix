@@ -1,10 +1,17 @@
 import * as vscode from "vscode";
+import { Event } from "./model";
 import { getNonce } from "./webviews/utils/nonce";
 
 export class PanelProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
 
   constructor(private readonly _extensionUri: vscode.Uri) {}
+
+  private _onMessageFromWebview = new vscode.EventEmitter<Event>();
+  onMessageFromWebview = this._onMessageFromWebview.event;
+
+  private _onDidWebviewBecomeVisible = new vscode.EventEmitter<void>();
+  onDidWebviewBecomeVisible = this._onDidWebviewBecomeVisible.event;
 
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -17,11 +24,13 @@ export class PanelProvider implements vscode.WebviewViewProvider {
       localResourceRoots: [this._extensionUri],
     };
 
+    this._onDidWebviewBecomeVisible.fire();
+
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
     // Handle messages from the webview
     webviewView.webview.onDidReceiveMessage((data) => {
-      console.log("Message from webview", data);
+      this._onMessageFromWebview.fire(data);
       switch (data.type) {
         case "init":
           webviewView.webview.postMessage({ command: "init" });
@@ -30,8 +39,10 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     });
   }
 
-  public sendEvent(_message: Record<string, string>) {
-    if (this._view) {
+  public updateState() {
+    console.log("update state of the view here");
+    if (!this._view) {
+      return;
     }
   }
 

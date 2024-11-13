@@ -24,7 +24,16 @@ interface InitEvent {
   type: "init";
 }
 
-export type Event = OpenTaskEvent | TaskResponseEvent | InitEvent;
+interface NewRequestEvent {
+  type: "new-request";
+  query: string;
+}
+
+export type Event =
+  | OpenTaskEvent
+  | TaskResponseEvent
+  | InitEvent
+  | NewRequestEvent;
 
 export type MarkdownResponsePart = {
   type: "markdown";

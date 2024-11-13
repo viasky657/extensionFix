@@ -4,15 +4,19 @@ import { TaskView } from "@task/view";
 import { mockTask } from "mock/task";
 
 interface vscode {
-  postMessage(message: Record<string, any>): void;
+  postMessage(message: Event): void;
 }
 
 declare const vscode: vscode;
 
 function onMessage(event: React.FormEvent<HTMLFormElement>) {
+  event.preventDefault();
   const form = event.currentTarget;
-  const data = Object.fromEntries(new FormData(form));
-  vscode.postMessage({ request: "new-request", data });
+  const data = new FormData(form);
+  const query = data.get("query");
+  if (query && typeof query === "string") {
+    vscode.postMessage({ type: "new-request", query });
+  }
 }
 
 // Move this somewhere else

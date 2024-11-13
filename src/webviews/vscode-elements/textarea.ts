@@ -4,7 +4,7 @@ import { convertPropsToRegularHTMLAttributes } from "./convert-props";
 
 interface VSCodeTextAreaProps
   extends React.DetailedHTMLProps<
-    React.HTMLAttributes<HTMLTextAreaElement>,
+    React.TextareaHTMLAttributes<HTMLTextAreaElement>,
     HTMLTextAreaElement
   > {}
 

@@ -13,7 +13,8 @@ export interface TaskViewProps {
   onSubmit: React.FormEventHandler<HTMLFormElement>;
 }
 
-export function TaskView({ task, onSubmit }: TaskViewProps) {
+export function TaskView(props: TaskViewProps) {
+  const { task, onSubmit } = props;
   const { exchanges, summary, preset, cost, usage, originalQuery } = task;
 
   // TODO(g-danna) Improve this
@@ -76,7 +77,7 @@ export function TaskView({ task, onSubmit }: TaskViewProps) {
         )}
       </section>
       <form onSubmit={onSubmit}>
-        <VSCodeTextArea className="w-full" />
+        <VSCodeTextArea className="w-full" name="query" />
         <VSCodeButton type="submit">Send</VSCodeButton>
       </form>
     </main>
