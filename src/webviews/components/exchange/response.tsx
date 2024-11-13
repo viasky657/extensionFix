@@ -5,11 +5,11 @@ import { ContextSummary } from "../context-summary";
 import { Exchange, ExchangeHeader, ExchangeContent } from "./exchange-base";
 
 export function ResponseViewItem(props: Response) {
-  const { username, parts, context } = props;
+  const { parts, context } = props;
   return (
     <Exchange className="text-foreground">
       <ExchangeHeader className="text-textLink-foreground">
-        {username}
+        SōtaPR
       </ExchangeHeader>
       <ExchangeContent>
         {parts.map(renderPart)}

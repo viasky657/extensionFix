@@ -1,4 +1,4 @@
-import { SimpleHTMLElementProps } from "../../../utils/types";
+import { SimpleHTMLElementProps } from "../../utils/types";
 
 export function Exchange(props: SimpleHTMLElementProps<HTMLDivElement>) {
   const { children, ...rest } = props;

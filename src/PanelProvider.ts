@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { getNonce } from "./utils/nonce";
+import { getNonce } from "./webviews/utils/nonce";
 
 export class PanelProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
