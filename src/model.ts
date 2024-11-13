@@ -1,5 +1,3 @@
-import { MarkdownString, Command, Uri } from "vscode";
-
 // TODO split these into modules ?
 
 export enum View {
@@ -30,7 +28,12 @@ export type Event = OpenTaskEvent | TaskResponseEvent | InitEvent;
 
 export type MarkdownResponsePart = {
   type: "markdown";
-  markdown: MarkdownString;
+  rawMarkdown: string;
+};
+
+export type Command = {
+  command: string;
+  title: string;
 };
 
 export type CommandGroupResponsePart = {
@@ -44,7 +47,7 @@ interface MessageBase {
   username: string;
   exchangeId: string;
   sessionId: string;
-  context: Uri[];
+  context: string[];
 }
 
 export interface Response extends MessageBase {

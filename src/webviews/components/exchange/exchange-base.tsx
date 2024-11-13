@@ -13,7 +13,11 @@ export function ExchangeHeader(
   props: SimpleHTMLElementProps<HTMLParagraphElement>
 ) {
   const { children, ...rest } = props;
-  return <p {...rest}>{children}</p>;
+  return (
+    <p className="font-medium" {...rest}>
+      {children}
+    </p>
+  );
 }
 
 export function ExchangeContent(props: SimpleHTMLElementProps<HTMLDivElement>) {

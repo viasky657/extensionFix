@@ -22,7 +22,7 @@ export function ResponseViewItem(props: Response) {
 function renderPart(part: ResponsePart) {
   switch (part.type) {
     case "markdown":
-      return <MarkdownRenderer rawMarkdown={part.markdown.value} />;
+      return <MarkdownRenderer rawMarkdown={part.rawMarkdown} />;
     case "commandGroup":
       return (
         <div>
