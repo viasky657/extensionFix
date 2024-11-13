@@ -13,7 +13,7 @@ export function ResponseViewItem(props: Response) {
       </ExchangeHeader>
       <ExchangeContent>
         {parts.map(renderPart)}
-        {context && <ContextSummary context={context} />}
+        {context.length > 0 && <ContextSummary context={context} />}
       </ExchangeContent>
     </Exchange>
   );
