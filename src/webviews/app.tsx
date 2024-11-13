@@ -64,17 +64,22 @@ const App = () => {
 
   return (
     <div>
-      <h1>Functional Components Work!</h1>
       <nav>
         <ul>
           <li>
-            <button type="button">New</button>
+            <button className="codicon codicon-add" type="button">
+              <span className="sr-only">New</span>
+            </button>
           </li>
           <li>
-            <button type="button">History</button>
+            <button type="button">
+              <span className="sr-only">History</span>
+            </button>
           </li>
           <li>
-            <button type="button">Settings</button>
+            <button type="button">
+              <span className="sr-only">Settings</span>
+            </button>
           </li>
         </ul>
       </nav>

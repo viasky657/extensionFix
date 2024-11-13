@@ -37,7 +37,7 @@ export const mockTask: Task = {
     {
       type: "response",
       username: "agent",
-      exchangeId: "exchange_1",
+      exchangeId: "exchange_2",
       sessionId: "session_12345",
       parts: [
         {
@@ -50,7 +50,7 @@ export const mockTask: Task = {
     {
       type: "request",
       username: "user123",
-      exchangeId: "exchange_2",
+      exchangeId: "exchange_3",
       sessionId: "session_12345",
       message: "Can you tell me more about Paris?",
       context: [],
@@ -58,7 +58,7 @@ export const mockTask: Task = {
     {
       type: "response",
       username: "agent",
-      exchangeId: "exchange_2",
+      exchangeId: "exchange_4",
       sessionId: "session_12345",
       parts: [
         {
