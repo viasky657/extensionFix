@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Event, ViewType, Task, View } from "model";
+import { Event, ViewType, Task, View } from "../model";
 import { TaskView } from "@task/view";
 
 interface vscode {
