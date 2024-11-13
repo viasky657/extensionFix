@@ -18,6 +18,8 @@ export const mockTask: Task = {
   usage: {
     inputTokens: 10,
     outputTokens: 50,
+    cacheReads: 12,
+    cacheWrites: 12,
   },
   cost: 1,
   // MVP

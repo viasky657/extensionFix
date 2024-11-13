@@ -3,9 +3,9 @@ export function addVSCodeThemeColors(
 ): Record<string, string> {
   let tokens: Record<string, string> = {};
   for (const id of colorsIds) {
-    const cssPropName = `--vsc${id.replace(".", "-")}`;
-    const value = `rgb(var(${cssPropName}) / <alpha-value>)`;
-    tokens[id] = value;
+    const tokenName = id.replaceAll(".", "-");
+    const cssPropName = `--vscode-${tokenName}`;
+    tokens[tokenName] = cssPropName;
   }
   return tokens;
 }

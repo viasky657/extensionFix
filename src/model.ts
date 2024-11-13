@@ -1,4 +1,4 @@
-import { MarkdownString, Command } from "vscode";
+import { MarkdownString, Command, Uri } from "vscode";
 
 // TODO split these into modules ?
 
@@ -44,6 +44,7 @@ interface MessageBase {
   username: string;
   exchangeId: string;
   sessionId: string;
+  context: Uri[];
 }
 
 export interface Response extends MessageBase {
@@ -56,13 +57,20 @@ export interface Request extends MessageBase {
   message: string;
 }
 
+export interface Usage {
+  inputTokens: number;
+  outputTokens: number;
+  cacheReads: number;
+  cacheWrites: number;
+}
+
 export interface Task {
   sessionId: string;
   summary: string;
   preset: Preset;
   originalQuery: string;
   cost: number;
-  usage: Record<string, number>; // metric, number of tokens
+  usage: Usage; // metric, number of tokens
   context: any[]; // temporary,
   exchanges: Exchange[];
 }

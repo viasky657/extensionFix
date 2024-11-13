@@ -1,8 +1,8 @@
 import * as React from "react";
-import * as vscode from "vscode";
-import { Exchange, Task } from "../../model";
-import { ResponseViewItem } from "components/response";
-import { RequestViewItem } from "components/request";
+import { ObjectEntry } from "../../utils/types";
+import { Exchange, Task, Usage } from "../../model";
+import { ResponseViewItem } from "components/exchange/response";
+import { RequestViewItem } from "components/exchange/request";
 import { TaskDL, TaskDT, TaskDD } from "components/task-definition-list";
 
 export interface TaskViewProps {
@@ -25,10 +25,10 @@ export function TaskView({ task, onSubmit }: TaskViewProps) {
             <dl>
               <dt className="sr-only">Preset</dt>
               <dd>{preset.name}</dd>
-              {usage.cost && (
+              {cost && (
                 <React.Fragment>
                   <dt className="sr-only">API cost</dt>
-                  <dd>{usage.cost}</dd>
+                  <dd>{cost}</dd>
                 </React.Fragment>
               )}
             </dl>
@@ -48,7 +48,11 @@ export function TaskView({ task, onSubmit }: TaskViewProps) {
               <React.Fragment>
                 <TaskDT>Data</TaskDT>
                 <TaskDD>
-                  <ul>{Object.entries(usage).map(renderUsagePart)}</ul>
+                  <ul>
+                    {(Object.entries(usage) as ObjectEntry<Usage>[]).map(
+                      renderUsagePart
+                    )}
+                  </ul>
                 </TaskDD>
               </React.Fragment>
             )}
@@ -81,18 +85,43 @@ function renderExchange(exchange: Exchange) {
   }
 }
 
-//const usageKeys = ["output", "input", "cache-reads", "cache-writes"];
+// Move this to dedicated part
 
-function renderUsagePart(entry: [string, number]) {
+function renderUsagePart(entry: ObjectEntry<Usage>) {
   const [key, value] = entry;
   switch (key) {
-    case "output":
+    case "outputTokens":
       return (
         <li>
           <span aria-hidden className="codicon codicon-arrow-down" />
           {formatNumber(value)} <span className="sr-ony">tokens</span> output
         </li>
       );
+    case "inputTokens":
+      return (
+        <li>
+          <span aria-hidden className="codicon codicon-arrow-up" />
+          {formatNumber(value)} <span className="sr-ony">tokens</span> input
+        </li>
+      );
+    case "cacheReads":
+      return (
+        <li>
+          <span aria-hidden className="codicon codicon-dashboard" />
+          {formatNumber(value)} <span className="sr-ony">tokens in</span> cache
+          reads
+        </li>
+      );
+    case "cacheWrites":
+      return (
+        <li>
+          <span aria-hidden className="codicon codicon-database" />
+          {formatNumber(value)} <span className="sr-ony">tokens in</span> cache
+          writes
+        </li>
+      );
+    default:
+      return "";
   }
 }
 
