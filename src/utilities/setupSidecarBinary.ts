@@ -198,7 +198,7 @@ export async function startSidecarBinaryWithLocal(
 
 export async function startSidecarBinary(
 	extensionBasePath: string,
-	_installLocation: string,
+	installLocation: string,
 ): Promise<string> {
 	// We want to check where the sidecar binary is stored
 	// extension_path: /Users/skcd/.vscode-oss-dev/User/globalStorage/codestory-ghost.codestoryai/sidecar_bin
@@ -207,10 +207,7 @@ export async function startSidecarBinary(
 	// console.log('starting sidecar binary');
 	// console.log('installLocation', installLocation);
 
-
-	// const selfStart = await startSidecarBinaryWithLocal(installLocation);
-	// zi: setting this to true for now
-	const selfStart = true;
+	const selfStart = await startSidecarBinaryWithLocal(installLocation);
 	if (selfStart) {
 		return 'http://127.0.0.1:42424';
 	}
