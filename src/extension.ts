@@ -2,7 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import { PanelProvider } from "./PanelProvider";
-import { RepoRef, RepoRefBackend, SideCarClient } from "./sidecar/client";
+import { SideCarClient } from "./sidecar/client";
 import { startSidecarBinary } from "./utilities/setupSidecarBinary";
 
 export let SIDECAR_CLIENT: SideCarClient | null = null;
