@@ -208,7 +208,11 @@ export async function startSidecarBinary(
     // we have to figure out how to copy them together
     // console.log('starting sidecar binary');
     // console.log('installLocation', installLocation);
-    const selfStart = await startSidecarBinaryWithLocal(installLocation);
+
+    // zi: omitting this for now as it depends on aideConfiguration
+    // const selfStart = await startSidecarBinaryWithLocal(installLocation);
+
+    const selfStart = true;
     if (selfStart) {
         return 'http://127.0.0.1:42424';
     }

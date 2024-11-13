@@ -2,12 +2,13 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import { PanelProvider } from "./PanelProvider";
+import { startSidecarBinary } from "./sidecar/setupSidecarBinary";
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
-
-
+export async function activate(context: vscode.ExtensionContext) {
+  const sidecarUrl = await startSidecarBinary(context.globalStorageUri.fsPath, vscode.env.appRoot);
+  console.log('sidecarUrl', sidecarUrl);
 
   const panelProvider = new PanelProvider(context.extensionUri);
 
