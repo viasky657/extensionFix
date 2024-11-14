@@ -4,8 +4,9 @@ import { getNonce } from "./webviews/utils/nonce";
 
 export class PanelProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
+  private _isSidecarReady: boolean = false;
 
-  constructor(private readonly _extensionUri: vscode.Uri) {}
+  constructor(private readonly _extensionUri: vscode.Uri) { }
 
   private _onMessageFromWebview = new vscode.EventEmitter<ClientRequest>();
   onMessageFromWebview = this._onMessageFromWebview.event;
@@ -39,11 +40,23 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     });
   }
 
+  // informs webview of status updates
   public updateState() {
-    console.log("update state of the view here");
     if (!this._view) {
       return;
     }
+
+    // tell the webview that the sidecar is ready
+    this._view.webview.postMessage({
+      command: 'updateState',
+      isSidecarReady: this._isSidecarReady
+    });
+  }
+
+  // updates internal state and tells the webview
+  public setSidecarReady(ready: boolean) {
+    this._isSidecarReady = ready;
+    this.updateState();
   }
 
   private _getHtmlForWebview(webview: vscode.Webview) {

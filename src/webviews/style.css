@@ -11,3 +11,7 @@ body,
 body {
   padding-inline: 0px;
 }
+
+#root {
+  height: 100vh;
+}
