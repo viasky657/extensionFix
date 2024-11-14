@@ -1081,11 +1081,7 @@ export class SideCarClient {
 			return textDocument.document.uri.fsPath;
 		});
 		const currentShell = detectDefaultShell();
-		if (shouldUseUnstableToolAgent()) {
-			baseUrl.pathname = '/api/agentic/agent_tool_use';
-		} else {
-			baseUrl.pathname = '/api/agentic/agent_session_plan';
-		}
+		baseUrl.pathname = '/api/agentic/agent_tool_use';
 		const url = baseUrl.toString();
 		const body = {
 			session_id: sessionId,
