@@ -63,8 +63,6 @@ async function checkCorrectVersionRunning(url: string): Promise<boolean> {
     const response = await fetch(`${url}/api/version`);
     // console.log('Version check done' + response);
     const version = await response.json();
-    // console.log('version content');
-    // console.log(version);
     return version.version_hash === SIDECAR_VERSION;
   } catch (e) {
     return false;
