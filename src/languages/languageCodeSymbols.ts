@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Definition, LocationLink, Position, TextDocument, languages, workspace, Location, Uri } from 'vscode';
+import { Definition, LocationLink, Position, TextDocument, workspace, Location, Uri } from 'vscode';
 const Parser = require('web-tree-sitter');
 import { v4 as uuidV4 } from 'uuid';
 import * as path from 'path';
@@ -129,32 +129,7 @@ export const getGoToDefinition = async (
 	fsFilePath: string;
 	startPosition: Position;
 } | null> => {
-	const referencesProviders = languages.getDefinitionProvider({
-		language: 'typescript',
-		scheme: 'file',
-	});
-	for (let index = 0; index < referencesProviders.length; index++) {
-		try {
-			logger.info('[getGoToDefinition] ' + currentCodeSymbol + ' ' + lineNumber + ' ' + columnNumber + ' ' + dependencyStrings);
-			const definitions = await referencesProviders[index].provideDefinition(
-				textDocument,
-				new Position(lineNumber, columnNumber),
-				{
-					isCancellationRequested: false,
-					onCancellationRequested: () => ({ dispose() { } }),
-				}
-			);
-			logger.info('[getGoToDefinition] definitions ' + JSON.stringify(definitions));
-			if (definitions) {
-				return definitionInformation(definitions);
-			}
-		} catch (e) {
-			logger.info('[getGoToDefinition] error ' + textDocument.lineAt(lineNumber));
-			logger.info('[getGoToDefinition] file line content: ' + textDocument.lineAt(lineNumber).text);
-			logger.info('[getGoToDefinition] error for symbol: ' + currentCodeSymbol + ' ' + lineNumber + ' ' + columnNumber + ' ' + dependencyStrings);
-			logger.error(e);
-		}
-	}
+	console.log(textDocument, lineNumber, columnNumber, currentCodeSymbol, dependencyStrings);
 	return null;
 };
 

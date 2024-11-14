@@ -441,15 +441,18 @@ class DocumentManager {
 	lines: LineContent[];
 	firstSentLineIndex: number;
 	firstRangeLine: number;
+	readonly document: vscode.TextDocument;
 
 	constructor(
 		progress: AideAgentResponseStream,
-		private document: vscode.TextDocument,
+		document: vscode.TextDocument,
 		lines: string[],
 		contextSelection: InLineAgentContextSelection,
 		indentStyle: IndentStyleSpaces | undefined,
 		lineLimit: number,
 	) {
+		console.log(document);
+		this.document = document;
 		this.progress = progress; // Progress tracking
 		this.lines = []; // Stores all the lines in the document
 		this.indentStyle = IndentationHelper.getDocumentIndentStyle(lines, indentStyle);
@@ -497,15 +500,6 @@ class DocumentManager {
 		// console.log('sidecar.replaceLine');
 		// console.log('sidecar.replaceLine', index, newLine.adjustedContent);
 		this.lines[index] = new LineContent(newLine.adjustedContent, this.indentStyle);
-		this.progress.textEdit(
-			this.document.uri,
-			[
-				{
-					range: new vscode.Range(index, 0, index, 1000),
-					newText: newLine.adjustedContent
-				}
-			]
-		);
 		return index + 1;
 	}
 
@@ -521,15 +515,6 @@ class DocumentManager {
 				endIndex - startIndex + 1,
 				new LineContent(newLine.adjustedContent, this.indentStyle)
 			);
-			this.progress.textEdit(
-				this.document.uri,
-				[
-					{
-						range: new vscode.Range(startIndex, 0, endIndex, 1000),
-						newText: newLine.adjustedContent
-					}
-				]
-			);
 			return startIndex + 1;
 		}
 	}
@@ -539,15 +524,6 @@ class DocumentManager {
 		// console.log('sidecar.appendLine');
 		// console.log('sidecar.appendLine', this.lines.length, newLine.adjustedContent);
 		this.lines.push(new LineContent(newLine.adjustedContent, this.indentStyle));
-		this.progress.textEdit(
-			this.document.uri,
-			[
-				{
-					range: new vscode.Range(this.lines.length - 1, 1000, this.lines.length - 1, 1000),
-					newText: '\n' + newLine.adjustedContent,
-				},
-			]
-		);
 		return this.lines.length;
 	}
 
@@ -556,15 +532,6 @@ class DocumentManager {
 		// console.log('sidecar.insertLineAfter');
 		// console.log('sidecar.insertLineAfter', index, newLine.adjustedContent);
 		this.lines.splice(index + 1, 0, new LineContent(newLine.adjustedContent, this.indentStyle));
-		this.progress.textEdit(
-			this.document.uri,
-			[
-				{
-					range: new vscode.Range(index, 1000, index, 1000),
-					newText: '\n' + newLine.adjustedContent,
-				}
-			]
-		);
 		return index + 2;
 	}
 }

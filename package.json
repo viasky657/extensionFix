@@ -100,18 +100,6 @@
     "winston": "^3.10.0",
     "winston-vscode": "^1.0.0"
   },
-  "enabledApiProposals": [
-    "chatParticipantAdditions",
-    "chatParticipantPrivate",
-    "chatProvider",
-    "chatVariableResolver",
-    "defaultChatParticipant",
-    "inlineCompletionsAdditions",
-    "interactive",
-    "mappedEditsProvider",
-    "terminalSelection",
-    "textSearchProviderNew"
-  ],
   "configuration": {
     "type": "object",
     "title": "Aide Extension settings",

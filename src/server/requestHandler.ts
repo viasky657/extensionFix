@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 import * as http from 'http';
-import { SidecarApplyEditsRequest, LSPDiagnostics, SidecarGoToDefinitionRequest, SidecarGoToImplementationRequest, SidecarGoToReferencesRequest, SidecarOpenFileToolRequest, LSPQuickFixInvocationRequest, SidecarQuickFixRequest, SidecarSymbolSearchRequest, SidecarInlayHintsRequest, SidecarGetOutlineNodesRequest, SidecarOutlineNodesWithContentRequest, EditedCodeStreamingRequest, SidecarRecentEditsRetrieverRequest, SidecarRecentEditsRetrieverResponse, SidecarCreateFileRequest, LSPFileDiagnostics, SidecarGetPreviousWordRangeRequest, SidecarDiagnosticsResponse, SidecarCreateNewExchangeRequest, SidecarUndoPlanStep, SidecarExecuteTerminalCommandRequest } from './types';
+import { SidecarApplyEditsRequest, LSPDiagnostics, SidecarGoToDefinitionRequest, SidecarGoToImplementationRequest, SidecarGoToReferencesRequest, SidecarOpenFileToolRequest, LSPQuickFixInvocationRequest, SidecarQuickFixRequest, SidecarSymbolSearchRequest, SidecarInlayHintsRequest, SidecarGetOutlineNodesRequest, EditedCodeStreamingRequest, SidecarRecentEditsRetrieverRequest, SidecarRecentEditsRetrieverResponse, SidecarCreateFileRequest, LSPFileDiagnostics, SidecarGetPreviousWordRangeRequest, SidecarDiagnosticsResponse, SidecarCreateNewExchangeRequest, SidecarUndoPlanStep, SidecarExecuteTerminalCommandRequest } from './types';
 import { Position, Range } from 'vscode';
 import { getDiagnosticsFromEditor, getEnrichedDiagnostics, getFileDiagnosticsFromEditor, getFullWorkspaceDiagnostics, getHoverInformation } from './diagnostics';
 import { openFileEditor } from './openFile';
@@ -14,7 +14,7 @@ import { quickFixInvocation, quickFixList } from './quickFix';
 import { symbolSearch } from './symbolSearch';
 import { goToReferences } from './goToReferences';
 import { inlayHints } from './inlayHints';
-import { getOutlineNodes, getOutlineNodesFromContent } from './outlineNodes';
+import { getOutlineNodes } from './outlineNodes';
 import { createFileResponse } from './createFile';
 import { getPreviousWordAtPosition } from './previousWordCommand';
 import { goToTypeDefinition } from './goToTypeDefinition';
@@ -210,11 +210,6 @@ export function handleRequest(
 				res.end(JSON.stringify(response));
 			} else if (req.method === 'POST' && req.url === '/get_outline_nodes_content') {
 				console.log('get_outline_node_content');
-				const body = await readRequestBody(req);
-				const request: SidecarOutlineNodesWithContentRequest = JSON.parse(body);
-				const response = await getOutlineNodesFromContent(request);
-				res.writeHead(200, { 'Content-Type': 'application/json' });
-				res.end(JSON.stringify(response));
 			} else if (req.method === 'POST' && req.url === '/create_file') {
 				console.log('create_file');
 				const body = await readRequestBody(req);

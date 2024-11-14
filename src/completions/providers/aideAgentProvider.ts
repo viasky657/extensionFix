@@ -14,10 +14,10 @@ import { RecentEditsRetriever } from '../../server/editedFiles';
 import { handleRequest } from '../../server/requestHandler';
 import { EditedCodeStreamingRequest, SideCarAgentEvent, SidecarApplyEditsRequest, SidecarContextEvent, SidecarUndoPlanStep } from '../../server/types';
 import { RepoRef, SideCarClient } from '../../sidecar/client';
-import { getUniqueId, getUserId } from '../../utilities/uniqueId';
+import { getUniqueId } from '../../utilities/uniqueId';
 import { ProjectContext } from '../../utilities/workspaceContext';
 import postHogClient from '../../posthog/client';
-import { AideAgentEventSenderResponse, AideAgentMode, AideAgentPromptReference, AideAgentRequest, AideAgentResponseStream, AideAgentScope, AideSessionAgent, AideSessionExchangeUserAction, AideSessionParticipant } from '../../types';
+import { AideAgentEventSenderResponse, AideAgentMode, AideAgentPromptReference, AideAgentRequest, AideAgentResponseStream, AideAgentScope, AideSessionExchangeUserAction, AideSessionParticipant } from '../../types';
 
 /**
  * Stores the necessary identifiers required for identifying a response stream
@@ -64,7 +64,6 @@ class AideResponseStreamCollection {
 
 
 export class AideAgentSessionProvider implements AideSessionParticipant {
-	private aideAgent: AideSessionAgent;
 
 	editorUrl: string | undefined;
 	private iterationEdits = new vscode.WorkspaceEdit();
@@ -140,29 +139,9 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 			this.editorUrl = editorUrl;
 		});
 
-		this.aideAgent = vscode.aideAgent.createChatParticipant('aide', {
-			newSession: this.newSession.bind(this),
-			handleEvent: this.handleEvent.bind(this),
-			handleExchangeUserAction: this.handleExchangeUserAction.bind(this),
-			handleSessionUndo: this.handleSessionUndo.bind(this),
-			handleSessionIterationRequest: this.handleSessionIterationRequest.bind(this),
-		});
-		this.aideAgent.iconPath = vscode.Uri.joinPath(vscode.extensions.getExtension('codestory-ghost.codestoryai')?.extensionUri ?? vscode.Uri.parse(''), 'assets', 'aide-agent.png');
-		this.aideAgent.requester = {
-			name: getUserId(),
-			icon: vscode.Uri.joinPath(vscode.extensions.getExtension('codestory-ghost.codestoryai')?.extensionUri ?? vscode.Uri.parse(''), 'assets', 'aide-user.png')
-		};
 		// our collection of active response streams for exchanges which are still running
 		// apparantaly this also works??? crazy the world of js
 		this.responseStreamCollection = new AideResponseStreamCollection(extensionContext, sidecarClient, this);
-		this.aideAgent.supportIssueReporting = false;
-		this.aideAgent.welcomeMessageProvider = {
-			provideWelcomeMessage: async () => {
-				return [
-					'Hi, I\'m **Aide**, your personal coding assistant! I can find, understand, explain, debug or write code for you.',
-				];
-			}
-		};
 	}
 
 	async sendContextRecording(events: SidecarContextEvent[]) {
@@ -205,19 +184,21 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 	async newExchangeIdForSession(sessionId: string): Promise<{
 		exchange_id: string | undefined;
 	}> {
+		console.log('activeSessionId', sessionId);
 		// TODO(skcd): Figure out when the close the exchange? This is not really
 		// well understood but we should have an explicit way to do that
-		const response = await this.aideAgent.initResponse(sessionId);
-		if (response !== undefined) {
-			console.log('newExchangeCreated', sessionId, response.exchangeId);
-			this.responseStreamCollection.addResponseStream({
-				sessionId,
-				exchangeId: response.exchangeId,
-			}, response);
-		}
-		return {
-			exchange_id: response?.exchangeId,
-		};
+		// const response = await this.aideAgent.initResponse(sessionId);
+		// if (response !== undefined) {
+		// 	console.log('newExchangeCreated', sessionId, response.exchangeId);
+		// 	this.responseStreamCollection.addResponseStream({
+		// 		sessionId,
+		// 		exchangeId: response.exchangeId,
+		// 	}, response);
+		// }
+		// return {
+		// 	exchange_id: response?.exchangeId,
+		// };
+		return { exchange_id: undefined };
 	}
 
 	async provideEditStreamed(request: EditedCodeStreamingRequest): Promise<{
@@ -552,15 +533,7 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 					responseStream.stream.markdown(`${toolUseDetectedEvent.thinking}\n${JSON.stringify(toolUseDetectedEvent.tool_use_partial_input)}`);
 
 				} else if (event.event.FrameworkEvent.ReferencesUsed) {
-					const references = event.event.FrameworkEvent.ReferencesUsed.variables;
-					references.forEach((reference) => {
-						// send to the response stream that we have a bunch of references
-						// to look at
-						responseStream.stream.reference2({
-							variableName: reference.name,
-							value: new vscode.Location(vscode.Uri.file(reference.fs_file_path), new vscode.Range(new vscode.Position(reference.start_position.line, reference.start_position.character), new vscode.Position(reference.end_position.line, reference.end_position.character))),
-						});
-					});
+					// not doing anything right now
 				} else if (event.event.FrameworkEvent.GroupedReferences) {
 					const groupedRefs = event.event.FrameworkEvent.GroupedReferences;
 					const followups: { [key: string]: { symbolName: string; uri: vscode.Uri }[] } = {};
@@ -884,7 +857,7 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 	}
 
 	dispose() {
-		this.aideAgent.dispose();
+		// this.aideAgent.dispose();
 	}
 }
 
