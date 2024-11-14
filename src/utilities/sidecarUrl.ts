@@ -35,18 +35,16 @@ export const shouldUseUnstableToolAgent = (): boolean => {
 	return false;
 }
 
-// zi: this is mocked for sake of iteration. @g-danna will find better way
 export const sidecarUseSelfRun = (): boolean => {
-	return true;
-	// const aideConfiguration = vscode.workspace.getConfiguration('aide');
-	// const sideCarUseSelfRun = aideConfiguration.get('sidecarUseSelfRun');
-	// if (sideCarUseSelfRun === undefined) {
-	// 	return false;
-	// }
-	// if (typeof sideCarUseSelfRun === 'boolean') {
-	// 	return sideCarUseSelfRun;
-	// }
-	// return false;
+	const aideConfiguration = vscode.workspace.getConfiguration('aide');
+	const sideCarUseSelfRun = aideConfiguration.get('sidecarUseSelfRun');
+	if (sideCarUseSelfRun === undefined) {
+		return false;
+	}
+	if (typeof sideCarUseSelfRun === 'boolean') {
+		return sideCarUseSelfRun;
+	}
+	return false;
 };
 
 export const sidecarNotIndexRepository = (): boolean => {
