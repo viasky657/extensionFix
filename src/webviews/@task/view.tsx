@@ -17,7 +17,7 @@ export interface TaskViewProps {
 
 export function TaskView(props: TaskViewProps) {
   const { task, onSubmit } = props;
-  const { exchanges, summary, preset, cost, usage, originalQuery } = task;
+  const { exchanges, preset, cost, usage } = task;
 
   const [summaryShown, setSummaryShown] = React.useState(false);
 
@@ -32,7 +32,7 @@ export function TaskView(props: TaskViewProps) {
             className="px-4 py-2 cursor-pointer hover:bg-[rgba(128,128,128,0.1)] rounded-sm select-none"
             onClick={() => setSummaryShown(!summaryShown)}
           >
-            <h2>{summary}</h2>
+            {/* <h2>{summary}</h2> */}
             <dl className="flex items-baseline">
               <dt className="sr-only">Preset</dt>
               <dd className="text-descriptionForeground mr-auto flex items-center">
@@ -54,7 +54,7 @@ export function TaskView(props: TaskViewProps) {
           <div style={{ display: summaryShown ? 'block' : 'none' }} className="px-4 py-2">
             <TaskDL>
               <TaskDT>Query</TaskDT>
-              <TaskDD>{originalQuery}</TaskDD>
+              {/* <TaskDD>{originalQuery}</TaskDD> */}
               <TaskDT>Preset</TaskDT>
               <TaskDD>{preset.name}</TaskDD>
               {cost && (

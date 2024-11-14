@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
-import { ClientRequest } from "./model";
+import { AppState, ClientRequest, Task, View } from "./model";
 import { getNonce } from "./webviews/utils/nonce";
+import { uniqueId } from "lodash";
 
 export class PanelProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
@@ -13,12 +14,14 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
   private _onDidWebviewBecomeVisible = new vscode.EventEmitter<void>();
   onDidWebviewBecomeVisible = this._onDidWebviewBecomeVisible.event;
+  private _runningTask: Task | undefined;
 
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
     _context: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken
   ) {
+    this._runningTask = undefined;
     this._view = webviewView;
     webviewView.webview.options = {
       enableScripts: true,
@@ -38,6 +41,66 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           break;
       }
     });
+
+    this._runningTask = {
+      sessionId: uniqueId(),
+      context: [],
+      cost: 0,
+      usage: {
+        inputTokens: 0,
+        outputTokens: 0,
+        cacheReads: 0,
+        cacheWrites: 0,
+      },
+      exchanges: [],
+      preset: {
+        provider: "anthropic",
+        model: "claude-3-5-sonnet-20241022",
+        apiKey: "exampleApiKey123",
+        customBaseUrl: "https://api.anthropic.com",
+        permissions: {
+          readData: "ask",
+          writeData: "never",
+        },
+        customInstructions: "Answer as concisely as possible",
+        name: "claude-sonnet-3.5",
+      },
+      responseOnGoing: false,
+    };
+
+    // on initialisation we are able to pipe it
+    this._view.webview.postMessage({
+      command: 'initial-state',
+      initialAppState: {
+        extensionReady: false,
+        view: View.Task,
+        currentTask: this._runningTask,
+        loadedTasks: new Map()
+      }
+    });
+  }
+
+  public addExchangeRequest(sessionId: string, exchangeId: string, request: string) {
+    if (this._runningTask) {
+      this._runningTask.exchanges.push({
+        type: "request",
+        message: request,
+        exchangeId,
+        sessionId,
+        context: [],
+        username: 'testing',
+      });
+
+      this._view?.webview.postMessage({
+        command: 'state-updated',
+        initialAppState: {
+          extensionReady: false,
+          view: View.Task,
+          currentTask: this._runningTask,
+          loadedTasks: new Map()
+        }
+      });
+    }
   }
 
   // informs webview of status updates

@@ -10,6 +10,12 @@ export enum View {
 
 export type ViewType = `${View}`;
 
+interface TaskFeedback {
+  type: 'task-feedback',
+  query: string,
+  sessionId: string,
+}
+
 interface OpenTaskEvent {
   type: "open-task";
   task: Task;
@@ -24,7 +30,17 @@ interface InitEvent {
   type: "init";
 }
 
-export type Event = OpenTaskEvent | TaskResponseEvent | InitEvent;
+interface InitialState {
+  type: 'initial-state';
+  initialAppState: AppState;
+}
+
+interface TaskUpdate {
+  type: 'task-update',
+  currentTask: Task,
+}
+
+export type Event = OpenTaskEvent | TaskResponseEvent | InitEvent | TaskFeedback | InitialState | TaskUpdate;
 
 export type NewSessionRequest = {
   type: "new-request";
@@ -32,7 +48,8 @@ export type NewSessionRequest = {
   exchangeId: string;
 };
 
-export type ClientRequest = NewSessionRequest;
+// For now the client request is also an event which we have over here
+export type ClientRequest = Event;
 
 export type MarkdownResponsePart = {
   type: "markdown";
@@ -61,11 +78,13 @@ interface MessageBase {
 export interface Response extends MessageBase {
   type: "response";
   parts: ResponsePart[];
+  exchangeId: string;
 }
 
 export interface Request extends MessageBase {
   type: "request";
   message: string;
+  exchangeId: string;
 }
 
 export interface Usage {
@@ -77,9 +96,8 @@ export interface Usage {
 
 export interface Task {
   sessionId: string;
-  summary: string;
   preset: Preset;
-  originalQuery: string;
+  responseOnGoing: boolean;
   cost: number;
   usage: Usage; // metric, number of tokens
   context: any[]; // temporary,
@@ -129,4 +147,11 @@ export interface Preset {
   permissions: Permissions;
   customInstructions: string;
   name: string;
+}
+
+export interface AppState {
+  extensionReady: boolean;
+  view: ViewType;
+  currentTask: Task;
+  loadedTasks: Map<string, Task>;
 }

@@ -1,7 +1,7 @@
 import * as React from "react";
-import { Event, ViewType, Task, View } from "../model";
+import { Event, ViewType, Task, View, AppState } from "../model";
 import { TaskView } from "@task/view";
-import { mockTask } from "mock/task";
+import { uniqueId } from "lodash";
 
 interface vscode {
   postMessage(message: Event): void;
@@ -9,37 +9,35 @@ interface vscode {
 
 declare const vscode: vscode;
 
-function onMessage(event: React.FormEvent<HTMLFormElement>) {
+function onMessage(event: React.FormEvent<HTMLFormElement>, sessionId: string | undefined) {
   event.preventDefault();
   const form = event.currentTarget;
   const data = new FormData(form);
   const query = data.get("query");
+  if (sessionId === undefined) {
+    return;
+  }
   if (query && typeof query === "string") {
-    vscode.postMessage({ type: "init" });
+    vscode.postMessage({
+      type: 'task-feedback',
+      query,
+      sessionId,
+    });
   }
 }
 
-// Move this somewhere else
-interface State {
-  extensionReady: boolean;
-  view: ViewType;
-  currentTask?: Task;
-  loadedTasks: Map<string, Task>;
-}
 
-const mockLoadedTasks = new Map();
-mockLoadedTasks.set(mockTask.sessionId, mockTask);
-
-const initialState: State = {
-  extensionReady: false,
-  view: View.Task,
-  currentTask: mockTask,
-  loadedTasks: mockLoadedTasks, // new Map(),
-};
-
-function reducer(state: State, action: Event) {
+function reducer(state: AppState, action: Event) {
   const newState = structuredClone(state);
 
+  if (action.type === 'initial-state') {
+    newState.currentTask = action.initialAppState.currentTask;
+    return newState;
+  }
+  if (action.type === 'task-update') {
+    newState.currentTask = action.currentTask;
+    return newState;
+  }
   if (action.type === "init") {
     newState.extensionReady = true;
   } else if (action.type === "open-task") {
@@ -52,6 +50,37 @@ function reducer(state: State, action: Event) {
   }
   return newState;
 }
+
+export const initialState: AppState = {
+  extensionReady: false,
+  view: View.Task,
+  currentTask: {
+    sessionId: uniqueId(),
+    context: [],
+    cost: 0,
+    usage: {
+      inputTokens: 0,
+      outputTokens: 0,
+      cacheReads: 0,
+      cacheWrites: 0,
+    },
+    exchanges: [],
+    preset: {
+      provider: "anthropic",
+      model: "claude-3-5-sonnet-20241022",
+      apiKey: "exampleApiKey123",
+      customBaseUrl: "https://api.anthropic.com",
+      permissions: {
+        readData: "ask",
+        writeData: "never",
+      },
+      customInstructions: "Answer as concisely as possible",
+      name: "claude-sonnet-3.5",
+    },
+    responseOnGoing: false,
+  },
+  loadedTasks: new Map()
+};
 
 const App = () => {
   const [state, dispatch] = React.useReducer(reducer, initialState);
@@ -83,6 +112,34 @@ const App = () => {
     return () => window.removeEventListener('message', messageHandler);
   }, []);
 
+
+  // piping the current state from the bridge
+  React.useEffect(() => {
+    // handles messages from the extension
+    const messageHandler = (event: MessageEvent) => {
+      const message = event.data;
+
+      // Only PanelProvider sends updateState messages
+      if (message.command === 'initial-state') {
+        dispatch({
+          initialAppState: message.initialAppState,
+          type: 'initial-state',
+        });
+      }
+
+      if (message.command === 'state-updated') {
+        dispatch({
+          type: 'task-update',
+          currentTask: message.initialAppState.currentTask,
+        });
+      }
+    };
+
+    // listen for messages
+    window.addEventListener('message', messageHandler);
+    return () => window.removeEventListener('message', messageHandler);
+  }, []);
+
   // loading spinner
   if (!isSidecarReady) {
     return (
@@ -102,13 +159,10 @@ const App = () => {
   );
 }
 
-function renderView(state: State) {
+function renderView(state: AppState) {
   switch (state.view) {
     case "task":
-      if (!state.currentTask) {
-        return "Error"; // Implement better fallback
-      }
-      return <TaskView task={state.currentTask} onSubmit={onMessage} />;
+      return <TaskView task={state.currentTask} onSubmit={(event) => onMessage(event, state.currentTask?.sessionId)} />;
     default:
       return "View not implemented";
   }
