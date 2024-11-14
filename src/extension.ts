@@ -2,11 +2,11 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import { PanelProvider } from "./PanelProvider";
-import { RepoRef, RepoRefBackend, SideCarClient } from "./sidecar/client";
+import { SideCarClient } from "./sidecar/client";
 import { startSidecarBinary } from "./utilities/setupSidecarBinary";
-import { AideAgentSessionProvider } from "./completions/providers/aideAgentProvider";
-import { ProjectContext } from "./utilities/workspaceContext";
-import { RecentEditsRetriever } from "./server/editedFiles";
+// import { AideAgentSessionProvider } from "./completions/providers/aideAgentProvider";
+// import { ProjectContext } from "./utilities/workspaceContext";
+// import { RecentEditsRetriever } from "./server/editedFiles";
 
 export let SIDECAR_CLIENT: SideCarClient | null = null;
 
@@ -22,7 +22,7 @@ export async function activate(context: vscode.ExtensionContext) {
   console.log("Sidecar health check", healthCheck);
 
   const panelProvider = new PanelProvider(context.extensionUri);
-
+  /*
   let rootPath = vscode.workspace.rootPath;
   if (!rootPath) {
     rootPath = "";
@@ -57,13 +57,11 @@ export async function activate(context: vscode.ExtensionContext) {
   );
   const editorUrl = agentSessionProvider.editorUrl;
   context.subscriptions.push(agentSessionProvider);
+  */
 
   context.subscriptions.push(
     panelProvider.onMessageFromWebview(async (message) => {
       if (message.type === "new-request") {
-        if (!editorUrl) {
-          return;
-        }
 
         //const { query, exchangeId } = message;
         //const sessionId = randomUUID();
