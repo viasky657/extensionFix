@@ -99,11 +99,14 @@ enum Provider {
   Ollama = "ollama",
 }
 
-type AnthropicModels =
-  | "claude-3-5-sonnet-20241022"
-  | "claude-3-5-haiku-20241022"
-  | "claude-3-opus-20241022"
-  | "claude-3-haiku-20241022";
+const ANTHROPIC_MODELS = [
+  "claude-3-5-sonnet-20241022",
+  "claude-3-5-haiku-20241022",
+  "claude-3-opus-20241022",
+  "claude-3-haiku-20241022",
+] as const;
+
+type AnthropicModels = typeof ANTHROPIC_MODELS[number];
 
 type Model = AnthropicModels;
 
