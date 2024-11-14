@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Definition, LocationLink, Position, TextDocument, languages, workspace, Location, Uri } from 'vscode';
+import { Definition, LocationLink, Position, workspace, Location, Uri } from 'vscode';
 const Parser = require('web-tree-sitter');
 import { v4 as uuidV4 } from 'uuid';
 import * as path from 'path';
@@ -112,45 +112,6 @@ export const definitionInformation = (
 };
 
 
-export const getGoToDefinition = async (
-	textDocument: TextDocument,
-	lineNumber: number,
-	columnNumber: number,
-	currentCodeSymbol: string,
-	dependencyStrings: string[],
-): Promise<{
-	fsFilePath: string;
-	startPosition: Position;
-} | null> => {
-	const referencesProviders = languages.getDefinitionProvider({
-		language: 'typescript',
-		scheme: 'file',
-	});
-	for (let index = 0; index < referencesProviders.length; index++) {
-		try {
-			logger.info('[getGoToDefinition] ' + currentCodeSymbol + ' ' + lineNumber + ' ' + columnNumber + ' ' + dependencyStrings);
-			const definitions = await referencesProviders[index].provideDefinition(
-				textDocument,
-				new Position(lineNumber, columnNumber),
-				{
-					isCancellationRequested: false,
-					onCancellationRequested: () => ({ dispose() { } }),
-				}
-			);
-			logger.info('[getGoToDefinition] definitions ' + JSON.stringify(definitions));
-			if (definitions) {
-				return definitionInformation(definitions);
-			}
-		} catch (e) {
-			logger.info('[getGoToDefinition] error ' + textDocument.lineAt(lineNumber));
-			logger.info('[getGoToDefinition] file line content: ' + textDocument.lineAt(lineNumber).text);
-			logger.info('[getGoToDefinition] error for symbol: ' + currentCodeSymbol + ' ' + lineNumber + ' ' + columnNumber + ' ' + dependencyStrings);
-			logger.error(e);
-		}
-	}
-	return null;
-};
-
 // We are just parsing identifier and field identifier types here
 export const parseGoCodeTreeSitter = async (code: string): Promise<GoParserNodeInformation[]> => {
 	await setGoParser();
@@ -201,14 +162,11 @@ export class GoLangParser extends CodeSymbolsIndexer {
 	}
 
 	async fixDependenciesForCodeSymbols(filePath: string): Promise<void> {
-		const textDocument = await workspace.openTextDocument(filePath);
 		const codeSymbolNodes = this._fileToCodeSymbols.get(filePath) ?? [];
 		const newCodeSymbols: CodeSymbolInformation[] = [];
 		for (let index = 0; index < codeSymbolNodes.length; index++) {
 			const currentCodeSymbol = codeSymbolNodes[index];
 			logger.info('[fixDependenciesForCodeSymbols] fixing dependencies: ' + currentCodeSymbol.symbolName);
-			const startLineCodeSymbolStart = currentCodeSymbol.symbolStartLine;
-			const endLineCodeSymbolStart = currentCodeSymbol.symbolEndLine;
 			const codeSnippet = currentCodeSymbol.codeSnippet.code;
 			const dependentNodes = await parseGoCodeTreeSitter(codeSnippet);
 			// Lets fix the position here by first counting the number of tabs at
@@ -222,41 +180,7 @@ export class GoLangParser extends CodeSymbolsIndexer {
 					// const endColumn = dependency.endColumn;
 					// Go to definition now
 					try {
-						const definition = await getGoToDefinition(textDocument, startLine, startColumn, currentCodeSymbol.symbolName, dependency.text);
-						logger.info('[fixDependenciesForCodeSymbols] definition: ' + currentCodeSymbol.symbolName + ' ' + startLine + ' ' + startColumn + ' ' + JSON.stringify(definition));
-						let codeSymbolForDefinition: CodeSymbolInformation | null = null;
-						if (definition === null) {
-							continue;
-						}
-						if (definition.fsFilePath === filePath) {
-							if (definition.startPosition.line >= startLineCodeSymbolStart && definition.startPosition.line <= endLineCodeSymbolStart) {
-								// We are in the same function block, so no need to regard this as a dependency
-							} else {
-								// Find the symbol in the filePath whose line start matches up
-								codeSymbolForDefinition = await this.getSymbolAtLineNumber(
-									definition.fsFilePath,
-									definition.startPosition.line,
-								);
-							}
-						} else {
-							codeSymbolForDefinition = await this.getSymbolAtLineNumber(
-								definition.fsFilePath,
-								definition.startPosition.line,
-							);
-						}
-						if (codeSymbolForDefinition) {
-							logger.info('[fixDependenciesForCodeSymbols] found dependency: ' + currentCodeSymbol.symbolName + ' ' + codeSymbolForDefinition.symbolName);
-							currentCodeSymbol.dependencies.push({
-								codeSymbolName: codeSymbolForDefinition.symbolName,
-								codeSymbolKind: codeSymbolForDefinition.symbolKind,
-								edges: [{
-									filePath: definition.fsFilePath,
-									codeSymbolName: codeSymbolForDefinition.symbolName,
-								}],
-							});
-						} else {
-							logger.info('[fixDependenciesForCodeSymbols] could not find dependency: ' + currentCodeSymbol.symbolName + ' ' + startLine + ' ' + startColumn + ' ' + JSON.stringify(definition));
-						}
+
 					} catch (e) {
 						logger.info('[fixDependenciesForCodeSymbols] error');
 						logger.info(currentCodeSymbol.symbolName + ' ' + startLine + ' ' + startColumn);
@@ -277,7 +201,6 @@ export class GoLangParser extends CodeSymbolsIndexer {
 		// We don't want to store the results from parsing in the cache at all
 		const codeSymbols = await this.parseFileWithoutDependency(filePath, workingDirectory, false);
 		this._fileToCodeSymbols.set(filePath, codeSymbols);
-		await this.fixDependenciesForCodeSymbols(filePath);
 		return this._fileToCodeSymbols.get(filePath) ?? [];
 	}
 

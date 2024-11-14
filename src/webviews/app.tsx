@@ -15,7 +15,7 @@ function onMessage(event: React.FormEvent<HTMLFormElement>) {
   const data = new FormData(form);
   const query = data.get("query");
   if (query && typeof query === "string") {
-    vscode.postMessage({ type: "new-request", query });
+    vscode.postMessage({ type: "init" });
   }
 }
 
