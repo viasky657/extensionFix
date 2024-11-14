@@ -3,7 +3,7 @@ import * as React from "react";
 import { convertPropsToRegularHTMLAttributes } from "./convert-props";
 
 export interface VSCodeSingleSelectProps
-  extends React.DetailedHTMLProps<React.HTMLAttributes<HTMLSelectElement>, HTMLSelectElement>
+  extends React.DetailedHTMLProps<React.SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>
    {}
 
 export function VSCodeSingleSelect(props: VSCodeSingleSelectProps) {

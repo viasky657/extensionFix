@@ -3,7 +3,7 @@ import * as React from "react";
 import { convertPropsToRegularHTMLAttributes } from "./convert-props";
 
 export interface VSCodeLabelProps
-  extends React.DetailedHTMLProps<React.HTMLAttributes<HTMLLabelElement>, HTMLLabelElement>
+  extends React.DetailedHTMLProps<React.LabelHTMLAttributes<HTMLLabelElement>, HTMLLabelElement>
    {}
 
 export function VSCodeLabel(props: VSCodeLabelProps) {

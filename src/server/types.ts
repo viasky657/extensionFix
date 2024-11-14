@@ -119,7 +119,7 @@ interface ToolUseDetectedEvent {
 	thinking: string;
 };
 
-type ToolInputPartial = {
+export type ToolInputPartial = {
 	CodeEditing: CodeEditingPartialRequest;
 	ListFiles: ListFilesInput;
 	SearchFileContentWithRegex: SearchFileContentInputPartial;

@@ -125,7 +125,7 @@ type AnthropicModels = typeof ANTHROPIC_MODELS[number];
 
 type Model = AnthropicModels;
 
-enum PermissionState {
+export enum PermissionState {
   Always = "always",
   Ask = "ask",
   Never = "never",
