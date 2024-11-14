@@ -1666,7 +1666,7 @@ export async function convertVSCodeVariableToSidecarHackingForPlan(
 				}
 			}
 			sidecarVariables.push({
-				name: v.name,
+				name: v.id,
 				start_position: {
 					line: range.start.line,
 					character: range.start.character,
@@ -1689,7 +1689,7 @@ export async function convertVSCodeVariableToSidecarHackingForPlan(
 			const range = value.range;
 			const type: SidecarVariableType = 'CodeSymbol';
 			sidecarVariables.push({
-				name: v.name,
+				name: v.id,
 				start_position: {
 					line: range.start.line,
 					character: range.start.character,
@@ -1712,7 +1712,7 @@ export async function convertVSCodeVariableToSidecarHackingForPlan(
 
 	let isPlanGeneration = false;
 	for (const variable of variables) {
-		const variableName = variable.name;
+		const variableName = variable.id;
 		const name = variableName.split(':')[0];
 		if (name === 'generatePlan') {
 			isPlanGeneration = true;
@@ -1721,7 +1721,7 @@ export async function convertVSCodeVariableToSidecarHackingForPlan(
 
 	let isPlanExecutionUntil = null;
 	for (const variable of variables) {
-		const variableName = variable.name;
+		const variableName = variable.id;
 		const name = variableName.split(':')[0];
 		if (name === 'EXECUTE_UNTIL') {
 			const queryParts = query.split(' ');
@@ -1734,7 +1734,7 @@ export async function convertVSCodeVariableToSidecarHackingForPlan(
 
 	let isPlanAppend = false;
 	for (const variable of variables) {
-		const variableName = variable.name;
+		const variableName = variable.id;
 		const name = variableName.split(':')[0];
 		if (name === 'APPEND_TO_PLAN') {
 			isPlanAppend = true;
@@ -1743,7 +1743,7 @@ export async function convertVSCodeVariableToSidecarHackingForPlan(
 
 	let enrichLSP = false;
 	for (const variable of variables) {
-		const variableName = variable.name;
+		const variableName = variable.id;
 		const name = variableName.split(':')[0];
 		if (name === 'enrichLSP') {
 			console.log('LSP will be enriched');
@@ -1753,7 +1753,7 @@ export async function convertVSCodeVariableToSidecarHackingForPlan(
 
 	let isPlanDropFrom = null;
 	for (const variable of variables) {
-		const variableName = variable.name;
+		const variableName = variable.id;
 		const name = variableName.split(':')[0];
 		if (name === 'DROP_PLAN_STEP_FROM') {
 			const queryParts = query.split(' ');
@@ -1815,7 +1815,7 @@ async function convertVSCodeVariableToSidecar(
 				type = 'Selection';
 			}
 			sidecarVariables.push({
-				name: v.name,
+				name: v.id,
 				start_position: {
 					line: range.start.line,
 					character: range.start.character,
@@ -1838,7 +1838,7 @@ async function convertVSCodeVariableToSidecar(
 			const range = value.range;
 			const type: SidecarVariableType = 'CodeSymbol';
 			sidecarVariables.push({
-				name: v.name,
+				name: v.id,
 				start_position: {
 					line: range.start.line,
 					character: range.start.character,
@@ -1861,7 +1861,7 @@ async function convertVSCodeVariableToSidecar(
 
 	let isPlanGeneration = false;
 	for (const variable of variables) {
-		const variableName = variable.name;
+		const variableName = variable.id;
 		const name = variableName.split(':')[0];
 		if (name === 'generatePlan') {
 			isPlanGeneration = true;
@@ -1870,7 +1870,7 @@ async function convertVSCodeVariableToSidecar(
 
 	let isIncludeLSP = false;
 	for (const variable of variables) {
-		const variableName = variable.name;
+		const variableName = variable.id;
 		const name = variableName.split(':')[0];
 		if (name === 'LSP') {
 			isIncludeLSP = true;
@@ -1947,7 +1947,7 @@ async function newConvertVSCodeVariableToSidecar(
 				}
 			}
 			sidecarVariables.push({
-				name: v.name,
+				name: v.id,
 				start_position: {
 					line: range.start.line,
 					character: range.start.character,
@@ -1970,7 +1970,7 @@ async function newConvertVSCodeVariableToSidecar(
 			const range = value.range;
 			const type: SidecarVariableType = 'CodeSymbol';
 			sidecarVariables.push({
-				name: v.name,
+				name: v.id,
 				start_position: {
 					line: range.start.line,
 					character: range.start.character,
