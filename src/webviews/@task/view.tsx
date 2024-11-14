@@ -17,6 +17,16 @@ export interface TaskViewProps {
 
 export function TaskView(props: TaskViewProps) {
   const { task, onSubmit } = props;
+
+  const formRef = React.useRef<HTMLFormElement>(null);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      formRef.current?.requestSubmit();
+    }
+  };
+
   const { exchanges, preset, cost, usage } = task;
 
   const [summaryShown, setSummaryShown] = React.useState(false);
@@ -89,8 +99,12 @@ export function TaskView(props: TaskViewProps) {
             </ol>
           )}
         </section>
-        <form onSubmit={onSubmit}>
-          <VSCodeTextArea className="w-full" name="query" />
+        <form onSubmit={onSubmit} ref={formRef}>
+          <VSCodeTextArea
+            className="w-full"
+            name="query"
+            onKeyDown={handleKeyDown}
+          />
           <VSCodeButton type="submit">Send</VSCodeButton>
         </form>
       </div>
