@@ -24,15 +24,15 @@ interface InitEvent {
   type: "init";
 }
 
-export type Event = OpenTaskEvent | TaskResponseEvent | InitEvent;
+export type Event = OpenTaskEvent | TaskResponseEvent | InitEvent | NewSessionEvent;
 
-export type NewSessionRequest = {
+export type NewSessionEvent = {
   type: "new-request";
   query: string;
   exchangeId: string;
 };
 
-export type ClientRequest = NewSessionRequest;
+export type ClientRequest = NewSessionEvent;
 
 export type MarkdownResponsePart = {
   type: "markdown";
