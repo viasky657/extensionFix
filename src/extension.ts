@@ -96,8 +96,8 @@ export async function activate(context: vscode.ExtensionContext) {
         const exchangeId = uniqueId();
         panelProvider.addExchangeRequest(sessionId, exchangeId, query);
 
-        // - ping the sidecar over here
-        const stream = SIDECAR_CLIENT!.agentSessionPlanStep(query, sessionId, exchangeId, agentSessionProvider.editorUrl!, AideAgentMode.Chat, [], currentRepo, projectContext.labels, false, '');
+        // - ping the sidecar over here. currentRepo can be undefined, which will 422 sidecar
+        const stream = SIDECAR_CLIENT!.agentSessionChat(query, sessionId, exchangeId, agentSessionProvider.editorUrl!, AideAgentMode.Chat, [], currentRepo ?? "", projectContext.labels, '');
         // - have a respose somewhere and the chat model would update
         agentSessionProvider.reportAgentEventsToChat(true, stream);
         // and the model will have a on did change
