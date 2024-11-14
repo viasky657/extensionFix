@@ -2,6 +2,7 @@ const esbuild = require("esbuild");
 const tailwindcss = require("tailwindcss");
 const autoprefixer = require("autoprefixer");
 const stylePlugin = require("esbuild-style-plugin");
+const svgr = require('esbuild-plugin-svgr');
 
 const production = process.argv.includes("--production");
 const watch = process.argv.includes("--watch");
@@ -71,9 +72,13 @@ async function webview() {
           plugins: [tailwindcss, autoprefixer],
         },
       }),
+      svgr(),
       /* add to the end of plugins array */
       esbuildProblemMatcherPlugin,
     ],
+    loader: {
+      ".svg": "file",
+    },
   });
   if (watch) {
     await ctx.watch();

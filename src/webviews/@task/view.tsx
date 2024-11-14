@@ -1,12 +1,14 @@
 import * as React from "react";
-import { ObjectEntry } from "../utils/types";
-import { Exchange, Task, Usage } from "../../model";
-import { ResponseViewItem } from "components/exchange/response";
-import { RequestViewItem } from "components/exchange/request";
-import { TaskDL, TaskDT, TaskDD } from "components/task-definition-list";
-import { VSCodeTextArea } from "vscode-elements/textarea";
-import { VSCodeButton } from "vscode-elements/button";
 import { VSCodeBadge } from "vscode-elements/badge";
+import { VSCodeButton } from "vscode-elements/button";
+import { VSCodeTextArea } from "vscode-elements/textarea";
+
+import { RequestViewItem } from "components/exchange/request";
+import { ResponseViewItem } from "components/exchange/response";
+import { TaskDD, TaskDL, TaskDT } from "components/task-definition-list";
+import { Exchange, Task, Usage } from "../../model";
+import ClaudeLogo from "../assets/claude.svg";
+import { ObjectEntry } from "../utils/types";
 
 export interface TaskViewProps {
   task: Task;
@@ -28,8 +30,11 @@ export function TaskView(props: TaskViewProps) {
             <h2>{summary}</h2>
             <dl className="flex items-baseline">
               <dt className="sr-only">Preset</dt>
-              <dd className="text-descriptionForeground mr-auto">
-                {preset.name}
+              <dd className="text-descriptionForeground mr-auto flex items-center">
+                <ClaudeLogo width={12} height={12} className="mr-1" />
+                <span className="whitespace-nowrap">
+                  {preset.name}
+                </span>
               </dd>
               {cost && (
                 <React.Fragment>
