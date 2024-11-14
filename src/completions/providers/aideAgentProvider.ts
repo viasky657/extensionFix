@@ -19,6 +19,7 @@ import { ProjectContext } from '../../utilities/workspaceContext';
 import postHogClient from '../../posthog/client';
 import { AideAgentEventSenderResponse, AideAgentMode, AideAgentPromptReference, AideAgentRequest, AideAgentResponseStream, AideAgentScope, AideSessionExchangeUserAction, AideSessionParticipant } from '../../types';
 import { SIDECAR_CLIENT } from '../../extension';
+import { PanelProvider } from '../../PanelProvider';
 
 /**
  * Stores the necessary identifiers required for identifying a response stream
@@ -73,6 +74,7 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 	private openResponseStream: AideAgentResponseStream | undefined;
 	private processingEvents: Map<string, boolean> = new Map();
 	private responseStreamCollection: AideResponseStreamCollection;
+	private panelProvider: PanelProvider;
 	// private sessionId: string | undefined;
 	// this is a hack to test the theory that we can keep snapshots and make
 	// that work
@@ -116,7 +118,9 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 		private projectContext: ProjectContext,
 		recentEditsRetriever: RecentEditsRetriever,
 		extensionContext: vscode.ExtensionContext,
+		panelProvider: PanelProvider,
 	) {
+		this.panelProvider = panelProvider;
 		this.requestHandler = http.createServer(
 			handleRequest(
 				this.provideEdit.bind(this),
@@ -179,7 +183,7 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 	async newExchangeIdForSession(sessionId: string): Promise<{
 		exchange_id: string | undefined;
 	}> {
-		console.log('activeSessionId', sessionId);
+		const exchangeId = this.panelProvider.createNewExchangeResponse(sessionId);
 		// TODO(skcd): Figure out when the close the exchange? This is not really
 		// well understood but we should have an explicit way to do that
 		// const response = await this.aideAgent.initResponse(sessionId);
@@ -193,7 +197,7 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 		// return {
 		// 	exchange_id: response?.exchangeId,
 		// };
-		return { exchange_id: undefined };
+		return { exchange_id: exchangeId };
 	}
 
 	async provideEditStreamed(request: EditedCodeStreamingRequest): Promise<{
@@ -368,9 +372,6 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 		}
 	}
 
-	handleUserWebViewMessage(sessionId: string, exchangeId: string, message: string): void {
-	}
-
 	handleEvent(event: AideAgentRequest): void {
 		this.eventQueue.push(event);
 		const uniqueId = `${event.sessionId}-${event.exchangeId}`;
@@ -457,7 +458,7 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 	 * We might be streaming back chat events or something else on the exchange we are
 	 * interested in, so we want to close the stream when we want to
 	 */
-	async reportAgentEventsToChat(
+	public async reportAgentEventsToChat(
 		editMode: boolean,
 		stream: AsyncIterableIterator<SideCarAgentEvent>,
 	): Promise<void> {
@@ -480,377 +481,384 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 			if ('done' in event) {
 				continue;
 			}
-			const sessionId = event.request_id;
-			const exchangeId = event.exchange_id;
-			const responseStream = this.responseStreamCollection.getResponseStream({
-				sessionId,
-				exchangeId,
-			});
-			if (responseStream === undefined) {
-				continue;
-			}
+			// const sessionId = event.request_id;
+			// const exchangeId = event.exchange_id;
 
-			if (event.event.FrameworkEvent) {
-				if (event.event.FrameworkEvent.InitialSearchSymbols) {
-					// const initialSearchSymbolInformation = event.event.FrameworkEvent.InitialSearchSymbols.symbols.map((item) => {
-					// 	return {
-					// 		symbolName: item.symbol_name,
-					// 		uri: vscode.Uri.file(item.fs_file_path),
-					// 		isNew: item.is_new,
-					// 		thinking: item.thinking,
-					// 	};
-					// });
-					// response.initialSearchSymbols(initialSearchSymbolInformation);
-				} else if (event.event.FrameworkEvent.RepoMapGenerationStart) {
-					// response.repoMapGeneration(false);
-				} else if (event.event.FrameworkEvent.RepoMapGenerationFinished) {
-					// response.repoMapGeneration(true);
-				} else if (event.event.FrameworkEvent.LongContextSearchStart) {
-					// response.longContextSearch(false);
-				} else if (event.event.FrameworkEvent.LongContextSearchFinished) {
-					// response.longContextSearch(true);
-				} else if (event.event.FrameworkEvent.OpenFile) {
-					// const filePath = event.event.FrameworkEvent.OpenFile.fs_file_path;
-					// if (filePath) {
-					// 	response.reference(vscode.Uri.file(filePath));
-					// }
-				} else if (event.event.FrameworkEvent.CodeIterationFinished) {
-					// response.codeIterationFinished({ edits: iterationEdits });
-				} else if (event.event.FrameworkEvent.ReferenceFound) {
-					// response.referenceFound({ references: event.event.FrameworkEvent.ReferenceFound });
-				} else if (event.event.FrameworkEvent.RelevantReference) {
-					// const ref = event.event.FrameworkEvent.RelevantReference;
-					// response.relevantReference({
-					// 	uri: vscode.Uri.file(ref.fs_file_path),
-					// 	symbolName: ref.symbol_name,
-					// 	reason: ref.reason,
-					// });
-				} else if (event.event.FrameworkEvent.ToolUseDetected) {
-					const toolUseDetectedEvent = event.event.FrameworkEvent.ToolUseDetected;
-					// just send this over as markdown right now for checking if things are working
-					responseStream.stream.markdown(`${toolUseDetectedEvent.thinking}\n${JSON.stringify(toolUseDetectedEvent.tool_use_partial_input)}`);
-
-				} else if (event.event.FrameworkEvent.ReferencesUsed) {
-					// not doing anything right now
-				} else if (event.event.FrameworkEvent.GroupedReferences) {
-					const groupedRefs = event.event.FrameworkEvent.GroupedReferences;
-					const followups: { [key: string]: { symbolName: string; uri: vscode.Uri }[] } = {};
-					for (const [reason, references] of Object.entries(groupedRefs)) {
-						followups[reason] = references.map((ref) => {
-							return {
-								symbolName: ref.symbol_name,
-								uri: vscode.Uri.file(ref.fs_file_path),
-							};
-						});
-					}
-					// response.followups(followups);
-				} else if (event.event.FrameworkEvent.SearchIteration) {
-					// console.log(event.event.FrameworkEvent.SearchIteration);
-				} else if (event.event.FrameworkEvent.AgenticTopLevelThinking) {
-					// TODO(skcd): The agent thinking event is over here, not streamed
-					// but it can get the job done
-					console.log(event.event.FrameworkEvent.AgenticTopLevelThinking);
-				} else if (event.event.FrameworkEvent.AgenticSymbolLevelThinking) {
-					// TODO(skcd): The agent symbol level thinking is here, not streamed
-					// but we can hook into it for information and context
-					console.log(event.event.FrameworkEvent.AgenticSymbolLevelThinking);
-				}
-			} else if (event.event.SymbolEvent) {
-				const symbolEvent = event.event.SymbolEvent.event;
-				const symbolEventKeys = Object.keys(symbolEvent);
-				if (symbolEventKeys.length === 0) {
-					continue;
-				}
-				const symbolEventKey = symbolEventKeys[0] as keyof typeof symbolEvent;
-				// If this is a symbol event then we have to make sure that we are getting the probe request over here
-				if (!editMode && symbolEventKey === 'Probe' && symbolEvent.Probe !== undefined) {
-					// response.breakdown({
-					// 	reference: {
-					// 		uri: vscode.Uri.file(symbolEvent.Probe.symbol_identifier.fs_file_path ?? 'symbol_not_found'),
-					// 		name: symbolEvent.Probe.symbol_identifier.symbol_name,
-					// 	},
-					// 	query: new vscode.MarkdownString(symbolEvent.Probe.probe_request)
-					// });
-				}
-			} else if (event.event.SymbolEventSubStep) {
-				const { symbol_identifier, event: symbolEventSubStep } = event.event.SymbolEventSubStep;
-
-				if (symbolEventSubStep.GoToDefinition) {
-					if (!symbol_identifier.fs_file_path) {
-						continue;
-					}
-					// const goToDefinition = symbolEventSubStep.GoToDefinition;
-					// const uri = vscode.Uri.file(goToDefinition.fs_file_path);
-					// const startPosition = new vscode.Position(goToDefinition.range.startPosition.line, goToDefinition.range.startPosition.character);
-					// const endPosition = new vscode.Position(goToDefinition.range.endPosition.line, goToDefinition.range.endPosition.character);
-					// const _range = new vscode.Range(startPosition, endPosition);
-					// response.location({ uri, range, name: symbol_identifier.symbol_name, thinking: goToDefinition.thinking });
-					continue;
-				} else if (symbolEventSubStep.Edit) {
-					if (!symbol_identifier.fs_file_path) {
-						continue;
-					}
-					const editEvent = symbolEventSubStep.Edit;
-
-					// UX handle for code correction tool usage - consider using
-					if (editEvent.CodeCorrectionTool) { }
-
-					// TODO(skcd): We have to show this properly over here since
-					// even with the search and replace blocks we do want to show it
-					// to the user
-					if (editEvent.ThinkingForEdit.delta) {
-						responseStream.stream.thinkingForEdit({
-							exchangeId,
-							sessionId,
-							thinkingDelta: editEvent.ThinkingForEdit.delta
-						});
-					}
-					if (editEvent.RangeSelectionForEdit) {
-						// response.breakdown({
-						// 	reference: {
-						// 		uri: vscode.Uri.file(symbol_identifier.fs_file_path),
-						// 		name: symbol_identifier.symbol_name,
-						// 	}
-						// });
-					} else if (editEvent.EditCodeStreaming) {
-						// scraped out over here, we do not need to react to this
-						// event anymore
-					}
-				} else if (symbolEventSubStep.Probe) {
-					if (!symbol_identifier.fs_file_path) {
-						continue;
-					}
-					const probeSubStep = symbolEventSubStep.Probe;
-					const probeRequestKeys = Object.keys(probeSubStep) as (keyof typeof symbolEventSubStep.Probe)[];
-					if (!symbol_identifier.fs_file_path || probeRequestKeys.length === 0) {
-						continue;
-					}
-
-					const subStepType = probeRequestKeys[0];
-					if (!editMode && subStepType === 'ProbeAnswer' && probeSubStep.ProbeAnswer !== undefined) {
-						// const probeAnswer = probeSubStep.ProbeAnswer;
-						// response.breakdown({
-						// 	reference: {
-						// 		uri: vscode.Uri.file(symbol_identifier.fs_file_path),
-						// 		name: symbol_identifier.symbol_name
-						// 	},
-						// 	response: new vscode.MarkdownString(probeAnswer)
-						// });
-					}
-				}
-			} else if (event.event.RequestEvent) {
-				// const { ProbeFinished } = event.event.RequestEvent;
-				// if (!ProbeFinished) {
-				// 	continue;
-				// }
-
-				// const { reply } = ProbeFinished;
-				// if (reply === null) {
-				// 	continue;
-				// }
-
-				// // The sidecar currently sends '<symbolName> at <fileName>' at the start of the response. Remove it.
-				// const match = reply.match(pattern);
-				// if (match) {
-				// 	const suffix = match[2].trim();
-				// 	response.markdown(suffix);
-				// } else {
-				// 	response.markdown(reply);
-				// }
-
-				// break;
-			} else if (event.event.EditRequestFinished) {
-				// break;
-			} else if (event.event.ChatEvent) {
+			if (event.event.ChatEvent) {
 				// responses to the chat
 				const sessionId = event.request_id;
 				const exchangeId = event.exchange_id;
-				const responseStream = this.responseStreamCollection.getResponseStream({ sessionId, exchangeId });
-				if (responseStream === undefined) {
-					console.log('responseStreamNotFound::ChatEvent', exchangeId, sessionId);
-				}
-
-				const { delta } = event.event.ChatEvent;
-
-				if (delta !== null) {
-					responseStream?.stream.markdown(delta);
-				}
-			} else if (event.event.PlanEvent) {
-				const sessionId = event.request_id;
-				const exchangeId = event.exchange_id;
-				const responseStream = this.responseStreamCollection.getResponseStream({
-					sessionId, exchangeId,
-				});
-				// we also have a plan step description updated event which we are going
-				// to handle on the review panel
-				if (event.event.PlanEvent.PlanStepTitleAdded) {
-					// we still want to send the planInfo over here (we should check
-					// why the rendering is so slow for this... weird reason)
-					responseStream?.stream.planInfo({
-						exchangeId,
-						sessionId,
-						isStale: false,
-						state: 'Started',
-						description: event.event.PlanEvent.PlanStepTitleAdded.title,
-					});
-					responseStream?.stream.step({
-						description: '',
-						index: event.event.PlanEvent.PlanStepTitleAdded.index,
-						sessionId,
-						exchangeId: event.event.PlanEvent.PlanStepTitleAdded.exchange_id,
-						isLast: false,
-						title: event.event.PlanEvent.PlanStepTitleAdded.title,
-						descriptionDelta: null,
-						files: event.event.PlanEvent.PlanStepTitleAdded.files_to_edit.map((file) => vscode.Uri.file(file)),
-					});
-				}
-				if (event.event.PlanEvent.PlanStepDescriptionUpdate) {
-					responseStream?.stream.step({
-						description: event.event.PlanEvent.PlanStepDescriptionUpdate.description_up_until_now,
-						index: event.event.PlanEvent.PlanStepDescriptionUpdate.index,
-						sessionId,
-						exchangeId: event.event.PlanEvent.PlanStepDescriptionUpdate.exchange_id,
-						isLast: false,
-						title: '',
-						descriptionDelta: `\n${event.event.PlanEvent.PlanStepDescriptionUpdate.delta}`,
-						files: event.event.PlanEvent.PlanStepDescriptionUpdate.files_to_edit.map((file) => vscode.Uri.file(file)),
-					});
-				}
-			} else if (event.event.ExchangeEvent) {
-				const sessionId = event.request_id;
-				const exchangeId = event.exchange_id;
-				const responseStream = this.responseStreamCollection.getResponseStream({
-					sessionId,
-					exchangeId,
-				});
-
-				if (responseStream === undefined) {
-					console.log('resonseStreamNotFound::ExchangeEvent::ExchangeEvent::exchangeId::sessionId', exchangeId, sessionId);
-				}
-				if (event.event.ExchangeEvent.PlansExchangeState) {
-					const editsState = event.event.ExchangeEvent.PlansExchangeState.edits_state;
-					if (editsState === 'Loading') {
-						responseStream?.stream.planInfo({
-							exchangeId,
-							sessionId,
-							isStale: false,
-							state: 'Started',
-						});
-					} else if (editsState === 'Cancelled') {
-						responseStream?.stream.planInfo({
-							exchangeId,
-							sessionId,
-							isStale: false,
-							state: 'Cancelled',
-						});
-					} else if (editsState === 'MarkedComplete') {
-						responseStream?.stream.planInfo({
-							exchangeId,
-							sessionId,
-							isStale: false,
-							state: 'Complete',
-						});
-					} else if (editsState === 'Accepted') {
-						responseStream?.stream.planInfo({
-							exchangeId,
-							sessionId,
-							isStale: false,
-							state: 'Accepted',
-						});
-					}
-					continue;
-				}
-				if (event.event.ExchangeEvent.EditsExchangeState) {
-					const editsState = event.event.ExchangeEvent.EditsExchangeState.edits_state;
-					const files = event.event.ExchangeEvent.EditsExchangeState.files.map((file) => vscode.Uri.file(file));
-					if (editsState === 'Loading') {
-						responseStream?.stream.editsInfo({
-							exchangeId,
-							sessionId,
-							files,
-							isStale: false,
-							state: 'loading',
-						});
-					} else if (editsState === 'Cancelled') {
-						responseStream?.stream.editsInfo({
-							exchangeId,
-							sessionId,
-							files,
-							isStale: false,
-							state: 'cancelled',
-						});
-					} else if (editsState === 'MarkedComplete') {
-						responseStream?.stream.editsInfo({
-							exchangeId,
-							sessionId,
-							files,
-							isStale: false,
-							state: 'markedComplete',
-						});
-					}
-					continue;
-				}
-				if (event.event.ExchangeEvent.ExecutionState) {
-					const executionState = event.event.ExchangeEvent.ExecutionState;
-					if (executionState === 'Inference') {
-						responseStream?.stream.streamingState({
-							exchangeId,
-							sessionId,
-							files: [],
-							isError: false,
-							state: 'loading',
-							loadingLabel: 'reasoning',
-						});
-					} else if (executionState === 'InReview') {
-						responseStream?.stream.streamingState({
-							exchangeId,
-							sessionId,
-							files: [],
-							isError: false,
-							state: 'waitingFeedback',
-							loadingLabel: 'generating',
-						});
-					} else if (executionState === 'Cancelled') {
-						responseStream?.stream.streamingState({
-							exchangeId,
-							sessionId,
-							files: [],
-							isError: false,
-							state: 'cancelled',
-							loadingLabel: 'generating',
-							message: 'Cancelled',
-						});
-					}
-					continue;
-				}
-				if (event.event.ExchangeEvent.RegeneratePlan) {
-					// This event help us regenerate the plan and set details on the editor layer
-					responseStream?.stream.regeneratePlan({
-						sessionId: event.event.ExchangeEvent.RegeneratePlan.session_id,
-						exchangeId: event.event.ExchangeEvent.RegeneratePlan.exchange_id,
-					});
-					continue;
-				}
-				if (event.event.ExchangeEvent.FinishedExchange) {
-					// Update our streaming state that we are finished
-					responseStream?.stream.streamingState({
-						exchangeId,
-						sessionId,
-						files: [],
-						isError: false,
-						state: 'finished',
-						message: 'Finished',
-					});
-					if (responseStream) {
-						responseStream.stream.close();
-					}
-					// remove the response stream from the collection
-					this.responseStreamCollection.removeResponseStream({
-						sessionId,
-						exchangeId,
-					});
-				}
+				this.panelProvider.addChatMessage(sessionId, exchangeId, event.event.ChatEvent.delta);
 			}
+			// const responseStream = this.responseStreamCollection.getResponseStream({
+			// 	sessionId,
+			// 	exchangeId,
+			// });
+			// if (responseStream === undefined) {
+			// 	continue;
+			// }
+
+			// if (event.event.FrameworkEvent) {
+			// 	if (event.event.FrameworkEvent.InitialSearchSymbols) {
+			// 		// const initialSearchSymbolInformation = event.event.FrameworkEvent.InitialSearchSymbols.symbols.map((item) => {
+			// 		// 	return {
+			// 		// 		symbolName: item.symbol_name,
+			// 		// 		uri: vscode.Uri.file(item.fs_file_path),
+			// 		// 		isNew: item.is_new,
+			// 		// 		thinking: item.thinking,
+			// 		// 	};
+			// 		// });
+			// 		// response.initialSearchSymbols(initialSearchSymbolInformation);
+			// 	} else if (event.event.FrameworkEvent.RepoMapGenerationStart) {
+			// 		// response.repoMapGeneration(false);
+			// 	} else if (event.event.FrameworkEvent.RepoMapGenerationFinished) {
+			// 		// response.repoMapGeneration(true);
+			// 	} else if (event.event.FrameworkEvent.LongContextSearchStart) {
+			// 		// response.longContextSearch(false);
+			// 	} else if (event.event.FrameworkEvent.LongContextSearchFinished) {
+			// 		// response.longContextSearch(true);
+			// 	} else if (event.event.FrameworkEvent.OpenFile) {
+			// 		// const filePath = event.event.FrameworkEvent.OpenFile.fs_file_path;
+			// 		// if (filePath) {
+			// 		// 	response.reference(vscode.Uri.file(filePath));
+			// 		// }
+			// 	} else if (event.event.FrameworkEvent.CodeIterationFinished) {
+			// 		// response.codeIterationFinished({ edits: iterationEdits });
+			// 	} else if (event.event.FrameworkEvent.ReferenceFound) {
+			// 		// response.referenceFound({ references: event.event.FrameworkEvent.ReferenceFound });
+			// 	} else if (event.event.FrameworkEvent.RelevantReference) {
+			// 		// const ref = event.event.FrameworkEvent.RelevantReference;
+			// 		// response.relevantReference({
+			// 		// 	uri: vscode.Uri.file(ref.fs_file_path),
+			// 		// 	symbolName: ref.symbol_name,
+			// 		// 	reason: ref.reason,
+			// 		// });
+			// 	} else if (event.event.FrameworkEvent.ToolUseDetected) {
+			// 		const toolUseDetectedEvent = event.event.FrameworkEvent.ToolUseDetected;
+			// 		// just send this over as markdown right now for checking if things are working
+			// 		responseStream.stream.markdown(`${toolUseDetectedEvent.thinking}\n${JSON.stringify(toolUseDetectedEvent.tool_use_partial_input)}`);
+
+			// 	} else if (event.event.FrameworkEvent.ReferencesUsed) {
+			// 		// not doing anything right now
+			// 	} else if (event.event.FrameworkEvent.GroupedReferences) {
+			// 		const groupedRefs = event.event.FrameworkEvent.GroupedReferences;
+			// 		const followups: { [key: string]: { symbolName: string; uri: vscode.Uri }[] } = {};
+			// 		for (const [reason, references] of Object.entries(groupedRefs)) {
+			// 			followups[reason] = references.map((ref) => {
+			// 				return {
+			// 					symbolName: ref.symbol_name,
+			// 					uri: vscode.Uri.file(ref.fs_file_path),
+			// 				};
+			// 			});
+			// 		}
+			// 		// response.followups(followups);
+			// 	} else if (event.event.FrameworkEvent.SearchIteration) {
+			// 		// console.log(event.event.FrameworkEvent.SearchIteration);
+			// 	} else if (event.event.FrameworkEvent.AgenticTopLevelThinking) {
+			// 		// TODO(skcd): The agent thinking event is over here, not streamed
+			// 		// but it can get the job done
+			// 		console.log(event.event.FrameworkEvent.AgenticTopLevelThinking);
+			// 	} else if (event.event.FrameworkEvent.AgenticSymbolLevelThinking) {
+			// 		// TODO(skcd): The agent symbol level thinking is here, not streamed
+			// 		// but we can hook into it for information and context
+			// 		console.log(event.event.FrameworkEvent.AgenticSymbolLevelThinking);
+			// 	}
+			// } else if (event.event.SymbolEvent) {
+			// 	const symbolEvent = event.event.SymbolEvent.event;
+			// 	const symbolEventKeys = Object.keys(symbolEvent);
+			// 	if (symbolEventKeys.length === 0) {
+			// 		continue;
+			// 	}
+			// 	const symbolEventKey = symbolEventKeys[0] as keyof typeof symbolEvent;
+			// 	// If this is a symbol event then we have to make sure that we are getting the probe request over here
+			// 	if (!editMode && symbolEventKey === 'Probe' && symbolEvent.Probe !== undefined) {
+			// 		// response.breakdown({
+			// 		// 	reference: {
+			// 		// 		uri: vscode.Uri.file(symbolEvent.Probe.symbol_identifier.fs_file_path ?? 'symbol_not_found'),
+			// 		// 		name: symbolEvent.Probe.symbol_identifier.symbol_name,
+			// 		// 	},
+			// 		// 	query: new vscode.MarkdownString(symbolEvent.Probe.probe_request)
+			// 		// });
+			// 	}
+			// } else if (event.event.SymbolEventSubStep) {
+			// 	const { symbol_identifier, event: symbolEventSubStep } = event.event.SymbolEventSubStep;
+
+			// 	if (symbolEventSubStep.GoToDefinition) {
+			// 		if (!symbol_identifier.fs_file_path) {
+			// 			continue;
+			// 		}
+			// 		// const goToDefinition = symbolEventSubStep.GoToDefinition;
+			// 		// const uri = vscode.Uri.file(goToDefinition.fs_file_path);
+			// 		// const startPosition = new vscode.Position(goToDefinition.range.startPosition.line, goToDefinition.range.startPosition.character);
+			// 		// const endPosition = new vscode.Position(goToDefinition.range.endPosition.line, goToDefinition.range.endPosition.character);
+			// 		// const _range = new vscode.Range(startPosition, endPosition);
+			// 		// response.location({ uri, range, name: symbol_identifier.symbol_name, thinking: goToDefinition.thinking });
+			// 		continue;
+			// 	} else if (symbolEventSubStep.Edit) {
+			// 		if (!symbol_identifier.fs_file_path) {
+			// 			continue;
+			// 		}
+			// 		const editEvent = symbolEventSubStep.Edit;
+
+			// 		// UX handle for code correction tool usage - consider using
+			// 		if (editEvent.CodeCorrectionTool) { }
+
+			// 		// TODO(skcd): We have to show this properly over here since
+			// 		// even with the search and replace blocks we do want to show it
+			// 		// to the user
+			// 		if (editEvent.ThinkingForEdit.delta) {
+			// 			responseStream.stream.thinkingForEdit({
+			// 				exchangeId,
+			// 				sessionId,
+			// 				thinkingDelta: editEvent.ThinkingForEdit.delta
+			// 			});
+			// 		}
+			// 		if (editEvent.RangeSelectionForEdit) {
+			// 			// response.breakdown({
+			// 			// 	reference: {
+			// 			// 		uri: vscode.Uri.file(symbol_identifier.fs_file_path),
+			// 			// 		name: symbol_identifier.symbol_name,
+			// 			// 	}
+			// 			// });
+			// 		} else if (editEvent.EditCodeStreaming) {
+			// 			// scraped out over here, we do not need to react to this
+			// 			// event anymore
+			// 		}
+			// 	} else if (symbolEventSubStep.Probe) {
+			// 		if (!symbol_identifier.fs_file_path) {
+			// 			continue;
+			// 		}
+			// 		const probeSubStep = symbolEventSubStep.Probe;
+			// 		const probeRequestKeys = Object.keys(probeSubStep) as (keyof typeof symbolEventSubStep.Probe)[];
+			// 		if (!symbol_identifier.fs_file_path || probeRequestKeys.length === 0) {
+			// 			continue;
+			// 		}
+
+			// 		const subStepType = probeRequestKeys[0];
+			// 		if (!editMode && subStepType === 'ProbeAnswer' && probeSubStep.ProbeAnswer !== undefined) {
+			// 			// const probeAnswer = probeSubStep.ProbeAnswer;
+			// 			// response.breakdown({
+			// 			// 	reference: {
+			// 			// 		uri: vscode.Uri.file(symbol_identifier.fs_file_path),
+			// 			// 		name: symbol_identifier.symbol_name
+			// 			// 	},
+			// 			// 	response: new vscode.MarkdownString(probeAnswer)
+			// 			// });
+			// 		}
+			// 	}
+			// } else if (event.event.RequestEvent) {
+			// 	// const { ProbeFinished } = event.event.RequestEvent;
+			// 	// if (!ProbeFinished) {
+			// 	// 	continue;
+			// 	// }
+
+			// 	// const { reply } = ProbeFinished;
+			// 	// if (reply === null) {
+			// 	// 	continue;
+			// 	// }
+
+			// 	// // The sidecar currently sends '<symbolName> at <fileName>' at the start of the response. Remove it.
+			// 	// const match = reply.match(pattern);
+			// 	// if (match) {
+			// 	// 	const suffix = match[2].trim();
+			// 	// 	response.markdown(suffix);
+			// 	// } else {
+			// 	// 	response.markdown(reply);
+			// 	// }
+
+			// 	// break;
+			// } else if (event.event.EditRequestFinished) {
+			// 	// break;
+			// } else if (event.event.ChatEvent) {
+			// 	// responses to the chat
+			// 	const sessionId = event.request_id;
+			// 	const exchangeId = event.exchange_id;
+			// 	const responseStream = this.responseStreamCollection.getResponseStream({ sessionId, exchangeId });
+			// 	if (responseStream === undefined) {
+			// 		console.log('responseStreamNotFound::ChatEvent', exchangeId, sessionId);
+			// 	}
+
+			// 	const { delta } = event.event.ChatEvent;
+
+			// 	if (delta !== null) {
+			// 		responseStream?.stream.markdown(delta);
+			// 	}
+			// } else if (event.event.PlanEvent) {
+			// 	const sessionId = event.request_id;
+			// 	const exchangeId = event.exchange_id;
+			// 	const responseStream = this.responseStreamCollection.getResponseStream({
+			// 		sessionId, exchangeId,
+			// 	});
+			// 	// we also have a plan step description updated event which we are going
+			// 	// to handle on the review panel
+			// 	if (event.event.PlanEvent.PlanStepTitleAdded) {
+			// 		// we still want to send the planInfo over here (we should check
+			// 		// why the rendering is so slow for this... weird reason)
+			// 		responseStream?.stream.planInfo({
+			// 			exchangeId,
+			// 			sessionId,
+			// 			isStale: false,
+			// 			state: 'Started',
+			// 			description: event.event.PlanEvent.PlanStepTitleAdded.title,
+			// 		});
+			// 		responseStream?.stream.step({
+			// 			description: '',
+			// 			index: event.event.PlanEvent.PlanStepTitleAdded.index,
+			// 			sessionId,
+			// 			exchangeId: event.event.PlanEvent.PlanStepTitleAdded.exchange_id,
+			// 			isLast: false,
+			// 			title: event.event.PlanEvent.PlanStepTitleAdded.title,
+			// 			descriptionDelta: null,
+			// 			files: event.event.PlanEvent.PlanStepTitleAdded.files_to_edit.map((file) => vscode.Uri.file(file)),
+			// 		});
+			// 	}
+			// 	if (event.event.PlanEvent.PlanStepDescriptionUpdate) {
+			// 		responseStream?.stream.step({
+			// 			description: event.event.PlanEvent.PlanStepDescriptionUpdate.description_up_until_now,
+			// 			index: event.event.PlanEvent.PlanStepDescriptionUpdate.index,
+			// 			sessionId,
+			// 			exchangeId: event.event.PlanEvent.PlanStepDescriptionUpdate.exchange_id,
+			// 			isLast: false,
+			// 			title: '',
+			// 			descriptionDelta: `\n${event.event.PlanEvent.PlanStepDescriptionUpdate.delta}`,
+			// 			files: event.event.PlanEvent.PlanStepDescriptionUpdate.files_to_edit.map((file) => vscode.Uri.file(file)),
+			// 		});
+			// 	}
+			// } else if (event.event.ExchangeEvent) {
+			// 	const sessionId = event.request_id;
+			// 	const exchangeId = event.exchange_id;
+			// 	const responseStream = this.responseStreamCollection.getResponseStream({
+			// 		sessionId,
+			// 		exchangeId,
+			// 	});
+
+			// 	if (responseStream === undefined) {
+			// 		console.log('resonseStreamNotFound::ExchangeEvent::ExchangeEvent::exchangeId::sessionId', exchangeId, sessionId);
+			// 	}
+			// 	if (event.event.ExchangeEvent.PlansExchangeState) {
+			// 		const editsState = event.event.ExchangeEvent.PlansExchangeState.edits_state;
+			// 		if (editsState === 'Loading') {
+			// 			responseStream?.stream.planInfo({
+			// 				exchangeId,
+			// 				sessionId,
+			// 				isStale: false,
+			// 				state: 'Started',
+			// 			});
+			// 		} else if (editsState === 'Cancelled') {
+			// 			responseStream?.stream.planInfo({
+			// 				exchangeId,
+			// 				sessionId,
+			// 				isStale: false,
+			// 				state: 'Cancelled',
+			// 			});
+			// 		} else if (editsState === 'MarkedComplete') {
+			// 			responseStream?.stream.planInfo({
+			// 				exchangeId,
+			// 				sessionId,
+			// 				isStale: false,
+			// 				state: 'Complete',
+			// 			});
+			// 		} else if (editsState === 'Accepted') {
+			// 			responseStream?.stream.planInfo({
+			// 				exchangeId,
+			// 				sessionId,
+			// 				isStale: false,
+			// 				state: 'Accepted',
+			// 			});
+			// 		}
+			// 		continue;
+			// 	}
+			// 	if (event.event.ExchangeEvent.EditsExchangeState) {
+			// 		const editsState = event.event.ExchangeEvent.EditsExchangeState.edits_state;
+			// 		const files = event.event.ExchangeEvent.EditsExchangeState.files.map((file) => vscode.Uri.file(file));
+			// 		if (editsState === 'Loading') {
+			// 			responseStream?.stream.editsInfo({
+			// 				exchangeId,
+			// 				sessionId,
+			// 				files,
+			// 				isStale: false,
+			// 				state: 'loading',
+			// 			});
+			// 		} else if (editsState === 'Cancelled') {
+			// 			responseStream?.stream.editsInfo({
+			// 				exchangeId,
+			// 				sessionId,
+			// 				files,
+			// 				isStale: false,
+			// 				state: 'cancelled',
+			// 			});
+			// 		} else if (editsState === 'MarkedComplete') {
+			// 			responseStream?.stream.editsInfo({
+			// 				exchangeId,
+			// 				sessionId,
+			// 				files,
+			// 				isStale: false,
+			// 				state: 'markedComplete',
+			// 			});
+			// 		}
+			// 		continue;
+			// 	}
+			// 	if (event.event.ExchangeEvent.ExecutionState) {
+			// 		const executionState = event.event.ExchangeEvent.ExecutionState;
+			// 		if (executionState === 'Inference') {
+			// 			responseStream?.stream.streamingState({
+			// 				exchangeId,
+			// 				sessionId,
+			// 				files: [],
+			// 				isError: false,
+			// 				state: 'loading',
+			// 				loadingLabel: 'reasoning',
+			// 			});
+			// 		} else if (executionState === 'InReview') {
+			// 			responseStream?.stream.streamingState({
+			// 				exchangeId,
+			// 				sessionId,
+			// 				files: [],
+			// 				isError: false,
+			// 				state: 'waitingFeedback',
+			// 				loadingLabel: 'generating',
+			// 			});
+			// 		} else if (executionState === 'Cancelled') {
+			// 			responseStream?.stream.streamingState({
+			// 				exchangeId,
+			// 				sessionId,
+			// 				files: [],
+			// 				isError: false,
+			// 				state: 'cancelled',
+			// 				loadingLabel: 'generating',
+			// 				message: 'Cancelled',
+			// 			});
+			// 		}
+			// 		continue;
+			// 	}
+			// 	if (event.event.ExchangeEvent.RegeneratePlan) {
+			// 		// This event help us regenerate the plan and set details on the editor layer
+			// 		responseStream?.stream.regeneratePlan({
+			// 			sessionId: event.event.ExchangeEvent.RegeneratePlan.session_id,
+			// 			exchangeId: event.event.ExchangeEvent.RegeneratePlan.exchange_id,
+			// 		});
+			// 		continue;
+			// 	}
+			// 	if (event.event.ExchangeEvent.FinishedExchange) {
+			// 		// Update our streaming state that we are finished
+			// 		responseStream?.stream.streamingState({
+			// 			exchangeId,
+			// 			sessionId,
+			// 			files: [],
+			// 			isError: false,
+			// 			state: 'finished',
+			// 			message: 'Finished',
+			// 		});
+			// 		if (responseStream) {
+			// 			responseStream.stream.close();
+			// 		}
+			// 		// remove the response stream from the collection
+			// 		this.responseStreamCollection.removeResponseStream({
+			// 			sessionId,
+			// 			exchangeId,
+			// 		});
+			// 	}
+			// }
 		}
 	}
 

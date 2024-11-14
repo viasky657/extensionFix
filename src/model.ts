@@ -78,13 +78,11 @@ interface MessageBase {
 export interface Response extends MessageBase {
   type: "response";
   parts: ResponsePart[];
-  exchangeId: string;
 }
 
 export interface Request extends MessageBase {
   type: "request";
   message: string;
-  exchangeId: string;
 }
 
 export interface Usage {

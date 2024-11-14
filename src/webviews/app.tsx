@@ -42,15 +42,6 @@ interface State {
   loadedTasks: Map<string, Task>;
 }
 
-const mockLoadedTasks = new Map();
-mockLoadedTasks.set(mockTask.sessionId, mockTask);
-
-const initialState: State = {
-  extensionReady: false,
-  view: View.Task,
-  currentTask: mockTask,
-  loadedTasks: mockLoadedTasks, // new Map(),
-};
 
 function reducer(state: AppState, action: Event) {
   const newState = structuredClone(state);

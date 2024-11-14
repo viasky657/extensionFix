@@ -8,6 +8,7 @@ import { ProjectContext } from "./utilities/workspaceContext";
 import { RecentEditsRetriever } from "./server/editedFiles";
 import { AideAgentSessionProvider } from "./completions/providers/aideAgentProvider";
 import { uniqueId } from "lodash";
+import { AideAgentMode } from "./types";
 // import { AideAgentSessionProvider } from "./completions/providers/aideAgentProvider";
 // import { ProjectContext } from "./utilities/workspaceContext";
 // import { RecentEditsRetriever } from "./server/editedFiles";
@@ -58,7 +59,8 @@ export async function activate(context: vscode.ExtensionContext) {
     currentRepo,
     projectContext,
     recentEditsRetriever,
-    context
+    context,
+    panelProvider,
   );
   context.subscriptions.push(agentSessionProvider);
 
@@ -95,7 +97,9 @@ export async function activate(context: vscode.ExtensionContext) {
         panelProvider.addExchangeRequest(sessionId, exchangeId, query);
 
         // - ping the sidecar over here
+        const stream = SIDECAR_CLIENT!.agentSessionChat(query, sessionId, exchangeId, agentSessionProvider.editorUrl!, AideAgentMode.Chat, [], currentRepo, projectContext.labels, '');
         // - have a respose somewhere and the chat model would update
+        agentSessionProvider.reportAgentEventsToChat(true, stream);
         // and the model will have a on did change
         // - the extension needs the state
         // - on did change chat model gets back over here

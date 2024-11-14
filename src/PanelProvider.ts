@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
-import { AppState, ClientRequest, Task, View } from "./model";
+import { ClientRequest, Task, View } from "./model";
+import { Response, } from "./model";
 import { getNonce } from "./webviews/utils/nonce";
 import { uniqueId } from "lodash";
 
@@ -78,6 +79,47 @@ export class PanelProvider implements vscode.WebviewViewProvider {
         loadedTasks: new Map()
       }
     });
+  }
+
+  public addChatMessage(sessionId: string, exchangeId: string, delta: string | null) {
+    if (this._runningTask && this._runningTask.sessionId === sessionId) {
+      const exchangePossible = this._runningTask.exchanges.find((exchange) => {
+        return exchange.exchangeId === exchangeId;
+      }) as Response | undefined;
+      if (exchangePossible && delta) {
+        exchangePossible.parts.push({
+          type: "markdown",
+          rawMarkdown: delta
+        });
+      }
+
+      // we update our webview with the latest state
+      this._view?.webview.postMessage({
+        command: 'state-updated',
+        initialAppState: {
+          extensionReady: false,
+          view: View.Task,
+          currentTask: this._runningTask,
+          loadedTasks: new Map()
+        }
+      });
+    }
+  }
+
+  public createNewExchangeResponse(sessionId: string): string | undefined {
+    if (this._runningTask && this._runningTask.sessionId === sessionId) {
+      const exchangeId = uniqueId();
+      this._runningTask.exchanges.push({
+        type: "response",
+        parts: [],
+        exchangeId,
+        username: 'testing',
+        context: [],
+        sessionId,
+      });
+      return exchangeId;
+    }
+    return undefined;
   }
 
   public addExchangeRequest(sessionId: string, exchangeId: string, request: string) {
