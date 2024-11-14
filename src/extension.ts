@@ -7,18 +7,42 @@ import { startSidecarBinary } from "./utilities/setupSidecarBinary";
 
 export let SIDECAR_CLIENT: SideCarClient | null = null;
 
+/**
+Extension → PanelProvider → Webview (app.tsx)
+(native)     (bridge)       (UI layer)
+
+Example flow:
+1. Extension starts sidecar download
+2. When ready, calls panelProvider.setSidecarReady()
+3. PanelProvider sends message to webview
+4. app.tsx receives message and updates UI
+ */
+
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
-  const sidecarUrl = await startSidecarBinary(context.globalStorageUri.fsPath); // vscode.env.appRoot second argument
-  console.log("sidecarUrl", sidecarUrl);
-
-  const sidecarClient = new SideCarClient(sidecarUrl);
-
-  const healthCheck = await sidecarClient.healthCheck();
-  console.log("Sidecar health check", healthCheck);
-
   const panelProvider = new PanelProvider(context.extensionUri);
+
+  // Show the panel immediately
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider("sota-pr-panel", panelProvider)
+  );
+
+  // sidecar binary download in background
+  startSidecarBinary(context.globalStorageUri.fsPath).then(async (sidecarUrl) => {
+    console.log("sidecarUrl", sidecarUrl);
+    const sidecarClient = new SideCarClient(sidecarUrl);
+
+    const healthCheck = await sidecarClient.healthCheck();
+    console.log("Sidecar health check", healthCheck);
+
+    // Tell the PanelProvider that the sidecar is ready
+    panelProvider.setSidecarReady(true);
+    SIDECAR_CLIENT = sidecarClient;
+  }).catch(error => {
+    console.error("Failed to start sidecar:", error);
+    vscode.window.showErrorMessage("Failed to start Sota PR Assistant sidecar");
+  });
 
   context.subscriptions.push(
     panelProvider.onMessageFromWebview((message) => {
@@ -34,10 +58,6 @@ export async function activate(context: vscode.ExtensionContext) {
       // @theskcd we update the view state here
       panelProvider.updateState();
     })
-  );
-
-  context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider("sota-pr-panel", panelProvider)
   );
 
   // The command has been defined in the package.json file
@@ -56,4 +76,4 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 // This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }

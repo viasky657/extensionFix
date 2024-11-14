@@ -55,6 +55,7 @@ function reducer(state: State, action: Event) {
 
 const App = () => {
   const [state, dispatch] = React.useReducer(reducer, initialState);
+  const [isSidecarReady, setIsSidecarReady] = React.useState(false);
 
   React.useEffect(() => {
     const handleMessage = (event: MessageEvent<Event>) => {
@@ -65,6 +66,34 @@ const App = () => {
       window.removeEventListener("message", handleMessage);
     };
   }, []);
+
+  React.useEffect(() => {
+    // handles messages from the extension
+    const messageHandler = (event: MessageEvent) => {
+      const message = event.data;
+
+      // Only PanelProvider sends updateState messages
+      if (message.command === 'updateState') {
+        setIsSidecarReady(message.isSidecarReady);
+      }
+    };
+
+    // listen for messages
+    window.addEventListener('message', messageHandler);
+    return () => window.removeEventListener('message', messageHandler);
+  }, []);
+
+  // loading spinner
+  if (!isSidecarReady) {
+    return (
+      <div className="flex items-center justify-center h-full p-4">
+        <div className="flex flex-col items-center gap-2">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          <p className="text-sm text-gray-600">Downloading and starting Sota PR Assistant...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col">
@@ -91,7 +120,7 @@ const App = () => {
       {renderView(state)}
     </div>
   );
-};
+}
 
 function renderView(state: State) {
   switch (state.view) {
