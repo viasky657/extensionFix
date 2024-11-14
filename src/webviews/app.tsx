@@ -2,6 +2,7 @@ import * as React from "react";
 import { Event, ViewType, Task, View } from "../model";
 import { TaskView } from "@task/view";
 import { mockTask } from "mock/task";
+import { PresetView } from "@preset/view";
 
 interface vscode {
   postMessage(message: Event): void;
@@ -9,7 +10,7 @@ interface vscode {
 
 declare const vscode: vscode;
 
-function onMessage(event: React.FormEvent<HTMLFormElement>) {
+function onNewRequest(event: React.FormEvent<HTMLFormElement>) {
   event.preventDefault();
   const form = event.currentTarget;
   const data = new FormData(form);
@@ -17,6 +18,13 @@ function onMessage(event: React.FormEvent<HTMLFormElement>) {
   if (query && typeof query === "string") {
     vscode.postMessage({ type: "init" });
   }
+}
+
+function onNewPreset(event: React.FormEvent<HTMLFormElement>) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const data = new FormData(form);
+  console.log(Object.fromEntries(data))
 }
 
 // Move this somewhere else
@@ -39,7 +47,6 @@ const initialState: State = {
 
 function reducer(state: State, action: Event) {
   const newState = structuredClone(state);
-
   if (action.type === "init") {
     newState.extensionReady = true;
   } else if (action.type === "open-task") {
@@ -104,11 +111,13 @@ const App = () => {
 
 function renderView(state: State) {
   switch (state.view) {
-    case "task":
+    case View.Task:
       if (!state.currentTask) {
         return "Error"; // Implement better fallback
       }
-      return <TaskView task={state.currentTask} onSubmit={onMessage} />;
+      return <TaskView task={state.currentTask} onSubmit={onNewRequest} />;
+    case View.Preset:
+      return <PresetView onSubmit={onNewPreset} />
     default:
       return "View not implemented";
   }
