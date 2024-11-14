@@ -19,14 +19,19 @@ export function TaskView(props: TaskViewProps) {
   const { task, onSubmit } = props;
   const { exchanges, summary, preset, cost, usage, originalQuery } = task;
 
+  const [summaryShown, setSummaryShown] = React.useState(false);
+
   // TODO(g-danna) Improve this
   const showUsage = Object.keys(usage).length > 0; // usageKeys.some((key) => key in usage);
 
   return (
     <main className="flex flex-col flex-grow">
       <header>
-        <details>
-          <summary>
+        <div>
+          <div
+            className="px-4 py-2 cursor-pointer hover:bg-[rgba(128,128,128,0.1)] rounded-sm select-none"
+            onClick={() => setSummaryShown(!summaryShown)}
+          >
             <h2>{summary}</h2>
             <dl className="flex items-baseline">
               <dt className="sr-only">Preset</dt>
@@ -45,46 +50,50 @@ export function TaskView(props: TaskViewProps) {
                 </React.Fragment>
               )}
             </dl>
-          </summary>
-          <TaskDL>
-            <TaskDT>Query</TaskDT>
-            <TaskDD>{originalQuery}</TaskDD>
-            <TaskDT>Preset</TaskDT>
-            <TaskDD>{preset.name}</TaskDD>
-            {cost && (
-              <React.Fragment>
-                <TaskDT>API cost</TaskDT>
-                <TaskDD>{cost}</TaskDD>
-              </React.Fragment>
-            )}
-            {showUsage && (
-              <React.Fragment>
-                <TaskDT>Data</TaskDT>
-                <TaskDD>
-                  <ul>
-                    {(Object.entries(usage) as ObjectEntry<Usage>[]).map(
-                      renderUsagePart
-                    )}
-                  </ul>
-                </TaskDD>
-              </React.Fragment>
-            )}
-          </TaskDL>
-        </details>
+          </div>
+          <div style={{ display: summaryShown ? 'block' : 'none' }} className="px-4 py-2">
+            <TaskDL>
+              <TaskDT>Query</TaskDT>
+              <TaskDD>{originalQuery}</TaskDD>
+              <TaskDT>Preset</TaskDT>
+              <TaskDD>{preset.name}</TaskDD>
+              {cost && (
+                <React.Fragment>
+                  <TaskDT>API cost</TaskDT>
+                  <TaskDD>{cost}</TaskDD>
+                </React.Fragment>
+              )}
+              {showUsage && (
+                <React.Fragment>
+                  <TaskDT>Data</TaskDT>
+                  <TaskDD>
+                    <ul>
+                      {(Object.entries(usage) as ObjectEntry<Usage>[]).map(
+                        renderUsagePart
+                      )}
+                    </ul>
+                  </TaskDD>
+                </React.Fragment>
+              )}
+            </TaskDL>
+          </div>
+        </div>
       </header>
-      <section className="flex-grow">
-        {exchanges && (
-          <ol>
-            {exchanges.map((exchange) => (
-              <li key={exchange.exchangeId}>{renderExchange(exchange)}</li>
-            ))}
-          </ol>
-        )}
-      </section>
-      <form onSubmit={onSubmit}>
-        <VSCodeTextArea className="w-full" name="query" />
-        <VSCodeButton type="submit">Send</VSCodeButton>
-      </form>
+      <div className="px-4 py-2 flex flex-col gap-2">
+        <section className="flex-grow">
+          {exchanges && (
+            <ol>
+              {exchanges.map((exchange) => (
+                <li key={exchange.exchangeId}>{renderExchange(exchange)}</li>
+              ))}
+            </ol>
+          )}
+        </section>
+        <form onSubmit={onSubmit}>
+          <VSCodeTextArea className="w-full" name="query" />
+          <VSCodeButton type="submit">Send</VSCodeButton>
+        </form>
+      </div>
     </main>
   );
 }
