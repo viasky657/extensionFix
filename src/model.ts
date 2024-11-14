@@ -106,7 +106,7 @@ export interface Task {
 
 export type Exchange = Request | Response;
 
-enum Provider {
+export enum Provider {
   Anthropic = "anthropic",
   OpenAI = "open-ai",
   OpenRouter = "open-router",

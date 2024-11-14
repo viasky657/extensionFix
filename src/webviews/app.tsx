@@ -2,6 +2,7 @@ import * as React from "react";
 import { Event, ViewType, Task, View, AppState } from "../model";
 import { TaskView } from "@task/view";
 import { uniqueId } from "lodash";
+import { PresetView } from "@preset/view";
 
 interface vscode {
   postMessage(message: Event): void;
@@ -26,6 +27,30 @@ function onMessage(event: React.FormEvent<HTMLFormElement>, sessionId: string | 
   }
 }
 
+function onNewPreset(event: React.FormEvent<HTMLFormElement>) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const data = new FormData(form);
+  console.log(Object.fromEntries(data))
+}
+
+// Move this somewhere else
+interface State {
+  extensionReady: boolean;
+  view: ViewType;
+  currentTask?: Task;
+  loadedTasks: Map<string, Task>;
+}
+
+const mockLoadedTasks = new Map();
+mockLoadedTasks.set(mockTask.sessionId, mockTask);
+
+const initialState: State = {
+  extensionReady: false,
+  view: View.Task,
+  currentTask: mockTask,
+  loadedTasks: mockLoadedTasks, // new Map(),
+};
 
 function reducer(state: AppState, action: Event) {
   const newState = structuredClone(state);
@@ -163,6 +188,8 @@ function renderView(state: AppState) {
   switch (state.view) {
     case "task":
       return <TaskView task={state.currentTask} onSubmit={(event) => onMessage(event, state.currentTask?.sessionId)} />;
+    case View.Preset:
+      return <PresetView onSubmit={onNewPreset} />
     default:
       return "View not implemented";
   }

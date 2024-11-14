@@ -63,8 +63,6 @@ async function checkCorrectVersionRunning(url: string): Promise<boolean> {
     const response = await fetch(`${url}/api/version`);
     // console.log('Version check done' + response);
     const version = await response.json();
-    // console.log('version content');
-    // console.log(version);
     return version.version_hash === SIDECAR_VERSION;
   } catch (e) {
     return false;
@@ -187,30 +185,21 @@ export async function startSidecarBinaryWithLocal(
   if (shouldUseSelfRun) {
     return true;
   }
-  // check here if the binary is downloaded locally and if thats the case
-  // try to run it from there
+
+  // this is where the new binaries are stored
   const sidecarBinPath = path.join(
     installLocation,
-    "extensions",
-    "codestory",
-    "sidecar_bin"
+    "sidecar_bin",
   );
-  // console.log('startSidecarBinaryWithLocation', sidecarBinPath);
+
   if (fs.existsSync(sidecarBinPath)) {
-    const sidecarBinPathExists = fs.existsSync(
-      path.join(sidecarBinPath, "sidecar")
-    );
-    if (sidecarBinPathExists) {
-      try {
-        // console.log('Starting sidecar binary locally', sidecarBinPath, serverUrl);
-        const sidecarValue = await runSideCarBinary(sidecarBinPath, serverUrl);
-        // console.log('Sidecar binary exists locally, running it', sidecarValue);
-        return sidecarValue;
-      } catch (e) {
-        return false;
-        // console.log('Failed to run sidecar binary locally', e);
-      }
+    try {
+      const sidecarValue = await runSideCarBinary(sidecarBinPath, serverUrl);
+      return sidecarValue;
+    } catch (e) {
+      return false;
     }
+
   }
 
   return false;
@@ -244,15 +233,11 @@ export async function startSidecarBinary(
 
   // Check if we are running the correct version, or else we download a new version
   if (await checkCorrectVersionRunning(serverUrl)) {
-    // console.log('Correct version of Sidecar binary is running');
     return "http://127.0.0.1:42424";
   }
 
   // First let's kill the running version
-  // console.log('Killing running Sidecar binary');
   await checkOrKillRunningServer(serverUrl);
-
-  // console.log('Starting Sidecar binary right now');
 
   // Download the server executable
   const bucket = "sidecar-bin";
@@ -267,7 +252,6 @@ export async function startSidecarBinary(
   const sidecarDestination = path.join(extensionBasePath, "sidecar_bin");
 
   // First, check if the server is already downloaded
-  // console.log('Downloading the sidecar binary...');
   await window.withProgress(
     {
       location: ProgressLocation.SourceControl,
@@ -279,20 +263,15 @@ export async function startSidecarBinary(
       try {
         await downloadFromGCPBucket(bucket, fileName, zipDestination);
       } catch (e) {
-        // console.log('Failed to download from GCP bucket, trying using URL: ', e);
         await downloadUsingURL(bucket, fileName, zipDestination);
       }
     }
   );
 
-  // console.log(`Downloaded sidecar zip at ${zipDestination}`);
   // Now we need to unzip the folder in the location and also run a few commands
   // for the dylib files and the binary
   // -o is important here because we want to override the downloaded binary
   // if it has been already downloaded
-  // console.log(zipDestination);
-  // console.log(sidecarDestination);
-  // hopefully this works as we want it to
   unzipSidecarZipFolder(zipDestination, sidecarDestination);
   // now delete the zip file
   fs.unlinkSync(zipDestination);
