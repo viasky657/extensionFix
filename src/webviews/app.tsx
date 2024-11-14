@@ -25,6 +25,9 @@ function onMessage(event: React.FormEvent<HTMLFormElement>, sessionId: string | 
       sessionId,
     });
   }
+
+  // resets the form
+  form.reset();
 }
 
 function onNewPreset(event: React.FormEvent<HTMLFormElement>) {
