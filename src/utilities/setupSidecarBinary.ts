@@ -226,10 +226,10 @@ export async function startSidecarBinary(
   // console.log('starting sidecar binary');
   // console.log('installLocation', installLocation);
 
-  //const selfStart = await startSidecarBinaryWithLocal(installLocation);
-  //if (selfStart) {
-  return "http://127.0.0.1:42424";
-  //}
+  const selfStart = await startSidecarBinaryWithLocal(extensionBasePath);
+  if (selfStart) {
+    return "http://127.0.0.1:42424";
+  }
   // Check vscode settings
   const serverUrl = getSidecarBinaryURL();
   const shouldUseSelfRun = sidecarUseSelfRun();
@@ -259,8 +259,8 @@ export async function startSidecarBinary(
     os.platform() === "win32"
       ? "windows/sidecar.zip"
       : os.platform() === "darwin"
-      ? "mac/sidecar.zip"
-      : "linux/sidecar.zip";
+        ? "mac/sidecar.zip"
+        : "linux/sidecar.zip";
 
   const zipDestination = path.join(extensionBasePath, "sidecar_zip.zip");
   const sidecarDestination = path.join(extensionBasePath, "sidecar_bin");
