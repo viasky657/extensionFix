@@ -459,7 +459,7 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 	 * interested in, so we want to close the stream when we want to
 	 */
 	public async reportAgentEventsToChat(
-		editMode: boolean,
+		_editMode: boolean,
 		stream: AsyncIterableIterator<SideCarAgentEvent>,
 	): Promise<void> {
 		// const editsMap = new Map();

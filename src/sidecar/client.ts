@@ -12,7 +12,7 @@ import { CompletionRequest, CompletionResponse } from '../inlineCompletion/sidec
 import { CodeEditAgentBody, ProbeAgentBody, SideCarAgentEvent, SidecarContextEvent, UserContext } from '../server/types';
 import { SelectionDataForExplain } from '../utilities/getSelectionContext';
 import { AidePlanTimer } from '../utilities/planTimer';
-import { shouldUseUnstableToolAgent, sidecarNotIndexRepository } from '../utilities/sidecarUrl';
+import { sidecarNotIndexRepository } from '../utilities/sidecarUrl';
 import { sleep } from '../utilities/sleep';
 import { readCustomSystemInstruction } from '../utilities/systemInstruction';
 import { CodeSymbolInformationEmbeddings, CodeSymbolKind } from '../utilities/types';
