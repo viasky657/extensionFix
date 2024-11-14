@@ -2,8 +2,12 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import { PanelProvider } from "./PanelProvider";
-import { SideCarClient } from "./sidecar/client";
+import { RepoRef, RepoRefBackend, SideCarClient } from "./sidecar/client";
 import { startSidecarBinary } from "./utilities/setupSidecarBinary";
+import { ProjectContext } from "./utilities/workspaceContext";
+import { RecentEditsRetriever } from "./server/editedFiles";
+import { AideAgentSessionProvider } from "./completions/providers/aideAgentProvider";
+import { uniqueId } from "lodash";
 // import { AideAgentSessionProvider } from "./completions/providers/aideAgentProvider";
 // import { ProjectContext } from "./utilities/workspaceContext";
 // import { RecentEditsRetriever } from "./server/editedFiles";
@@ -25,7 +29,6 @@ Example flow:
 // Your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
   const panelProvider = new PanelProvider(context.extensionUri);
-  /*
   let rootPath = vscode.workspace.rootPath;
   if (!rootPath) {
     rootPath = "";
@@ -54,13 +57,10 @@ export async function activate(context: vscode.ExtensionContext) {
   const agentSessionProvider = new AideAgentSessionProvider(
     currentRepo,
     projectContext,
-    sidecarClient,
     recentEditsRetriever,
     context
   );
-  const editorUrl = agentSessionProvider.editorUrl;
   context.subscriptions.push(agentSessionProvider);
-  */
 
   // Show the panel immediately
   context.subscriptions.push(
@@ -85,31 +85,20 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     panelProvider.onMessageFromWebview(async (message) => {
-      if (message.type === "new-request") {
+      if (message.type === 'task-feedback') {
+        // here we get the message from the user
+        const query = message.query;
+        const sessionId = message.sessionId;
 
-        //const { query, exchangeId } = message;
-        //const sessionId = randomUUID();
-        //
-        //const iterationEdits = new vscode.WorkspaceEdit();
-        //
-        //const stream = sidecarClient.agentSessionPlanStep(
-        //  query,
-        //  sessionId,
-        //  exchangeId,
-        //  editorUrl,
-        //  AideAgentMode.Edit,
-        //  [],
-        //  currentRepo,
-        //  projectContext.labels,
-        //  false,
-        //  "" // Don't pass token for now (people can put their own API keys)
-        //);
+        // something will create the exchange id
+        const exchangeId = uniqueId();
+        panelProvider.addExchangeRequest(sessionId, exchangeId, query);
 
-        //const model = new ChatModel();
-        //const response = model.addResponse();
-        //const cts = new vscode.CancellationTokenSource();
-        //
-        //await reportAgentEventsToChat(true, stream);
+        // - ping the sidecar over here
+        // - have a respose somewhere and the chat model would update
+        // and the model will have a on did change
+        // - the extension needs the state
+        // - on did change chat model gets back over here
       }
     })
   );

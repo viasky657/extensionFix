@@ -55,7 +55,7 @@ export function getSidecarBinaryURL() {
 // for now, lets keep it as it is and figure out a way to update the hash on
 // important updates
 export const SIDECAR_VERSION =
-  "f76b2c07e462dea1c1e8492805847be911caed1013ea9b23d59223add4c7a267";
+  "ce0cebc1afd9fa590a469a9abb7767edbb0889fea99b378f99808cbd7e88ff6c";
 
 async function checkCorrectVersionRunning(url: string): Promise<boolean> {
   try {
@@ -179,6 +179,7 @@ export async function startSidecarBinaryWithLocal(
 ): Promise<boolean> {
   // Fixing the variable name here from sserverUrl -> serverUrl
   // should be automatig, or can we really do it with lsp
+  return true;
   const serverUrl = getSidecarBinaryURL();
   const shouldUseSelfRun = sidecarUseSelfRun();
   if (shouldUseSelfRun) {

@@ -12,12 +12,13 @@ import { AnswerSplitOnNewLineAccumulatorStreaming, StreamProcessor } from '../..
 import { applyEdits, applyEditsDirectly, } from '../../server/applyEdits';
 import { RecentEditsRetriever } from '../../server/editedFiles';
 import { handleRequest } from '../../server/requestHandler';
-import { EditedCodeStreamingRequest, SideCarAgentEvent, SidecarApplyEditsRequest, SidecarContextEvent, SidecarUndoPlanStep } from '../../server/types';
-import { RepoRef, SideCarClient } from '../../sidecar/client';
+import { EditedCodeStreamingRequest, SideCarAgentEvent, SidecarApplyEditsRequest, SidecarUndoPlanStep } from '../../server/types';
+import { RepoRef } from '../../sidecar/client';
 import { getUniqueId } from '../../utilities/uniqueId';
 import { ProjectContext } from '../../utilities/workspaceContext';
 import postHogClient from '../../posthog/client';
 import { AideAgentEventSenderResponse, AideAgentMode, AideAgentPromptReference, AideAgentRequest, AideAgentResponseStream, AideAgentScope, AideSessionExchangeUserAction, AideSessionParticipant } from '../../types';
+import { SIDECAR_CLIENT } from '../../extension';
 
 /**
  * Stores the necessary identifiers required for identifying a response stream
@@ -30,11 +31,10 @@ interface ResponseStreamIdentifier {
 class AideResponseStreamCollection {
 	private responseStreamCollection: Map<string, AideAgentEventSenderResponse> = new Map();
 
-	constructor(private extensionContext: vscode.ExtensionContext, private sidecarClient: SideCarClient, private aideAgentSessionProvider: AideAgentSessionProvider) {
+	constructor(private extensionContext: vscode.ExtensionContext, private aideAgentSessionProvider: AideAgentSessionProvider) {
 		this.extensionContext = extensionContext;
-		this.sidecarClient = sidecarClient;
-
 	}
+
 	getKey(responseStreamIdentifier: ResponseStreamIdentifier): string {
 		return `${responseStreamIdentifier.sessionId}-${responseStreamIdentifier.exchangeId}`;
 	}
@@ -47,7 +47,7 @@ class AideResponseStreamCollection {
 			// we can send empty access token here since we are not making llm calls
 			// on the sidecar... pretty sure I will forget and scream at myself later on
 			// for having herd knowledged like this
-			const responseStreamAnswer = this.sidecarClient.cancelRunningEvent(responseStreamIdentifier.sessionId, responseStreamIdentifier.exchangeId, this.aideAgentSessionProvider.editorUrl!, '');
+			const responseStreamAnswer = SIDECAR_CLIENT!.cancelRunningEvent(responseStreamIdentifier.sessionId, responseStreamIdentifier.exchangeId, this.aideAgentSessionProvider.editorUrl!, '');
 			this.aideAgentSessionProvider.reportAgentEventsToChat(true, responseStreamAnswer);
 		}));
 		this.responseStreamCollection.set(this.getKey(responseStreamIdentifier), responseStream);
@@ -114,7 +114,6 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 	constructor(
 		private currentRepoRef: RepoRef,
 		private projectContext: ProjectContext,
-		private sidecarClient: SideCarClient,
 		recentEditsRetriever: RecentEditsRetriever,
 		extensionContext: vscode.ExtensionContext,
 	) {
@@ -141,11 +140,7 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 
 		// our collection of active response streams for exchanges which are still running
 		// apparantaly this also works??? crazy the world of js
-		this.responseStreamCollection = new AideResponseStreamCollection(extensionContext, sidecarClient, this);
-	}
-
-	async sendContextRecording(events: SidecarContextEvent[]) {
-		await this.sidecarClient.sendContextRecording(events, this.editorUrl);
+		this.responseStreamCollection = new AideResponseStreamCollection(extensionContext, this);
 	}
 
 	async undoToCheckpoint(request: SidecarUndoPlanStep): Promise<{
@@ -336,13 +331,13 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 		// check here that we do not look at the user info over here if the llm keys are set
 		const session = await vscode.csAuthentication.getSession();
 		const token = session?.accessToken ?? '';
-		const stream = this.sidecarClient.agentSessionEditFeedback(iterationQuery, sessionId, exchangeId, this.editorUrl!, AideAgentMode.Edit, references, this.currentRepoRef, this.projectContext.labels, token);
+		const stream = SIDECAR_CLIENT!.agentSessionEditFeedback(iterationQuery, sessionId, exchangeId, this.editorUrl!, AideAgentMode.Edit, references, this.currentRepoRef, this.projectContext.labels, token);
 		this.reportAgentEventsToChat(true, stream);
 	}
 
 	handleSessionUndo(sessionId: string, exchangeId: string): void {
 		// TODO(skcd): Handle this properly that we are doing an undo over here
-		this.sidecarClient.handleSessionUndo(sessionId, exchangeId, this.editorUrl!);
+		SIDECAR_CLIENT!.handleSessionUndo(sessionId, exchangeId, this.editorUrl!);
 		console.log('handleSessionUndo', sessionId, exchangeId);
 	}
 
@@ -368,9 +363,12 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 			// get cleaned up via GC
 			const session = await vscode.csAuthentication.getSession();
 			const accessToken = session?.accessToken ?? '';
-			const responseStream = this.sidecarClient.userFeedbackOnExchange(sessionId, exchangeId, stepIndex, editorUrl, isAccepted, accessToken);
+			const responseStream = SIDECAR_CLIENT!.userFeedbackOnExchange(sessionId, exchangeId, stepIndex, editorUrl, isAccepted, accessToken);
 			this.reportAgentEventsToChat(true, responseStream);
 		}
+	}
+
+	handleUserWebViewMessage(sessionId: string, exchangeId: string, message: string): void {
 	}
 
 	handleEvent(event: AideAgentRequest): void {
@@ -425,7 +423,7 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 		const agentMode = event.mode;
 		const variables = event.references;
 		if (event.mode === AideAgentMode.Chat) {
-			const responseStream = this.sidecarClient.agentSessionChat(prompt, sessionId, exchangeIdForEvent, editorUrl, agentMode, variables, this.currentRepoRef, this.projectContext.labels, workosAccessToken);
+			const responseStream = SIDECAR_CLIENT!.agentSessionChat(prompt, sessionId, exchangeIdForEvent, editorUrl, agentMode, variables, this.currentRepoRef, this.projectContext.labels, workosAccessToken);
 			await this.reportAgentEventsToChat(true, responseStream);
 		}
 		// Now lets try to handle the edit event first
@@ -435,11 +433,11 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 		// if its selection scope then its agentic
 		if (event.mode === AideAgentMode.Edit) {
 			if (event.scope === AideAgentScope.Selection) {
-				const responseStream = await this.sidecarClient.agentSessionAnchoredEdit(prompt, sessionId, exchangeIdForEvent, editorUrl, agentMode, variables, this.currentRepoRef, this.projectContext.labels, workosAccessToken);
+				const responseStream = await SIDECAR_CLIENT!.agentSessionAnchoredEdit(prompt, sessionId, exchangeIdForEvent, editorUrl, agentMode, variables, this.currentRepoRef, this.projectContext.labels, workosAccessToken);
 				await this.reportAgentEventsToChat(true, responseStream);
 			} else {
 				const isWholeCodebase = event.scope === AideAgentScope.Codebase;
-				const responseStream = await this.sidecarClient.agentSessionPlanStep(prompt, sessionId, exchangeIdForEvent, editorUrl, agentMode, variables, this.currentRepoRef, this.projectContext.labels, isWholeCodebase, workosAccessToken);
+				const responseStream = await SIDECAR_CLIENT!.agentSessionPlanStep(prompt, sessionId, exchangeIdForEvent, editorUrl, agentMode, variables, this.currentRepoRef, this.projectContext.labels, isWholeCodebase, workosAccessToken);
 				await this.reportAgentEventsToChat(true, responseStream);
 			}
 		}
@@ -450,7 +448,7 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 		// once we have a step of the plan we should stream it along with the edits of the plan
 		// and keep doing that until we are done completely
 		if (event.mode === AideAgentMode.Plan) {
-			const responseStream = await this.sidecarClient.agentSessionPlanStep(prompt, sessionId, exchangeIdForEvent, editorUrl, agentMode, variables, this.currentRepoRef, this.projectContext.labels, false, workosAccessToken);
+			const responseStream = await SIDECAR_CLIENT!.agentSessionPlanStep(prompt, sessionId, exchangeIdForEvent, editorUrl, agentMode, variables, this.currentRepoRef, this.projectContext.labels, false, workosAccessToken);
 			await this.reportAgentEventsToChat(true, responseStream);
 		}
 	}
