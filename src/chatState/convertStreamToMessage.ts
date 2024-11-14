@@ -13,6 +13,7 @@ import { SideCarAgentEvent, SidecarRequestRange } from '../server/types';
 import { Limiter } from '../server/applyEdits';
 import { IndentationHelper, IndentStyleSpaces } from '../completions/providers/editorSessionProvider';
 import { AdjustedLineContent, LineContent, LineIndentManager } from '../completions/providers/reportEditorSessionAnswerStream';
+import { AideAgentResponseStream } from '../types';
 
 
 export const formatPathsInAnswer = async (answer: string, reporef: RepoRef): Promise<string> => {
@@ -97,7 +98,7 @@ export const reportCodeSpansToChat = (codeSpans: CodeSpan[], workingDirectory: s
 	return '## Relevant code snippets\n\n' + codeSpansString + suffixString;
 };
 
-export const reportCodeReferencesToChat = (response: vscode.AideAgentResponseStream, codeSpans: CodeSpan[], workingDirectory: string) => {
+export const reportCodeReferencesToChat = (response: AideAgentResponseStream, codeSpans: CodeSpan[], workingDirectory: string) => {
 	const sortedCodeSpans = codeSpans.sort((a, b) => {
 		if (a.score !== null && b.score !== null) {
 			return b.score - a.score;
@@ -129,7 +130,7 @@ export const reportCodeReferencesToChat = (response: vscode.AideAgentResponseStr
 
 
 export const reportProcUpdateToChat = (
-	progress: vscode.AideAgentResponseStream,
+	progress: AideAgentResponseStream,
 	proc: AgentStep,
 	workingDirectory: string,
 ) => {
@@ -156,7 +157,7 @@ const pattern = /(?:^|\s)(\w+\s+at\s+[\w/.-]+)?(.*)/s;
 export const reportAgentEventsToChat = async (
 	editMode: boolean,
 	stream: AsyncIterableIterator<SideCarAgentEvent>,
-	response: vscode.AideAgentResponseStream,
+	response: AideAgentResponseStream,
 	threadId: string,
 	token: vscode.CancellationToken,
 	sidecarClient: SideCarClient,
@@ -517,7 +518,7 @@ export class StreamProcessor {
 	documentLineIndex: number;
 	sentEdits: boolean;
 	documentLineLimit: number;
-	constructor(progress: vscode.AideAgentResponseStream,
+	constructor(progress: AideAgentResponseStream,
 		lines: string[],
 		indentStyle: IndentStyleSpaces | undefined,
 		uri: vscode.Uri,
@@ -631,7 +632,7 @@ export class StreamProcessor {
 
 class DocumentManager {
 	indentStyle: IndentStyleSpaces;
-	progress: vscode.AideAgentResponseStream;
+	progress: AideAgentResponseStream;
 	lines: LineContent[];
 	firstSentLineIndex: number;
 	firstRangeLine: number;
@@ -642,7 +643,7 @@ class DocumentManager {
 	uniqueId: string;
 
 	constructor(
-		progress: vscode.AideAgentResponseStream,
+		progress: AideAgentResponseStream,
 		lines: string[],
 		// Fix the way we provide context over here?
 		range: SidecarRequestRange,

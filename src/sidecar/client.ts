@@ -21,6 +21,7 @@ import { detectDefaultShell } from './default-shell';
 import { callServerEventStreamingBufferedGET, callServerEventStreamingBufferedPOST } from './ssestream';
 import { ConversationMessage, EditFileResponse, getSideCarModelConfiguration, IdentifierNodeType, InEditorRequest, InEditorTreeSitterDocumentationQuery, InEditorTreeSitterDocumentationReply, InLineAgentMessage, PlanResponse, RepoStatus, SemanticSearchResponse, SidecarVariableType, SidecarVariableTypes, SnippetInformation, SyncUpdate, TextDocument } from './types';
 import { MockModelSelection } from '../utilities/modelSelection';
+import { AideAgentCodeReference, AideAgentFileReference, AideAgentMode, AideAgentPromptReference } from '../types';
 
 export enum CompletionStopReason {
 	/**
@@ -435,7 +436,7 @@ export class SideCarClient {
 		query: string,
 		repoRef: RepoRef,
 		threadId: string,
-		variables: readonly vscode.AideAgentPromptReference[],
+		variables: readonly AideAgentPromptReference[],
 		projectLabels: string[],
 		editorUrl: string,
 		// probeProvider: AideProbeProvider,
@@ -1064,7 +1065,7 @@ export class SideCarClient {
 		sessionId: string,
 		exchangeId: string,
 		editorUrl: string,
-		agentMode: vscode.AideAgentMode,
+		agentMode: AideAgentMode,
 		variables: readonly vscode.ChatPromptReference[],
 		repoRef: RepoRef,
 		projectLabels: string[],
@@ -1156,7 +1157,7 @@ export class SideCarClient {
 		sessionId: string,
 		exchangeId: string,
 		editorUrl: string,
-		agentMode: vscode.AideAgentMode,
+		agentMode: AideAgentMode,
 		variables: readonly vscode.ChatPromptReference[],
 		repoRef: RepoRef,
 		projectLabels: string[],
@@ -1209,7 +1210,7 @@ export class SideCarClient {
 		sessionId: string,
 		exchangeId: string,
 		editorUrl: string,
-		agentMode: vscode.AideAgentMode,
+		agentMode: AideAgentMode,
 		variables: readonly vscode.ChatPromptReference[],
 		repoRef: RepoRef,
 		projectLabels: string[],
@@ -1263,7 +1264,7 @@ export class SideCarClient {
 		sessionId: string,
 		exchangeId: string,
 		editorUrl: string,
-		agentMode: vscode.AideAgentMode,
+		agentMode: AideAgentMode,
 		variables: readonly vscode.ChatPromptReference[],
 		repoRef: RepoRef,
 		projectLabels: string[],
@@ -1380,7 +1381,7 @@ export class SideCarClient {
 		sessionId: string,
 		exchangeId: string,
 		editorUrl: string,
-		agentMode: vscode.AideAgentMode,
+		agentMode: AideAgentMode,
 		variables: readonly vscode.ChatPromptReference[],
 		repoRef: RepoRef,
 		projectLabels: string[],
@@ -1637,7 +1638,7 @@ export async function convertVSCodeVariableToSidecarHackingForPlan(
 		// vscode.editor.selection is a special id which is also present in the editor
 		// this help us understand that this is a selection and not a file reference
 		if (variable.id === 'vscode.file.rangeNotSetProperlyFullFile' || variable.id === 'vscode.editor.selection' || variable.id === 'vscode.file.pinnedContext') {
-			const v = variable as vscode.AideAgentFileReference;
+			const v = variable as AideAgentFileReference;
 			const value = v.value;
 			const attachedFile = await resolveFile(value.uri);
 			let range = value.range;
@@ -1682,7 +1683,7 @@ export async function convertVSCodeVariableToSidecarHackingForPlan(
 				language: attachedFile.languageId,
 			});
 		} else if (variable.id === 'vscode.code') {
-			const v = variable as vscode.AideAgentCodeReference;
+			const v = variable as AideAgentCodeReference;
 			const value = v.value;
 			const attachedFile = await resolveFile(value.uri);
 			const range = value.range;
@@ -1803,7 +1804,7 @@ async function convertVSCodeVariableToSidecar(
 		// vscode.editor.selection is a special id which is also present in the editor
 		// this help us understand that this is a selection and not a file reference
 		if (variable.id === 'vscode.file' || variable.id === 'vscode.editor.selection') {
-			const v = variable as vscode.AideAgentFileReference;
+			const v = variable as AideAgentFileReference;
 			const value = v.value;
 			const attachedFile = await resolveFile(value.uri);
 			const range = value.range;
@@ -1831,7 +1832,7 @@ async function convertVSCodeVariableToSidecar(
 				language: attachedFile.languageId,
 			});
 		} else if (variable.id === 'vscode.code') {
-			const v = variable as vscode.AideAgentCodeReference;
+			const v = variable as AideAgentCodeReference;
 			const value = v.value;
 			const attachedFile = await resolveFile(value.uri);
 			const range = value.range;
@@ -1899,7 +1900,7 @@ async function convertVSCodeVariableToSidecar(
 }
 
 async function newConvertVSCodeVariableToSidecar(
-	variables: readonly vscode.AideAgentPromptReference[],
+	variables: readonly AideAgentPromptReference[],
 ): Promise<UserContext> {
 	const sidecarVariables: SidecarVariableTypes[] = [];
 	const fileCache: Map<string, vscode.TextDocument> = new Map();
@@ -1917,7 +1918,7 @@ async function newConvertVSCodeVariableToSidecar(
 		// vscode.editor.selection is a special id which is also present in the editor
 		// this help us understand that this is a selection and not a file reference
 		if (variable.id === 'vscode.file' || variable.id === 'vscode.editor.selection' || variable.id === 'vscode.file.rangeNotSetProperlyFullFile') {
-			const v = variable as vscode.AideAgentFileReference;
+			const v = variable as AideAgentFileReference;
 			const value = v.value;
 			const attachedFile = await resolveFile(value.uri);
 			let range = value.range;
@@ -1963,7 +1964,7 @@ async function newConvertVSCodeVariableToSidecar(
 				language: attachedFile.languageId,
 			});
 		} else if (variable.id === 'vscode.code') {
-			const v = variable as vscode.AideAgentCodeReference;
+			const v = variable as AideAgentCodeReference;
 			const value = v.value;
 			const attachedFile = await resolveFile(value.uri);
 			const range = value.range;

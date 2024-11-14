@@ -8,6 +8,7 @@ import { RepoRef, SideCarClient } from '../../sidecar/client';
 import { InEditorRequest, InLineAgentContextSelection } from '../../sidecar/types';
 import { parseDiagnosticsInformation, reportFromStreamToEditorSessionProgress } from './reportEditorSessionAnswerStream';
 import { shouldUseExactMatching } from '../../utilities/uniqueId';
+import { AideAgentRequest, AideAgentResponseStream } from '../../types';
 
 export enum IndentStyle {
 	Tabs = 'tabs',
@@ -179,8 +180,8 @@ export async function provideInteractiveEditorResponse(
 	repoRef: RepoRef,
 	sidecarClient: SideCarClient,
 	workingDirectory: string,
-	request: vscode.AideAgentRequest,
-	progress: vscode.AideAgentResponseStream,
+	request: AideAgentRequest,
+	progress: AideAgentResponseStream,
 	token: vscode.CancellationToken,
 ): Promise<vscode.ChatResult> {
 	const variables = request.references;

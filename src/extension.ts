@@ -2,8 +2,11 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import { PanelProvider } from "./PanelProvider";
-import { SideCarClient } from "./sidecar/client";
+import { RepoRef, RepoRefBackend, SideCarClient } from "./sidecar/client";
 import { startSidecarBinary } from "./utilities/setupSidecarBinary";
+import { AideAgentSessionProvider } from "./completions/providers/aideAgentProvider";
+import { ProjectContext } from "./utilities/workspaceContext";
+import { RecentEditsRetriever } from "./server/editedFiles";
 
 export let SIDECAR_CLIENT: SideCarClient | null = null;
 
@@ -20,11 +23,71 @@ export async function activate(context: vscode.ExtensionContext) {
 
   const panelProvider = new PanelProvider(context.extensionUri);
 
+  let rootPath = vscode.workspace.rootPath;
+  if (!rootPath) {
+    rootPath = "";
+  }
+
+  const currentRepo = new RepoRef(
+    // We assume the root-path is the one we are interested in
+    rootPath,
+    RepoRefBackend.local
+  );
+
+  // We also get some context about the workspace we are in and what we are
+  // upto
+  const projectContext = new ProjectContext();
+  await projectContext.collectContext();
+
+  // add the recent edits retriver to the subscriptions
+  // so we can grab the recent edits very quickly
+  const recentEditsRetriever = new RecentEditsRetriever(
+    300 * 1000,
+    vscode.workspace
+  );
+  context.subscriptions.push(recentEditsRetriever);
+
+  // Register the agent session provider
+  const agentSessionProvider = new AideAgentSessionProvider(
+    currentRepo,
+    projectContext,
+    sidecarClient,
+    recentEditsRetriever,
+    context
+  );
+  const editorUrl = agentSessionProvider.editorUrl;
+  context.subscriptions.push(agentSessionProvider);
+
   context.subscriptions.push(
-    panelProvider.onMessageFromWebview((message) => {
+    panelProvider.onMessageFromWebview(async (message) => {
       if (message.type === "new-request") {
-        console.log(message.query);
-        // @theskcd we will ping sindecar here
+        if (!editorUrl) {
+          return;
+        }
+
+        //const { query, exchangeId } = message;
+        //const sessionId = randomUUID();
+        //
+        //const iterationEdits = new vscode.WorkspaceEdit();
+        //
+        //const stream = sidecarClient.agentSessionPlanStep(
+        //  query,
+        //  sessionId,
+        //  exchangeId,
+        //  editorUrl,
+        //  AideAgentMode.Edit,
+        //  [],
+        //  currentRepo,
+        //  projectContext.labels,
+        //  false,
+        //  "" // Don't pass token for now (people can put their own API keys)
+        //);
+
+        //const model = new ChatModel();
+        //const response = model.addResponse();
+        //const cts = new vscode.CancellationTokenSource();
+        //
+        //await reportAgentEventsToChat(true, stream);
       }
     })
   );

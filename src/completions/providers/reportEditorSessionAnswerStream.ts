@@ -12,6 +12,7 @@ import * as vscode from 'vscode';
 import { DiagnosticCode, DiagnosticInformationFromEditor, DiagnosticSeverity, InLineAgentAction, InLineAgentContextSelection, InLineAgentLLMType, InLineAgentMessage } from '../../sidecar/types';
 import { RepoRef, SideCarClient } from '../../sidecar/client';
 import { IndentStyle, IndentStyleSpaces, IndentationHelper } from './editorSessionProvider';
+import { AideAgentResponseStream } from '../../types';
 
 export interface EditMessage {
 	message: string | null;
@@ -19,7 +20,7 @@ export interface EditMessage {
 
 export const reportFromStreamToEditorSessionProgress = async (
 	stream: AsyncIterator<InLineAgentMessage>,
-	progress: vscode.AideAgentResponseStream,
+	progress: AideAgentResponseStream,
 	cancellationToken: vscode.CancellationToken,
 	_currentRepoRef: RepoRef,
 	_workingDirectory: string,
@@ -304,7 +305,7 @@ class StreamProcessor {
 	sentEdits: boolean;
 	documentLineLimit: number;
 	constructor(
-		progress: vscode.AideAgentResponseStream,
+		progress: AideAgentResponseStream,
 		document: vscode.TextDocument,
 		lines: string[],
 		contextSelection: InLineAgentContextSelection,
@@ -436,13 +437,13 @@ class StreamProcessor {
 
 class DocumentManager {
 	indentStyle: IndentStyleSpaces;
-	progress: vscode.AideAgentResponseStream;
+	progress: AideAgentResponseStream;
 	lines: LineContent[];
 	firstSentLineIndex: number;
 	firstRangeLine: number;
 
 	constructor(
-		progress: vscode.AideAgentResponseStream,
+		progress: AideAgentResponseStream,
 		private document: vscode.TextDocument,
 		lines: string[],
 		contextSelection: InLineAgentContextSelection,

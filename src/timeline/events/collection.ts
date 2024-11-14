@@ -12,6 +12,7 @@ import {
 } from '../../llm/recipe/prompts';
 import { EventType } from './type';
 import { writeFileContents } from '../../llm/recipe/helpers';
+import { AideAgentResponseStream } from '../../types';
 
 interface TestExecutionHarness {
 	testScript: string;
@@ -495,7 +496,7 @@ export const taskComplete = (): ToolingEvent => {
 };
 
 type ChatProgress = {
-	response: vscode.AideAgentResponseStream;
+	response: AideAgentResponseStream;
 	cancellationToken: vscode.CancellationToken;
 };
 

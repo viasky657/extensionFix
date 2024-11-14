@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { Event } from "./model";
+import { ClientRequest } from "./model";
 import { getNonce } from "./webviews/utils/nonce";
 
 export class PanelProvider implements vscode.WebviewViewProvider {
@@ -7,7 +7,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
   constructor(private readonly _extensionUri: vscode.Uri) {}
 
-  private _onMessageFromWebview = new vscode.EventEmitter<Event>();
+  private _onMessageFromWebview = new vscode.EventEmitter<ClientRequest>();
   onMessageFromWebview = this._onMessageFromWebview.event;
 
   private _onDidWebviewBecomeVisible = new vscode.EventEmitter<void>();

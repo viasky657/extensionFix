@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { AideAgentResponseStream } from '../types';
 import { SidecarApplyEditsRequest, SidecarApplyEditsResponse } from './types';
 import * as vscode from 'vscode';
 
@@ -67,7 +68,7 @@ export async function applyEditsDirectly(
  */
 export async function applyEdits(
 	request: SidecarApplyEditsRequest,
-	response: vscode.AideAgentResponseStream,
+	response: AideAgentResponseStream,
 	iterationEdits: vscode.WorkspaceEdit,
 ): Promise<SidecarApplyEditsResponse> {
 	// const limiter = new Limiter(1);
