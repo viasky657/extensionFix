@@ -1,5 +1,6 @@
 const lookup: Record<string, any> = {
   className: "class",
+  htmlFor: 'for'
 };
 
 export function convertPropsToRegularHTMLAttributes(
