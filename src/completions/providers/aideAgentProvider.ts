@@ -20,6 +20,7 @@ import postHogClient from '../../posthog/client';
 import { AideAgentEventSenderResponse, AideAgentMode, AideAgentPromptReference, AideAgentRequest, AideAgentResponseStream, AideAgentScope, AideSessionExchangeUserAction, AideSessionParticipant } from '../../types';
 import { SIDECAR_CLIENT } from '../../extension';
 import { PanelProvider } from '../../PanelProvider';
+import assert from 'assert';
 
 /**
  * Stores the necessary identifiers required for identifying a response stream
@@ -206,6 +207,13 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 		if (request.plan_step_id) {
 			uniqueEditId = `${uniqueEditId}::${request.plan_step_id}`;
 		}
+		const textDocument = await vscode.workspace.openTextDocument(vscode.Uri.file(request.fs_file_path));
+		await vscode.window.showTextDocument(textDocument, {
+			preview: true,
+		});
+		const activeWindow = vscode.window.activeTextEditor;
+		assert(activeWindow?.document.fileName === request.fs_file_path, "file paths are not correct");
+		// now that we are showing it, it should also be the active text editor I suppose?
 		const editStreamEvent = request;
 		const fileDocument = editStreamEvent.fs_file_path;
 		if ('Start' === editStreamEvent.event) {
