@@ -244,6 +244,7 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 					// which tracks this edit in our system so we can track it as a timeline
 					// for the editor
 					uniqueEditId,
+					activeWindow,
 				),
 			});
 		} else if ('End' === editStreamEvent.event) {
@@ -257,6 +258,10 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 				await editsManager.streamProcessor.processLine(currentLine);
 			}
 			editsManager.streamProcessor.cleanup();
+			// send a no-op edit to update the undo stack
+			activeWindow.edit((_) => {
+				// No-op edit
+			}, { undoStopBefore: false, undoStopAfter: true });
 
 			await vscode.workspace.save(vscode.Uri.file(editStreamEvent.fs_file_path)); // save files upon stream completion
 			console.log('provideEditsStreamed::finished', editStreamEvent.fs_file_path);
