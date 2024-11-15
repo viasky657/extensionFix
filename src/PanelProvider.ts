@@ -150,14 +150,29 @@ export class PanelProvider implements vscode.WebviewViewProvider {
       const exchangePossible = this._runningTask.exchanges.find((exchange) => {
         return exchange.exchangeId === exchangeId;
       }) as Response | undefined;
-      if (exchangePossible && thinking) {
-        exchangePossible.parts.push({
-          type: 'toolThinking',
-          markdown: {
-            type: "markdown",
-            rawMarkdown: thinking,
-          }
+
+      if (exchangePossible) {
+        const index = exchangePossible.parts.findIndex((part) => {
+          return (part.type === 'toolThinking');
         });
+        if (index !== -1) {
+          if (exchangePossible.parts[index].type === 'toolThinking' && thinking) {
+            exchangePossible.parts[index].markdown = {
+              type: "markdown",
+              rawMarkdown: thinking,
+            };
+          }
+        } else {
+          if (thinking) {
+            exchangePossible.parts.push({
+              type: 'toolThinking',
+              markdown: {
+                type: "markdown",
+                rawMarkdown: thinking,
+              }
+            });
+          }
+        }
       }
 
       // we update our webview with the latest state
