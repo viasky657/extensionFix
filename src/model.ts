@@ -26,8 +26,15 @@ interface TaskResponseEvent {
   response: Response;
 }
 
-interface InitEvent {
+interface InitRequest {
   type: "init";
+}
+
+interface InitResponse {
+  type: "init-response";
+  task: Task;
+  view: ViewType;
+  isSidecarReady: boolean;
 }
 
 interface InitialState {
@@ -40,11 +47,12 @@ interface TaskUpdate {
   currentTask: Task,
 }
 
-interface RequestSidecarState {
-  type: 'request-sidecar-state',
+interface SidecarReadyState {
+  type: 'sidecar-ready-state',
+  isSidecarReady: boolean,
 }
 
-export type Event = OpenTaskEvent | TaskResponseEvent | InitEvent | TaskFeedback | InitialState | TaskUpdate | RequestSidecarState;
+export type Event = OpenTaskEvent | TaskResponseEvent | InitRequest | InitResponse | TaskFeedback | InitialState | TaskUpdate | SidecarReadyState;
 
 export type NewSessionRequest = {
   type: "new-request";
@@ -185,4 +193,5 @@ export interface AppState {
   view: ViewType;
   currentTask: Task;
   loadedTasks: Map<string, Task>;
+  isSidecarReady: boolean;
 }

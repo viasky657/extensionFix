@@ -1,10 +1,10 @@
 import * as React from "react";
-import { Event, ViewType, Task, View, AppState } from "../model";
+import { Event, View, AppState } from "../model";
 import { TaskView } from "@task/view";
-import { uniqueId } from "lodash";
 import { PresetView } from "@preset/view";
 import LoadingSpinner from "components/loading-spinner";
 import { processFormData } from './utils/form';
+import { v4 } from "uuid";
 
 interface vscode {
   postMessage(message: Event): void;
@@ -39,15 +39,6 @@ function onNewPreset(event: React.FormEvent<HTMLFormElement>) {
   console.log(processFormData(data))
 }
 
-// Move this somewhere else
-interface State {
-  extensionReady: boolean;
-  view: ViewType;
-  currentTask?: Task;
-  loadedTasks: Map<string, Task>;
-}
-
-
 function reducer(state: AppState, action: Event) {
   const newState = structuredClone(state);
 
@@ -59,8 +50,24 @@ function reducer(state: AppState, action: Event) {
     newState.currentTask = action.currentTask;
     return newState;
   }
-  if (action.type === "init") {
+
+  if (action.type === "sidecar-ready-state") {
+    newState.isSidecarReady = action.isSidecarReady;
+    return newState;
+  }
+
+  if (action.type === "init-response") {
+    console.log("init", action.task);
     newState.extensionReady = true;
+
+    const task = action.task;
+    if (!newState.loadedTasks.has(task.sessionId)) {
+      newState.loadedTasks.set(task.sessionId, task);
+    }
+    newState.view = action.view;
+    newState.currentTask = task;
+
+    newState.isSidecarReady = action.isSidecarReady;
   } else if (action.type === "open-task") {
     const task = action.task;
     if (!newState.loadedTasks.has(task.sessionId)) {
@@ -69,14 +76,16 @@ function reducer(state: AppState, action: Event) {
     newState.view = View.Task;
     newState.currentTask = task;
   }
+
   return newState;
 }
 
 export const initialState: AppState = {
   extensionReady: false,
   view: View.Task,
+  isSidecarReady: false, // this is extra
   currentTask: {
-    sessionId: uniqueId(),
+    sessionId: v4(),
     context: [],
     cost: 0,
     usage: {
@@ -105,12 +114,12 @@ export const initialState: AppState = {
 
 const App = () => {
   const [state, dispatch] = React.useReducer(reducer, initialState);
-  const [isSidecarReady, setIsSidecarReady] = React.useState(false);
 
   React.useEffect(() => {
-    // request the sidecar state
+    console.log({ state })
+    // fetches state from the extension
     vscode.postMessage({
-      type: 'request-sidecar-state', // this is currently only for sidecar
+      type: 'init',
     });
 
     const handleMessage = (event: MessageEvent<Event>) => {
@@ -143,10 +152,6 @@ const App = () => {
           currentTask: message.initialAppState.currentTask,
         });
       }
-
-      if (message.command === "sidecar-ready-state") {
-        setIsSidecarReady(message.isSidecarReady);
-      }
     };
 
     // listen for messages
@@ -156,7 +161,7 @@ const App = () => {
 
   return (
     <div className="h-full">
-      {isSidecarReady ? renderView(state) : <LoadingSpinner />}
+      {state.isSidecarReady ? renderView(state) : <LoadingSpinner />}
     </div>
   );
 }

@@ -38,10 +38,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
       this._onMessageFromWebview.fire(data);
       switch (data.type) {
         case "init":
-          webviewView.webview.postMessage({ command: "init" });
-          break;
-        case "request-sidecar-state":
-          this.updateState();
+          webviewView.webview.postMessage({ type: "init-response", task: this._runningTask, view: View.Task, isSidecarReady: this._isSidecarReady });
           break;
       }
     });
@@ -273,7 +270,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     }
 
     const sidecarReadyState = {
-      command: "sidecar-ready-state",
+      type: "sidecar-ready-state",
       isSidecarReady: this._isSidecarReady
     };
 
@@ -323,7 +320,6 @@ export class PanelProvider implements vscode.WebviewViewProvider {
             <script nonce="${nonce}">
                 const vscode = acquireVsCodeApi();
                 window.onload = function() {
-                  vscode.postMessage({ type: 'init' });
                   console.log('HTML started up.');
                 };
             </script>
