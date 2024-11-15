@@ -188,6 +188,7 @@ function renderPart(part: ResponsePart, index: number, allParts: ResponsePart[])
   const nextPart = allParts[index + 1]
   const isThinkingFollowedByTool = part.type === "toolThinking" && nextPart && nextPart.type === "toolType"
 
+  console.log("part type", part.type);
   switch (part.type) {
     case "markdown":
       return (
@@ -222,28 +223,20 @@ function renderPart(part: ResponsePart, index: number, allParts: ResponsePart[])
     case "toolType":
       const icon = <span aria-hidden className={`flex-shrink-0 translate-y-0.5 codicon ${toolIcons[part.toolType as ToolType] || 'codicon-question'}`} />
 
-
       let label = part.toolType as string;
 
-      switch (part.toolType) {
-        case 'AskFollowupQuestions':
-          label = 'Follow up question';
-        case 'CodeEditing':
-          label = 'Code editing';
-        case 'LSPDiagnostics':
-          label = 'LSP Diagnostics';
-        case 'RepoMapGeneration':
-          label = 'Repo map generation';
-        case 'AttemptCompletion':
-          label = 'Attempt completion';
-        case 'ListFiles':
-          label = 'List files';
-        case 'OpenFile':
-          label = 'Open file';
-        case 'SearchFileContentWithRegex':
-          label = 'Search content file with regex';
-      }
+      const toolTypeLabels = {
+        AskFollowupQuestions: 'Follow up question',
+        CodeEditing: 'Code editing',
+        LSPDiagnostics: 'LSP Diagnostics',
+        RepoMapGeneration: 'Repo map generation',
+        AttemptCompletion: 'Attempt completion',
+        ListFiles: 'List files',
+        OpenFile: 'Open file',
+        SearchFileContentWithRegex: 'Search content file with regex',
+      };
 
+      label = toolTypeLabels[part.toolType] || "Unknown tool type";
 
       return (
         <div className="flex gap-2 bg-blue-500/10 rounded px-2 py-2">
