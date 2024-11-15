@@ -1,14 +1,12 @@
 import * as React from "react";
-import { VSCodeBadge } from "vscode-elements/badge";
-import { VSCodeButton } from "vscode-elements/button";
-import { VSCodeTextArea } from "vscode-elements/textarea";
-
 import { RequestViewItem } from "components/exchange/request";
 import { ResponseViewItem } from "components/exchange/response";
 import { TaskDD, TaskDL, TaskDT } from "components/task-definition-list";
 import { Exchange, Task, Usage } from "../../model";
 import ClaudeLogo from "../assets/claude.svg";
 import { ObjectEntry } from "../utils/types";
+import { Textarea } from "components/textarea";
+import { Button } from "components/button";
 
 export interface TaskViewProps {
   task: Task;
@@ -55,7 +53,7 @@ export function TaskView(props: TaskViewProps) {
                 <React.Fragment>
                   <dt className="sr-only">API cost</dt>
                   <dd>
-                    <VSCodeBadge variant="counter">{cost}$</VSCodeBadge>
+                    <span>{cost}$</span>
                   </dd>
                 </React.Fragment>
               )}
@@ -100,12 +98,12 @@ export function TaskView(props: TaskViewProps) {
           )}
         </section>
         <form onSubmit={onSubmit} ref={formRef}>
-          <VSCodeTextArea
+          <Textarea
             className="w-full"
             name="query"
             onKeyDown={handleKeyDown}
           />
-          <VSCodeButton type="submit">Send</VSCodeButton>
+          <Button type="submit">Send</Button>
         </form>
       </div>
     </main>

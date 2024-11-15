@@ -4,6 +4,7 @@ import { TaskView } from "@task/view";
 import { uniqueId } from "lodash";
 import { PresetView } from "@preset/view";
 import LoadingSpinner from "components/loading-spinner";
+import { processFormData } from './utils/form';
 
 interface vscode {
   postMessage(message: Event): void;
@@ -35,7 +36,7 @@ function onNewPreset(event: React.FormEvent<HTMLFormElement>) {
   event.preventDefault();
   const form = event.currentTarget;
   const data = new FormData(form);
-  console.log(Object.fromEntries(data))
+  console.log(processFormData(data))
 }
 
 // Move this somewhere else
@@ -73,7 +74,7 @@ function reducer(state: AppState, action: Event) {
 
 export const initialState: AppState = {
   extensionReady: false,
-  view: View.Task,
+  view: View.Preset,
   currentTask: {
     sessionId: uniqueId(),
     context: [],
@@ -92,7 +93,7 @@ export const initialState: AppState = {
       customBaseUrl: "https://api.anthropic.com",
       permissions: {
         readData: "ask",
-        writeData: "never",
+        writeData: "ask",
       },
       customInstructions: "Answer as concisely as possible",
       name: "claude-sonnet-3.5",

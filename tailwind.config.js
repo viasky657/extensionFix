@@ -7,6 +7,9 @@ export default {
   content: ["./src/webviews/**/*.tsx"],
   theme: {
     extend: {
+      borderRadius: {
+        'xs': '0.1875rem'
+      },
       maxWidth: {
         "prose-lg": "75ch",
         "prose-xl": "90ch",

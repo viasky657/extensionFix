@@ -104,6 +104,9 @@ export class StreamProcessor {
 	documentLineIndex: number;
 	sentEdits: boolean;
 	documentLineLimit: number;
+	editLineDecorationType: vscode.TextEditorDecorationType;
+	activeWindow: vscode.TextEditor;
+	private previousDecorationRange: vscode.Range | null = null;
 	constructor(
 		lines: string[],
 		indentStyle: IndentStyleSpaces | undefined,
@@ -115,6 +118,17 @@ export class StreamProcessor {
 		uniqueId: string,
 		activeWindow: vscode.TextEditor,
 	) {
+		this.activeWindow = activeWindow;
+		this.editLineDecorationType = vscode.window.createTextEditorDecorationType(
+			{
+				isWholeLine: true,
+				backgroundColor: { id: "diffEditor.insertedLineBackground" },
+				outlineWidth: "1px",
+				outlineStyle: "solid",
+				outlineColor: { id: "diffEditor.insertedTextBorder" },
+				rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
+			},
+		);
 		// Initialize document with the given parameters
 		this.document = new DocumentManager(
 			lines,
@@ -142,6 +156,7 @@ export class StreamProcessor {
 		if (this.documentLineIndex <= this.documentLineLimit) {
 			this.document.replaceLines(this.documentLineIndex, this.documentLineLimit, new AdjustedLineContent('', 0, '', 0));
 		}
+		this.editLineDecorationType.dispose();
 	}
 
 	async processLine(answerStreamLine: AnswerStreamLine) {
@@ -153,6 +168,36 @@ export class StreamProcessor {
 		if (answerStreamLine.context !== AnswerStreamContext.InCodeBlock) {
 			return;
 		}
+
+		// console.log('documentLineIndex', this.documentLineIndex);
+
+		// updating the decorations
+		// Clear previous decoration
+		if (vscode.window.activeTextEditor?.document.uri.fsPath === this.activeWindow.document.uri.fsPath) {
+			if (this.previousDecorationRange) {
+				vscode.window.activeTextEditor.setDecorations(this.editLineDecorationType, []);
+			}
+
+			// Get the range for the current line
+			let lineNumber = this.documentLineIndex;
+			const lineCount = vscode.window.activeTextEditor.document.lineCount;
+			if (lineNumber >= lineCount) {
+				lineNumber = vscode.window.activeTextEditor.document.lineCount - 1;
+			}
+
+			// guard against empty files
+			if (lineNumber >= 0) {
+				const lineRange = vscode.window.activeTextEditor.document.lineAt(lineNumber).range;
+
+				// Apply the decoration
+				vscode.window.activeTextEditor.setDecorations(this.editLineDecorationType, [lineRange]);
+
+				// Update the previous decoration range
+				this.previousDecorationRange = lineRange;
+			}
+		}
+
+
 		const line = answerStreamLine.line;
 		if (this.previousLine) {
 			// if previous line is there, then we can reindent the current line
@@ -191,7 +236,6 @@ export class StreamProcessor {
 			const adjustedInitialLine = this.previousLine.reindent(line, this.document.indentStyle);
 			this.documentLineIndex = await this.document.replaceLine(initialAnchor, adjustedInitialLine);
 		}
-		// console.log('documentLineIndex', this.documentLineIndex);
 	}
 
 	// Find the initial anchor line in the document
@@ -357,6 +401,7 @@ class DocumentManager {
 				label: this.uniqueId.toString(),
 				needsConfirmation: false,
 			});
+			console.log('changedLineRange', startIndex, endIndex);
 			this.iterationEdits.replace(this.uri, new vscode.Range(startIndex, 0, endIndex, 1000), newLine.adjustedContent);
 			if (this.applyDirectly) {
 				await this.activeWindow.edit((editBuilder) => {
@@ -386,6 +431,7 @@ class DocumentManager {
 			label: this.uniqueId.toString(),
 			needsConfirmation: false,
 		});
+		console.log('changedLine', this.lines.length - 1);
 		this.iterationEdits.replace(this.uri, new vscode.Range(this.lines.length - 2, 1000, this.lines.length - 2, 1000), '\n' + newLine.adjustedContent);
 		if (this.applyDirectly) {
 			await this.activeWindow.edit((editBuilder) => {
@@ -414,6 +460,7 @@ class DocumentManager {
 			label: this.uniqueId.toString(),
 			needsConfirmation: false,
 		});
+		console.log('changedLine', index);
 		this.iterationEdits.replace(this.uri, new vscode.Range(index, 1000, index, 1000), '\n' + newLine.adjustedContent);
 		if (this.applyDirectly) {
 			await this.activeWindow.edit((editBuilder) => {

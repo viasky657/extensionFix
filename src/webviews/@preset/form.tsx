@@ -1,13 +1,11 @@
 
-import { VSCodeButton } from "vscode-elements/button";
-import { VSCodeTextArea } from "vscode-elements/textarea";
 import { ANTHROPIC_MODELS, PermissionState, Preset, Provider } from "../../model";
-import { VSCodeLabel } from "vscode-elements/label";
-import { VSCodeSingleSelect, VSCodeSingleSelectProps } from "vscode-elements/single-select";
-import { VSCodeOption } from "vscode-elements/option";
-import { VSCodeTextfield } from "vscode-elements/text-field";
 import * as React from "react";
-import { Checkbox, CheckboxInput } from "components/checkbox";
+import { Checkbox } from "components/checkbox";
+import { Select, Option, SelectProps } from "components/select";
+import { Input } from "components/input";
+import { Textarea } from "components/textarea";
+import { Button } from "components/button";
 
 
 interface PresetFormProps extends React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement> {
@@ -21,107 +19,107 @@ export function PresetForm(props: PresetFormProps) {
 
   return (
     <form {...rest}>
-      <VSCodeLabel htmlFor="provider">
+      <label htmlFor="provider">
         Provider
-      </VSCodeLabel>
-      <VSCodeSingleSelect id="provider" name="provider" className="w-full">
-        {Object.values(Provider).map((provider) => (
-          <VSCodeOption key={provider}>{provider}</VSCodeOption>
-        ))}
-      </VSCodeSingleSelect>
+        <Select className="w-full" id="provider" name="provider" defaultValue={initialData?.provider || Provider.Anthropic}>
+          {Object.values(Provider).map((provider) => (
+            <Option key={provider} value={provider}>{provider}</Option>
+          ))}
+        </Select>
+      </label>
 
       <fieldset>
-        <VSCodeLabel htmlFor="api-key">
+        <legend aria-hidden>API</legend>
+        <label htmlFor="api-key">
           APIKey
-        </VSCodeLabel>
-        <VSCodeTextfield className="w-full" id="api-key" name="api-key" type="password" />
-        <Checkbox>
-          <CheckboxInput name="custom-base-URL" />
+          <Input className="w-full" id="api-key" name="api-key" type="password" />
+        </label>
+        <label>
+          <Checkbox name="custom-base-URL" />
           Use custom base URL
-        </Checkbox>
+        </label>
       </fieldset>
 
-
-
-      <VSCodeLabel>
+      <label>
         Model
-      </VSCodeLabel>
-      <VSCodeSingleSelect className="w-full">
-        {ANTHROPIC_MODELS.map((model) => (
-          <VSCodeOption key={model}>{model}</VSCodeOption>
-        ))}
-      </VSCodeSingleSelect>
+        <Select className="w-full" defaultValue={initialData?.model || ANTHROPIC_MODELS[0]}>
+          {ANTHROPIC_MODELS.map((model) => (
+            <Option key={model} value={model}>{model}</Option>
+          ))}
+        </Select>
+      </label>
 
       <fieldset>
         <legend>Permissions</legend>
         <p>SōtaPR is smart, careful, and uses git to save changes - it works best with all permissions set to 'always'.</p>
-        <ul>
-          <li>
+        <ul className="grid grid-cols-[auto,_1fr]">
+          <li className="contents">
             <label htmlFor="code-editing">
               Code editing
             </label>
-            <PermissionSelect className="w-full" id="write-code" name="permissions[code-editing]" />
+            <PermissionSelect className="w-full border-none" id="write-code" name="permissions[code-editing]" />
           </li>
-          <li>
+          <li className="contents">
             <label htmlFor="permissions.terminal-commands">
               Run terminal commands
             </label>
-            <PermissionSelect className="w-full" id="permissions.terminal-commands" name="permissions[terminal-commands]" />
+            <PermissionSelect className="w-full border-none" id="permissions.terminal-commands" name="permissions[terminal-commands]" />
           </li>
-          <li>
+          <li className="contents">
             <label htmlFor="permissions.list-files">
               List files
             </label>
-            <PermissionSelect className="w-full" id="permissions.list-files" name="permissions[list-files]" />
+            <PermissionSelect className="w-full border-none" id="permissions.list-files" name="permissions[list-files]" />
           </li>
-          <li>
+          <li className="contents">
             <label htmlFor="permissions.search-file-content-with-regex">
               Search file content with regex
             </label>
-            <PermissionSelect className="w-full" id="permissions.search-file-content-with-regex" name="permissions[search-file-content-with-regex]" />
+            <PermissionSelect className="w-full border-none" id="permissions.search-file-content-with-regex" name="permissions[search-file-content-with-regex]" />
           </li>
-          <li>
+          <li className="contents">
             <label htmlFor="permissions.open-files">
               Open files
             </label>
-            <PermissionSelect className="w-full" id="permissions.oapen-files" name="permissions[open-files]" />
+            <PermissionSelect className="w-full border-none" id="permissions.oapen-files" name="permissions[open-files]" />
           </li>
-          <li>
+          <li className="contents">
             <label htmlFor="permissions.lsp-diagnostics">
               Use LSP diagnostics
             </label>
-            <PermissionSelect className="w-full" id="permissions.lsp-diagnostics" name="permissions[lsp-diagnostics]" />
+            <PermissionSelect className="w-full border-none" id="permissions.lsp-diagnostics" name="permissions[lsp-diagnostics]" />
           </li>
-          <li>
+          <li className="contents">
             <label htmlFor="permissions.followup-questions">
               Ask followup questions
             </label>
-            <PermissionSelect className="w-full" id="permissions.followup-questions" name="permissions[followup-questions]" />
+            <PermissionSelect className="w-full border-none" id="permissions.followup-questions" name="permissions[followup-questions]" />
           </li>
         </ul>
       </fieldset>
 
-      <VSCodeLabel htmlFor="name">
+      <label htmlFor="name">
         Preset name
-      </VSCodeLabel>
-      <VSCodeTextfield className="w-full" id="name" name="name" />
+        <Input className="w-full" id="name" name="name" />
+      </label>
 
-      <VSCodeLabel htmlFor="custom-instructions">
+
+      <label htmlFor="custom-instructions">
         Custom instructions
-      </VSCodeLabel>
-      <VSCodeTextArea className="w-full" id='custom-instructions' name="custom-instructions" />
+        <Textarea className="w-full" id='custom-instructions' name="custom-instructions" />
+      </label>
 
-      <VSCodeButton type="submit">Send</VSCodeButton>
+      <Button type="submit">Send</Button>
     </form>
   )
 }
 
-export function PermissionSelect(props: VSCodeSingleSelectProps) {
+export function PermissionSelect(props: SelectProps) {
   return (
-    <select {...props}>
+    <Select {...props} defaultValue={PermissionState.Always}>
       {Object.values(PermissionState).map((ps) => (
-        <option key={ps}>{ps}</option>
+        <Option key={ps} value={ps}>{ps}</Option>
       ))}
-    </select>
+    </Select>
   )
 }
