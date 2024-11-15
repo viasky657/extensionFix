@@ -10,6 +10,8 @@ import { arePathsEqual } from '../utilities/paths';
 import { mergePromise, TerminalProcess, TerminalProcessResultPromise } from './TerminalProcess';
 import { TerminalInfo, TerminalRegistry } from './TerminalRegistry';
 import pTimeout from './p-timeout';
+import delay from 'delay';
+import { SidecarTerminalFreshOutputRequest } from '../server/types';
 
 /*
 TerminalManager:
@@ -85,6 +87,68 @@ export class TerminalManager {
 		}
 		if (disposable) {
 			this.disposables.push(disposable);
+		}
+	}
+
+	public async getTerminalDetails(): Promise<string | undefined> {
+		// over here we need to first check the terminals which were active and which were inactive
+		// and then get their data over here
+		// if we are polling from an inactive terminal then we should make sure that we poll it once and not again
+		// and discard it from our collection at that point, there is no point in keeping all that data
+		const busyTerminals = this.getTerminals(true);
+		const inactiveTerminals = this.getTerminals(false);
+
+		if (busyTerminals.length > 0) {
+			// let the terminals breathe
+			await delay(300);
+		}
+
+		// let terminalWasBusy = false
+		if (busyTerminals.length > 0) {
+			// wait for terminals to cool down, since they are hot its good to give
+			// a bit of time before we get the stdout which might be heavily generated
+			await pWaitFor(() => busyTerminals.every((t) => !this.isProcessHot(t.id)), {
+				interval: 100,
+				timeout: 15_000,
+			}).catch(() => { });
+		}
+		let terminalDetails = "";
+		if (busyTerminals.length > 0) {
+			// terminals are cool, let's retrieve their output
+			terminalDetails += "\n\n# Running terminals which are active";
+			for (const busyTerminal of busyTerminals) {
+				terminalDetails += `\n## Original command: \`${busyTerminal.lastCommand}\``;
+				const newOutput = this.getUnretrievedOutput(busyTerminal.id);
+				if (newOutput) {
+					terminalDetails += `\n### New Output\n${newOutput}`;
+				}
+			}
+		}
+		// only show inactive terminals if there's output to show
+		if (inactiveTerminals.length > 0) {
+			const inactiveTerminalOutputs = new Map<number, string>();
+			for (const inactiveTerminal of inactiveTerminals) {
+				const newOutput = this.getUnretrievedOutput(inactiveTerminal.id);
+				if (newOutput) {
+					inactiveTerminalOutputs.set(inactiveTerminal.id, newOutput);
+				}
+			}
+			if (inactiveTerminalOutputs.size > 0) {
+				terminalDetails += "\n\n# Terminals which are inactive";
+				for (const [terminalId, newOutput] of inactiveTerminalOutputs) {
+					const inactiveTerminal = inactiveTerminals.find((t) => t.id === terminalId);
+					if (inactiveTerminal) {
+						terminalDetails += `\n## ${inactiveTerminal.lastCommand}`;
+						terminalDetails += `\n### New Output\n${newOutput}`;
+					}
+				}
+			}
+		}
+
+		if (terminalDetails === '') {
+			return undefined;
+		} else {
+			return terminalDetails;
 		}
 	}
 
@@ -191,6 +255,11 @@ export class TerminalManager {
 	}
 }
 
+export async function getTerminalOutputPending(terminalManager: TerminalManager, request: SidecarTerminalFreshOutputRequest): Promise<string | undefined> {
+	console.log('terminalOutput::request', request);
+	return await terminalManager.getTerminalDetails();
+}
+
 export async function executeTerminalCommand(command: string, cwd: string = process.cwd(), terminalManager: TerminalManager): Promise<string> {
 	try {
 		const terminalInfo = await terminalManager.getOrCreateTerminal(cwd);
@@ -206,7 +275,6 @@ export async function executeTerminalCommand(command: string, cwd: string = proc
 
 		return buffer;
 	} finally {
-		terminalManager.disposeAll();
 	}
 }
 
