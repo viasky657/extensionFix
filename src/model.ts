@@ -40,7 +40,11 @@ interface TaskUpdate {
   currentTask: Task,
 }
 
-export type Event = OpenTaskEvent | TaskResponseEvent | InitEvent | TaskFeedback | InitialState | TaskUpdate;
+interface RequestSidecarState {
+  type: 'request-sidecar-state',
+}
+
+export type Event = OpenTaskEvent | TaskResponseEvent | InitEvent | TaskFeedback | InitialState | TaskUpdate | RequestSidecarState;
 
 export type NewSessionRequest = {
   type: "new-request";

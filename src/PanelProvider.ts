@@ -40,6 +40,9 @@ export class PanelProvider implements vscode.WebviewViewProvider {
         case "init":
           webviewView.webview.postMessage({ command: "init" });
           break;
+        case "request-sidecar-state":
+          this.updateState();
+          break;
       }
     });
 
@@ -269,11 +272,13 @@ export class PanelProvider implements vscode.WebviewViewProvider {
       return;
     }
 
-    // tell the webview that the sidecar is ready
-    this._view.webview.postMessage({
-      command: 'updateState',
+    const sidecarReadyState = {
+      command: "sidecar-ready-state",
       isSidecarReady: this._isSidecarReady
-    });
+    };
+
+    // tell the webview that the sidecar is ready
+    this._view.webview.postMessage(sidecarReadyState);
   }
 
   // updates internal state and tells the webview

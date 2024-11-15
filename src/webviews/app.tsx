@@ -3,6 +3,7 @@ import { Event, ViewType, Task, View, AppState } from "../model";
 import { TaskView } from "@task/view";
 import { uniqueId } from "lodash";
 import { PresetView } from "@preset/view";
+import LoadingSpinner from "components/loading-spinner";
 
 interface vscode {
   postMessage(message: Event): void;
@@ -106,6 +107,11 @@ const App = () => {
   const [isSidecarReady, setIsSidecarReady] = React.useState(false);
 
   React.useEffect(() => {
+    // request the sidecar state
+    vscode.postMessage({
+      type: 'request-sidecar-state', // this is currently only for sidecar
+    });
+
     const handleMessage = (event: MessageEvent<Event>) => {
       dispatch(event.data);
     };
@@ -113,22 +119,6 @@ const App = () => {
     return () => {
       window.removeEventListener("message", handleMessage);
     };
-  }, []);
-
-  React.useEffect(() => {
-    // handles messages from the extension
-    const messageHandler = (event: MessageEvent) => {
-      const message = event.data;
-
-      // Only PanelProvider sends updateState messages
-      if (message.command === 'updateState') {
-        setIsSidecarReady(message.isSidecarReady);
-      }
-    };
-
-    // listen for messages
-    window.addEventListener('message', messageHandler);
-    return () => window.removeEventListener('message', messageHandler);
   }, []);
 
 
@@ -152,6 +142,10 @@ const App = () => {
           currentTask: message.initialAppState.currentTask,
         });
       }
+
+      if (message.command === "sidecar-ready-state") {
+        setIsSidecarReady(message.isSidecarReady);
+      }
     };
 
     // listen for messages
@@ -159,21 +153,9 @@ const App = () => {
     return () => window.removeEventListener('message', messageHandler);
   }, []);
 
-  // loading spinner
-  if (!isSidecarReady) {
-    return (
-      <div className="flex items-center justify-center h-full p-4">
-        <div className="flex flex-col items-center gap-2">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-          <p className="text-sm text-gray-600">Downloading and starting Sota PR Assistant...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="h-full">
-      {renderView(state)}
+      {isSidecarReady ? renderView(state) : <LoadingSpinner />}
     </div>
   );
 }
