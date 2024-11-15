@@ -61,7 +61,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
         customBaseUrl: "https://api.anthropic.com",
         permissions: {
           readData: "ask",
-          writeData: "never",
+          writeData: "ask",
         },
         customInstructions: "Answer as concisely as possible",
         name: "claude-sonnet-3.5",
@@ -194,6 +194,23 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           loadedTasks: new Map()
         }
       });
+    }
+  }
+
+  /**
+   * Returns if the exchange exists on the session
+   */
+  public doesExchangeExist(sessionId: string, exchangeId: string): boolean {
+    if (this._runningTask && this._runningTask.sessionId === sessionId) {
+      if (this._runningTask.exchanges.find((exchange) => {
+        return exchange.exchangeId === exchangeId;
+      })) {
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      return false;
     }
   }
 

@@ -2,8 +2,7 @@ import * as React from "react"
 import { Response, ResponsePart } from "../../../model"
 import MarkdownRenderer from "../markdown-renderer"
 import { ContextSummary } from "../context-summary"
-import { motion, AnimatePresence } from "framer-motion"
-import { FileSearch, Search, FolderOpen, Edit3, AlertCircle, HelpCircle, Wand2, GitBranch, Send, ChevronRight, Terminal, MessageSquare, CheckCircle2, ChevronDown, Code, Settings } from 'lucide-react'
+import { Exchange, ExchangeContent, ExchangeHeader } from "./exchange-base"
 
 type ToolType =
   | 'ListFiles'
@@ -15,193 +14,172 @@ type ToolType =
   | 'AttemptCompletion'
   | 'RepoMapGeneration'
 
-const toolIcons: Record<ToolType, React.ElementType> = {
-  ListFiles: Search,
-  SearchFileContentWithRegex: FileSearch,
-  OpenFile: FolderOpen,
-  CodeEditing: Edit3,
-  LSPDiagnostics: AlertCircle,
-  AskFollowupQuestions: HelpCircle,
-  AttemptCompletion: Wand2,
-  RepoMapGeneration: GitBranch,
+const toolIcons: Record<ToolType, string> = {
+  ListFiles: 'codicon-search',
+  SearchFileContentWithRegex: 'codicon-regex',
+  OpenFile: 'codicon-folder-opened',
+  CodeEditing: 'codicon-code',
+  LSPDiagnostics: 'codicon-checklist',
+  AskFollowupQuestions: 'codicon-comment-discussion',
+  AttemptCompletion: 'codicon-wand',
+  RepoMapGeneration: 'codicon-folder-library',
 }
 
 const Spinner = () => (
-  <motion.div
-    className="w-4 h-4 border-2 border-blue-500 rounded-full"
-    animate={{ rotate: 360 }}
-    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+  <div
+    className="w-4 h-4 border-2 border-blue-500 rounded-full animate-spin"
   />
 )
 
 
-function ParameterContent({ type, content, delta }: { 
-  type: string; 
-  content: string; 
-  delta: string 
+function ParameterContent({ type, content, delta }: {
+  type: string;
+  content: string;
+  delta: string
 }) {
-  return (
-    <div className="mt-2">
-      {(() => {
-        switch (type) {
-          case "fs_file_path":
-          case "directory_path":
-            return (
-              <button 
-                onClick={() => {/* Handle path click */}}
-                className="text-blue-400 hover:underline font-mono text-xs flex items-center gap-2 p-2 bg-zinc-800/30 rounded"
-              >
-                <FolderOpen className="w-4 h-4" />
-                {content}
-              </button>
-            )
-          
-          case "instruction":
-            return (
-              <div className="prose prose-invert prose-sm max-w-none bg-zinc-800/30 rounded p-4 border border-zinc-700">
-                <MarkdownRenderer rawMarkdown={content} />
-              </div>
-            )
-          
-          case "command":
-            return (
-              <div className="bg-zinc-900 rounded font-mono text-xs">
-                <div className="flex items-center gap-2 text-zinc-400 px-4 py-2 border-b border-zinc-700">
-                  <Terminal className="w-4 h-4" />
-                  <span>Terminal</span>
-                </div>
-                <div className="p-4 space-y-1">
-                  {content.split('\n').map((line, i) => (
-                    <div 
-                      key={i}
-                      className={line === delta ? "text-blue-400" : "text-zinc-300"}
-                    >
-                      $ {line}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )
-          
-          case "question":
-            return (
-              <div className="bg-blue-500/10 rounded p-4 border-l-4 border border-blue-500">
-                <div className="flex items-center gap-2 text-blue-400 mb-2">
-                  <MessageSquare className="w-4 h-4" />
-                  <span className="font-medium">Question</span>
-                </div>
-                <div className="text-zinc-300">
-                  {content}
-                </div>
-              </div>
-            )
-          
-          case "result":
-            return (
-              <div className="bg-green-950/30 rounded p-4 border border-green-600/30">
-                <div className="flex items-center gap-2 text-green-400 mb-2">
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span className="font-medium">Result</span>
-                </div>
-                <div className="text-zinc-300">
-                  {content}
-                </div>
-              </div>
-            )
-          
-          case "regex_pattern":
-          case "file_pattern":
-            return (
-              <div className="font-mono text-xs bg-zinc-800/50 rounded p-3">
-                {content.split('\n').map((line, i) => (
-                  <div 
-                    key={i}
-                    className={line === delta ? "text-blue-400" : "text-zinc-300"}
-                  >
-                    {line}
-                  </div>
-                ))}
-              </div>
-            )
-          
-          case "recursive":
-            return (
-              <div className="font-mono text-xs">
-                <span className={delta === content ? "text-blue-400" : "text-zinc-300"}>
-                  {content === "true" ? "Yes" : "No"}
-                </span>
-              </div>
-            )
-          
-          default:
-            return (
-              <div className="font-mono text-xs bg-zinc-800/50 rounded p-3">
-                {content.split('\n').map((line, i) => (
-                  <div 
-                    key={i}
-                    className={line === delta ? "text-blue-400" : "text-zinc-300"}
-                  >
-                    {line}
-                  </div>
-                ))}
-              </div>
-            )
-        }
-      })()}
-    </div>
-  )
-}
 
-function ToolParameter({ name, content, delta }: { name: string; content: string; delta: string }) {
-  return (
-    <div className="pl-8 py-2">
-      <div className="flex items-center gap-2 text-zinc-400 mb-1">
-        <ChevronRight className="w-4 h-4" />
-        <span className="font-mono">{name}:</span>
-      </div>
-      <ParameterContent 
-        type={name} 
-        content={content} 
-        delta={delta}
-      />
-    </div>
-  )
+  switch (type) {
+    case "fs_file_path":
+    case "directory_path":
+      return (
+        <button
+          onClick={() => {/* Handle path click */ }}
+          className="text-descriptionForeground text-start group text-sm flex gap-2 px-2 py-2 border-descriptionForeground w-full"
+        >
+          <span aria-hidden className="codicon codicon-folder-opened flex-shrink-0 translate-y-0.5" />
+          <span className="overflow-hidden flex-grow w-0 text-ellipsis whitespace-nowrap group-hover:underline">
+            {content}
+          </span>
+        </button>
+      )
+
+    case "instruction":
+      return (
+        <div className="prose prose-invert prose-sm max-w-none rounded p-4 border border-descriptionForeground">
+          <MarkdownRenderer rawMarkdown={content} />
+        </div>
+      )
+
+    case "command":
+      return (
+        <div className="bg-sideBarSectionHeader-background rounded text-xs border border-sideBarSectionHeader-border">
+          <div className="flex gap-2 text-editorHint-foreground px-2 py-2 border-b border-sideBarSectionHeader-border">
+            <span aria-hidden className="codicon codicon-terminal flex-shrink-0 translate-y-0.5" />
+            <span>Terminal commands</span>
+          </div>
+          <div className="px-2 py-2 space-y-1 font-mono">
+            {content.split('\n').map((line, i) => (
+              <div
+                key={i}
+                className={line === delta ? "text-editor-selectionForeground" : "text-editor-foreground"}
+              >
+                <span className="text-editor-foreground">$</span> {line}
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+
+    case "question":
+      return (
+        <div className="bg-blue-500/10 rounded p-4 border-l-4 border border-blue-500">
+          <div className="flex gap-2 text-blue-400 mb-2">
+            <span aria-hidden className="flex-shrink-0 codicon codicon-comment-discussion translate-y-0.5" />
+            <span className="font-medium">Question</span>
+          </div>
+          <div className="text-zinc-300">
+            {content}
+          </div>
+        </div>
+      )
+
+    case "result":
+      return (
+        <div className="bg-green-950/30 rounded px-3 py-2 border border-green-600/30">
+          <div className="flex gap-2 text-green-400 mb-2">
+            <span aria-hidden className="flex-shrink codicon codicon-check translate-y-0.5" />
+            <span className="font-medium">Result</span>
+          </div>
+          <div>
+            {content}
+          </div>
+        </div>
+      )
+
+    case "regex_pattern":
+    case "file_pattern":
+      return (
+        <div className="font-mono text-xs bg-zinc-800/50 rounded p-3">
+          {content.split('\n').map((line, i) => (
+            <div
+              key={i}
+            >
+              {line}
+            </div>
+          ))}
+        </div>
+      )
+
+    case "recursive":
+      return (
+        <div className="text-sm">
+          <span>
+            <span className="text-descriptionForeground" aria-hidden>Recursive: </span>
+            {content === "true" ? "Yes" : "No"}
+          </span>
+        </div>
+      )
+
+    default:
+      return (
+        <div className="font-mono text-sm p-3">
+          {content.split('\n').map((line, i) => (
+            <div key={i}>
+              {line}
+            </div>
+          ))}
+        </div>
+      )
+  }
 }
 
 export function ResponseViewItem(props: Response) {
   const { parts, context } = props
 
   return (
-    <div className="bg-zinc-900 text-zinc-300 flex flex-col h-full">
-      <div className="text-zinc-400 text-xs py-2 px-4 border-b border-zinc-800">SOTA-SWE</div>
-      <div className="flex-1 overflow-auto space-y-6 px-4 py-4">
+    <Exchange>
+      <ExchangeHeader>SOTA-SWE</ExchangeHeader>
+      <ExchangeContent className="flex flex-col gap-6">
         {parts.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-zinc-500">
+          <React.Fragment>
             <Spinner />
-            <span className="ml-2">Thinking...</span>
-          </div>
+            <span className="sr-only">Thinking...</span>
+          </React.Fragment>
         ) : (
           parts.map((part, index) => (
-            <div key={`${part.type}-${index}`} className="space-y-2">
+            <div key={`${part.type}-${index}`}>
               {renderPart(part, index, parts)}
               {renderParameter(part)}
             </div>
           ))
         )}
         {context.length > 0 && <ContextSummary context={context} />}
-      </div>
-    </div>
+      </ExchangeContent>
+    </Exchange>
   )
 }
 
 function renderParameter(responsePart: ResponsePart) {
   if (responsePart.type === 'toolParameter') {
-    return <ToolParameter
-      key={`${responsePart.toolParameters.parameterName}`}
-      name={responsePart.toolParameters.parameterName}
-      content={responsePart.toolParameters.contentUpUntilNow}
-      delta={responsePart.toolParameters.contentDelta}
-    />
+    const { parameterName, contentDelta, contentUpUntilNow } = responsePart.toolParameters
+    return <React.Fragment>
+      <span className="sr-only">{parameterName}</span>
+      <ParameterContent
+        type={parameterName}
+        content={contentUpUntilNow}
+        delta={contentDelta}
+      />
+    </React.Fragment>
   }
   return null
 }
@@ -213,17 +191,15 @@ function renderPart(part: ResponsePart, index: number, allParts: ResponsePart[])
   switch (part.type) {
     case "markdown":
       return (
-        <div className="text-zinc-300 text-sm">
-          <MarkdownRenderer rawMarkdown={part.rawMarkdown} />
-        </div>
+        <MarkdownRenderer rawMarkdown={part.rawMarkdown} />
       )
     case "commandGroup":
       return (
         <div className="flex flex-wrap gap-2">
           {part.commands.map((command) => (
-            <button 
+            <button
               key={command.command}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs flex items-center gap-2 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="bg-textLink.foreground hover:bg-blue-700 text-white px-2 py-1.5 rounded text-xs flex text-start gap-2 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               {command.title}
             </button>
@@ -244,11 +220,35 @@ function renderPart(part: ResponsePart, index: number, allParts: ResponsePart[])
         </div>
       )
     case "toolType":
-      const Icon = toolIcons[part.toolType as ToolType] || HelpCircle
+      const icon = <span aria-hidden className={`flex-shrink-0 translate-y-0.5 codicon ${toolIcons[part.toolType as ToolType] || 'codicon-question'}`} />
+
+
+      let label = part.toolType as string;
+
+      switch (part.toolType) {
+        case 'AskFollowupQuestions':
+          label = 'Follow up question';
+        case 'CodeEditing':
+          label = 'Code editing';
+        case 'LSPDiagnostics':
+          label = 'LSP Diagnostics';
+        case 'RepoMapGeneration':
+          label = 'Repo map generation';
+        case 'AttemptCompletion':
+          label = 'Attempt completion';
+        case 'ListFiles':
+          label = 'List files';
+        case 'OpenFile':
+          label = 'Open file';
+        case 'SearchFileContentWithRegex':
+          label = 'Search content file with regex';
+      }
+
+
       return (
-        <div className="flex items-center gap-2 bg-blue-500/10 rounded px-3 py-2">
-          <Icon className="w-4 h-4 text-blue-400" />
-          <span className="text-blue-400 text-sm">{part.toolType}</span>
+        <div className="flex gap-2 bg-blue-500/10 rounded px-2 py-2">
+          {icon}
+          <span className="text-sm">{label}</span>
         </div>
       )
     default:
