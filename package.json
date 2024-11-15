@@ -87,6 +87,7 @@
     "js-levenshtein": "^1.1.6",
     "lodash": "^4.17.21",
     "lru-cache": "^10.2.0",
+    "lucide-react": "^0.456.0",
     "marked": "^15.0.0",
     "node-fetch": "^3.3.2",
     "openai": "^4.0.1",

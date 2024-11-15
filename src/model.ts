@@ -66,7 +66,36 @@ export type CommandGroupResponsePart = {
   commands: Command[];
 };
 
-export type ResponsePart = MarkdownResponsePart | CommandGroupResponsePart;
+export type ToolThinkingResponsePart = {
+  type: 'toolThinking',
+  // this is the full tool thinking always
+  markdown: MarkdownResponsePart,
+}
+
+export type ToolParameterResponsePart = {
+  type: "toolParameter",
+  toolParameters: {
+    parameterName: string,
+    contentDelta: string,
+    contentUpUntilNow: string,
+  }
+}
+
+export type ToolThinkingToolTypeEnum = 'ListFiles' |
+  'SearchFileContentWithRegex' |
+  'OpenFile' |
+  'CodeEditing' |
+  'LSPDiagnostics' |
+  'AskFollowupQuestions' |
+  'AttemptCompletion' |
+  'RepoMapGeneration';
+
+export type ToolThinkingToolTypeResponsePart = {
+  type: 'toolType',
+  toolType: ToolThinkingToolTypeEnum,
+}
+
+export type ResponsePart = MarkdownResponsePart | CommandGroupResponsePart | ToolThinkingResponsePart | ToolThinkingToolTypeResponsePart | ToolParameterResponsePart;
 
 interface MessageBase {
   username: string;
