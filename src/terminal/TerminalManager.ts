@@ -191,10 +191,7 @@ export class TerminalManager {
 	}
 }
 
-export async function executeTerminalCommand(command: string, cwd: string = process.cwd()): Promise<string> {
-	// Create a terminal manager instance
-	const terminalManager = new TerminalManager();
-
+export async function executeTerminalCommand(command: string, cwd: string = process.cwd(), terminalManager: TerminalManager): Promise<string> {
 	try {
 		const terminalInfo = await terminalManager.getOrCreateTerminal(cwd);
 

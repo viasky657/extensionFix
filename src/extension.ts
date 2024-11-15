@@ -9,6 +9,7 @@ import { RecentEditsRetriever } from "./server/editedFiles";
 import { AideAgentSessionProvider } from "./completions/providers/aideAgentProvider";
 import { uniqueId } from "lodash";
 import { AideAgentMode } from "./types";
+import { TerminalManager } from "./terminal/TerminalManager";
 // import { AideAgentSessionProvider } from "./completions/providers/aideAgentProvider";
 // import { ProjectContext } from "./utilities/workspaceContext";
 // import { RecentEditsRetriever } from "./server/editedFiles";
@@ -54,6 +55,9 @@ export async function activate(context: vscode.ExtensionContext) {
   );
   context.subscriptions.push(recentEditsRetriever);
 
+  // Create a terminal manager instance
+  const terminalManager = new TerminalManager();
+
   // Register the agent session provider
   const agentSessionProvider = new AideAgentSessionProvider(
     currentRepo,
@@ -61,6 +65,7 @@ export async function activate(context: vscode.ExtensionContext) {
     recentEditsRetriever,
     context,
     panelProvider,
+    terminalManager,
   );
   context.subscriptions.push(agentSessionProvider);
 

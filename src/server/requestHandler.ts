@@ -19,7 +19,7 @@ import { createFileResponse } from './createFile';
 import { getPreviousWordAtPosition } from './previousWordCommand';
 import { goToTypeDefinition } from './goToTypeDefinition';
 import { getRipGrepPath } from '../utilities/ripGrep';
-import { executeTerminalCommand } from '../terminal/TerminalManager';
+import { executeTerminalCommand, TerminalManager } from '../terminal/TerminalManager';
 
 // Helper function to read the request body
 function readRequestBody(req: http.IncomingMessage): Promise<string> {
@@ -52,6 +52,7 @@ export function handleRequest(
 	}>,
 	recentEditsRetriever: (request: SidecarRecentEditsRetrieverRequest) => Promise<SidecarRecentEditsRetrieverResponse>,
 	undoToCheckpoint: (request: SidecarUndoPlanStep) => Promise<{ success: boolean }>,
+	terminalManager: TerminalManager,
 ) {
 	return async (req: http.IncomingMessage, res: http.ServerResponse) => {
 		try {
@@ -252,7 +253,9 @@ export function handleRequest(
 			} else if (req.method === 'POST' && req.url === '/execute_terminal_command') {
 				const body = await readRequestBody(req);
 				const request: SidecarExecuteTerminalCommandRequest = JSON.parse(body);
-				const response = await executeTerminalCommand(request.command, process.cwd());
+				const response = await executeTerminalCommand(request.command, process.cwd(), terminalManager);
+				console.log('executeTerminalCommand', response);
+
 				res.writeHead(200, { 'Content-Type': 'application/json' });
 				res.end(JSON.stringify({ output: response }));
 			} else {

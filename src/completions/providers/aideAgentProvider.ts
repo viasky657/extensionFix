@@ -20,6 +20,7 @@ import postHogClient from '../../posthog/client';
 import { AideAgentEventSenderResponse, AideAgentMode, AideAgentPromptReference, AideAgentRequest, AideAgentResponseStream, AideAgentScope, AideSessionExchangeUserAction, AideSessionParticipant } from '../../types';
 import { SIDECAR_CLIENT } from '../../extension';
 import { PanelProvider } from '../../PanelProvider';
+import { TerminalManager } from '../../terminal/TerminalManager';
 
 /**
  * Stores the necessary identifiers required for identifying a response stream
@@ -119,6 +120,7 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 		recentEditsRetriever: RecentEditsRetriever,
 		extensionContext: vscode.ExtensionContext,
 		panelProvider: PanelProvider,
+		terminalManager: TerminalManager,
 	) {
 		this.panelProvider = panelProvider;
 		this.requestHandler = http.createServer(
@@ -128,6 +130,7 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 				this.newExchangeIdForSession.bind(this),
 				recentEditsRetriever.retrieveSidecar.bind(recentEditsRetriever),
 				this.undoToCheckpoint.bind(this),
+				terminalManager,
 			)
 		);
 		this.getNextOpenPort().then((port) => {
