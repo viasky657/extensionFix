@@ -61,7 +61,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
         customBaseUrl: "https://api.anthropic.com",
         permissions: {
           readData: "ask",
-          writeData: "never",
+          writeData: "ask",
         },
         customInstructions: "Answer as concisely as possible",
         name: "claude-sonnet-3.5",
