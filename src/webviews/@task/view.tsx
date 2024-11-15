@@ -38,7 +38,7 @@ export function TaskView(props: TaskViewProps) {
       <header className="sticky top-0 bg-panel-background">
         <div>
           <div
-            className="py-2 cursor-pointer hover:bg-[rgba(128,128,128,0.1)] rounded-sm select-none"
+            className="p-2 cursor-pointer hover:bg-[rgba(128,128,128,0.1)] rounded-sm select-none"
             onClick={() => setSummaryShown(!summaryShown)}
           >
             <h2>{query}</h2>
