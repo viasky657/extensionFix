@@ -258,7 +258,9 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
   public addExchangeRequest(sessionId: string, exchangeId: string, request: string) {
     if (this._runningTask) {
-      this._runningTask.query = request;
+      if (this._runningTask.query !== '') {
+        this._runningTask.query = request;
+      }
       this._runningTask.exchanges.push({
         type: "request",
         message: request,
