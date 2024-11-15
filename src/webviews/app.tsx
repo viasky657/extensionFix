@@ -73,7 +73,7 @@ function reducer(state: AppState, action: Event) {
 
 export const initialState: AppState = {
   extensionReady: false,
-  view: View.Task,
+  view: View.Preset,
   currentTask: {
     sessionId: uniqueId(),
     context: [],

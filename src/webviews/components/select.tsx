@@ -12,7 +12,7 @@ export function Select(props: SelectProps) {
   return (
     <RUISelect.Root {...rest}>
       <RUISelect.Trigger className={cn(className, "flex items-start p-1 bg-settings-dropdownBackground text-settings-dropdownForeground rounded mr-auto gap-2")}>
-        <RUISelect.Value />
+        <RUISelect.Value className="mr-auto" />
         <span aria-hidden className="codicon codicon-chevron-down flex-shrink-0 translate-y-0.5" />
       </RUISelect.Trigger>
 
