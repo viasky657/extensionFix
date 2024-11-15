@@ -741,6 +741,11 @@ export type SidecarGoToDefinitionRequest = {
 	position: SidecarRequestPosition;
 };
 
+export type SidecarTerminalFreshOutputRequest = {
+	busy: boolean,
+	completed: boolean,
+}
+
 export type SidecarExecuteTerminalCommandRequest = {
 	command: string;
 };
