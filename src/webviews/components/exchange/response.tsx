@@ -173,12 +173,19 @@ export function ResponseViewItem(props: Response) {
     <div className="bg-zinc-900 text-zinc-300 flex flex-col h-full">
       <div className="text-zinc-400 text-xs py-2 px-4 border-b border-zinc-800">SOTA-SWE</div>
       <div className="flex-1 overflow-auto space-y-4 px-4 py-2">
-        {parts.map((part, index) => (
-          <React.Fragment key={`${part.type}-${index}`}>
-            {renderPart(part, index, parts)}
-            {renderParameter(part)}
-          </React.Fragment>
-        ))}
+        {parts.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-zinc-500">
+            <Spinner />
+            <span className="ml-2">Thinking...</span>
+          </div>
+        ) : (
+          parts.map((part, index) => (
+            <React.Fragment key={`${part.type}-${index}`}>
+              {renderPart(part, index, parts)}
+              {renderParameter(part)}
+            </React.Fragment>
+          ))
+        )}
         {context.length > 0 && <ContextSummary context={context} />}
       </div>
     </div>
