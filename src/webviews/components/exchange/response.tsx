@@ -38,6 +38,15 @@ function ParameterContent({ type, content, delta }: {
   delta: string
 }) {
 
+  function handleOpenFile() {
+    if (type === 'fs_file_path' || type === 'directory_path') {
+      vscode.postMessage({
+        type: 'open-file',
+        fs_file_path: content,
+      });
+    }
+  }
+
   switch (type) {
     case "fs_file_path":
     case "directory_path":
