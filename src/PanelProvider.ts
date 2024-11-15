@@ -208,6 +208,16 @@ export class PanelProvider implements vscode.WebviewViewProvider {
         context: [],
         sessionId,
       });
+
+      this._view?.webview.postMessage({
+        command: 'state-updated',
+        initialAppState: {
+          extensionReady: false,
+          view: View.Task,
+          currentTask: this._runningTask,
+          loadedTasks: new Map()
+        }
+      });
       return exchangeId;
     }
     return undefined;
