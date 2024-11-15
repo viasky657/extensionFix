@@ -258,7 +258,7 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 					editStreamEvent.range,
 					null,
 					this.iterationEdits,
-					editStreamEvent.apply_directly,
+					true,
 					// send an id over here which is unique to this run
 					// over here we want to send the plan-id or a unique reference
 					// which tracks this edit in our system so we can track it as a timeline

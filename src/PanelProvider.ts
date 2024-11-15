@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { ClientRequest, Task, ToolThinkingToolTypeEnum, View } from "./model";
 import { Response, } from "./model";
 import { getNonce } from "./webviews/utils/nonce";
-import { uniqueId } from "lodash";
+import { v4 } from 'uuid';
 
 export class PanelProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
@@ -44,7 +44,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     });
 
     this._runningTask = {
-      sessionId: uniqueId(),
+      sessionId: v4(),
       context: [],
       cost: 0,
       usage: {
@@ -199,7 +199,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
   public createNewExchangeResponse(sessionId: string): string | undefined {
     if (this._runningTask && this._runningTask.sessionId === sessionId) {
-      const exchangeId = uniqueId();
+      const exchangeId = v4();
       this._runningTask.exchanges.push({
         type: "response",
         parts: [],
