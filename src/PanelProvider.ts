@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { ClientRequest, Task, ToolThinkingToolTypeEnum, ToolThinkingToolTypeResponsePart, View } from "./model";
+import { ClientRequest, Task, ToolThinkingToolTypeEnum, View } from "./model";
 import { Response, } from "./model";
 import { getNonce } from "./webviews/utils/nonce";
 import { uniqueId } from "lodash";
