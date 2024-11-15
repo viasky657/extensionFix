@@ -35,6 +35,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
     // Handle messages from the webview
     webviewView.webview.onDidReceiveMessage((data) => {
+      console.log(data);
       this._onMessageFromWebview.fire(data);
       switch (data.type) {
         case "init":

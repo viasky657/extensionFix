@@ -120,6 +120,17 @@ export async function activate(context: vscode.ExtensionContext) {
         // - the extension needs the state
         // - on did change chat model gets back over here
       }
+
+      if (message.type === 'open-file') {
+        try {
+          const uri = vscode.Uri.parse(message.fs_file_path);
+          const document = await vscode.workspace.openTextDocument(uri);
+          await vscode.window.showTextDocument(document);
+          console.log('file opened');
+        } catch (err) {
+          console.error(`Could not find file with path ${message.fs_file_path}`);
+        }
+      }
     })
   );
 

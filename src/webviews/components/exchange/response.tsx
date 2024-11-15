@@ -39,7 +39,7 @@ function ParameterContent({ type, content, delta }: {
 }) {
 
   function handleOpenFile() {
-    if (type === 'fs_file_path' || type === 'directory_path') {
+    if (type === 'fs_file_path') {
       vscode.postMessage({
         type: 'open-file',
         fs_file_path: content,
@@ -49,14 +49,25 @@ function ParameterContent({ type, content, delta }: {
 
   switch (type) {
     case "fs_file_path":
+      return (
+        <button
+          onClick={handleOpenFile}
+          className="text-descriptionForeground text-start group text-sm flex gap-2 px-2 py-2 border-descriptionForeground w-full"
+        >
+          <span aria-hidden className="codicon codicon-file flex-shrink-0 translate-y-0.5" />
+          <span className="overflow-hidden flex-grow w-0 text-ellipsis whitespace-nowrap group-hover:underline">
+            {content}
+          </span>
+        </button>
+      )
     case "directory_path":
       return (
         <button
-          onClick={() => {/* Handle path click */ }}
-          className="text-descriptionForeground text-start group text-sm flex gap-2 px-2 py-2 border-descriptionForeground w-full"
+          onClick={handleOpenFile}
+          className="text-descriptionForeground text-start text-sm flex gap-2 px-2 py-2 border-descriptionForeground w-full"
         >
           <span aria-hidden className="codicon codicon-folder-opened flex-shrink-0 translate-y-0.5" />
-          <span className="overflow-hidden flex-grow w-0 text-ellipsis whitespace-nowrap group-hover:underline">
+          <span className="overflow-hidden flex-grow w-0 text-ellipsis whitespace-nowrap">
             {content}
           </span>
         </button>
@@ -197,7 +208,6 @@ function renderPart(part: ResponsePart, index: number, allParts: ResponsePart[])
   const nextPart = allParts[index + 1]
   const isThinkingFollowedByTool = part.type === "toolThinking" && nextPart && nextPart.type === "toolType"
 
-  console.log("part type", part.type);
   switch (part.type) {
     case "markdown":
       return (
