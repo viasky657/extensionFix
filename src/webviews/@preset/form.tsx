@@ -54,8 +54,14 @@ export function PresetForm(props: PresetFormProps) {
         <p>SōtaPR is smart, careful, and uses git to save changes - it works best with all permissions set to 'always'.</p>
         <ul className="grid grid-cols-[auto,_1fr]">
           <li className="contents">
+            <label htmlFor="permissions.list-files">
+              List files
+            </label>
+            <PermissionSelect className="w-full border-none" id="permissions.list-files" name="permissions[list-files]" />
+          </li>
+          <li className="contents">
             <label htmlFor="code-editing">
-              Code editing
+              Edit files
             </label>
             <PermissionSelect className="w-full border-none" id="write-code" name="permissions[code-editing]" />
           </li>
@@ -64,36 +70,6 @@ export function PresetForm(props: PresetFormProps) {
               Run terminal commands
             </label>
             <PermissionSelect className="w-full border-none" id="permissions.terminal-commands" name="permissions[terminal-commands]" />
-          </li>
-          <li className="contents">
-            <label htmlFor="permissions.list-files">
-              List files
-            </label>
-            <PermissionSelect className="w-full border-none" id="permissions.list-files" name="permissions[list-files]" />
-          </li>
-          <li className="contents">
-            <label htmlFor="permissions.search-file-content-with-regex">
-              Search file content with regex
-            </label>
-            <PermissionSelect className="w-full border-none" id="permissions.search-file-content-with-regex" name="permissions[search-file-content-with-regex]" />
-          </li>
-          <li className="contents">
-            <label htmlFor="permissions.open-files">
-              Open files
-            </label>
-            <PermissionSelect className="w-full border-none" id="permissions.oapen-files" name="permissions[open-files]" />
-          </li>
-          <li className="contents">
-            <label htmlFor="permissions.lsp-diagnostics">
-              Use LSP diagnostics
-            </label>
-            <PermissionSelect className="w-full border-none" id="permissions.lsp-diagnostics" name="permissions[lsp-diagnostics]" />
-          </li>
-          <li className="contents">
-            <label htmlFor="permissions.followup-questions">
-              Ask followup questions
-            </label>
-            <PermissionSelect className="w-full border-none" id="permissions.followup-questions" name="permissions[followup-questions]" />
           </li>
         </ul>
       </fieldset>
