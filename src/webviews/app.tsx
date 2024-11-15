@@ -1,16 +1,22 @@
 import * as React from "react";
-import { Event, View, AppState } from "../model";
+import { Event, View, AppState, ClientRequest } from "../model";
 import { TaskView } from "@task/view";
 import { PresetView } from "@preset/view";
 import LoadingSpinner from "components/loading-spinner";
 import { processFormData } from './utils/form';
 import { v4 } from "uuid";
 
-interface vscode {
-  postMessage(message: Event): void;
-}
+declare global {
+  interface Window {
+    vscode: {
+      postMessage(message: ClientRequest): void;
+    }
+  }
 
-declare const vscode: vscode;
+  const vscode: {
+    postMessage(message: ClientRequest): void;
+  }
+}
 
 function onMessage(event: React.FormEvent<HTMLFormElement>, sessionId: string | undefined) {
   event.preventDefault();

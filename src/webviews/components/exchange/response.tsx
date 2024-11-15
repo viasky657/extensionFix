@@ -38,6 +38,15 @@ function ParameterContent({ type, content, delta }: {
   delta: string
 }) {
 
+  function handleOpenFile() {
+    if (type === 'fs_file_path' || type === 'directory_path') {
+      vscode.postMessage({
+        type: 'open-file',
+        fs_file_path: content,
+      });
+    }
+  }
+
   switch (type) {
     case "fs_file_path":
     case "directory_path":
@@ -222,7 +231,6 @@ function renderPart(part: ResponsePart, index: number, allParts: ResponsePart[])
     case "toolType":
       const icon = <span aria-hidden className={`flex-shrink-0 translate-y-0.5 codicon ${toolIcons[part.toolType as ToolType] || 'codicon-question'}`} />
 
-
       let label = part.toolType as string;
 
       switch (part.toolType) {
@@ -243,7 +251,6 @@ function renderPart(part: ResponsePart, index: number, allParts: ResponsePart[])
         case 'SearchFileContentWithRegex':
           label = 'Search content file with regex';
       }
-
 
       return (
         <div className="flex gap-2 bg-blue-500/10 rounded px-2 py-2">

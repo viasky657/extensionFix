@@ -52,16 +52,20 @@ interface SidecarReadyState {
   isSidecarReady: boolean,
 }
 
-export type Event = OpenTaskEvent | TaskResponseEvent | InitRequest | InitResponse | TaskFeedback | InitialState | TaskUpdate | SidecarReadyState;
+interface OpenFile {
+  type: 'open-file';
+  fs_file_path: string;
+}
+
+export type ClientRequest = TaskFeedback | OpenFile | InitRequest
+
+export type Event = OpenTaskEvent | TaskResponseEvent | InitResponse | InitialState | TaskUpdate | SidecarReadyState;
 
 export type NewSessionRequest = {
   type: "new-request";
   query: string;
   exchangeId: string;
 };
-
-// For now the client request is also an event which we have over here
-export type ClientRequest = Event;
 
 export type MarkdownResponsePart = {
   type: "markdown";
