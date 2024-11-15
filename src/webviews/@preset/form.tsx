@@ -3,11 +3,10 @@ import { VSCodeButton } from "vscode-elements/button";
 import { VSCodeTextArea } from "vscode-elements/textarea";
 import { ANTHROPIC_MODELS, PermissionState, Preset, Provider } from "../../model";
 import { VSCodeLabel } from "vscode-elements/label";
-import { VSCodeSingleSelect, VSCodeSingleSelectProps } from "vscode-elements/single-select";
-import { VSCodeOption } from "vscode-elements/option";
 import { VSCodeTextfield } from "vscode-elements/text-field";
 import * as React from "react";
 import { Checkbox, CheckboxInput } from "components/checkbox";
+import { Select, Option, SelectProps } from "components/select";
 
 
 interface PresetFormProps extends React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement> {
@@ -24,11 +23,11 @@ export function PresetForm(props: PresetFormProps) {
       <VSCodeLabel htmlFor="provider">
         Provider
       </VSCodeLabel>
-      <VSCodeSingleSelect id="provider" name="provider" className="w-full">
+      <Select className="w-full" id="provider" name="provider" defaultValue={initialData?.provider || Provider.Anthropic}>
         {Object.values(Provider).map((provider) => (
-          <VSCodeOption key={provider}>{provider}</VSCodeOption>
+          <Option key={provider} value={provider}>{provider}</Option>
         ))}
-      </VSCodeSingleSelect>
+      </Select>
 
       <fieldset>
         <VSCodeLabel htmlFor="api-key">
@@ -46,11 +45,11 @@ export function PresetForm(props: PresetFormProps) {
       <VSCodeLabel>
         Model
       </VSCodeLabel>
-      <VSCodeSingleSelect className="w-full">
+      <Select className="w-full" defaultValue={initialData?.model || ANTHROPIC_MODELS[0]}>
         {ANTHROPIC_MODELS.map((model) => (
-          <VSCodeOption key={model}>{model}</VSCodeOption>
+          <Option key={model} value={model}>{model}</Option>
         ))}
-      </VSCodeSingleSelect>
+      </Select>
 
       <fieldset>
         <legend>Permissions</legend>
@@ -116,12 +115,12 @@ export function PresetForm(props: PresetFormProps) {
   )
 }
 
-export function PermissionSelect(props: VSCodeSingleSelectProps) {
+export function PermissionSelect(props: SelectProps) {
   return (
-    <select {...props}>
+    <Select {...props} defaultValue={PermissionState.Always}>
       {Object.values(PermissionState).map((ps) => (
-        <option key={ps}>{ps}</option>
+        <Option key={ps} value={ps}>{ps}</Option>
       ))}
-    </select>
+    </Select>
   )
 }
