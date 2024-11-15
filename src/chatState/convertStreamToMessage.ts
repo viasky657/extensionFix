@@ -286,88 +286,7 @@ export const reportAgentEventsToChat = async (
 				// response.location({ uri, range, name: symbol_identifier.symbol_name, thinking: goToDefinition.thinking });
 				continue;
 			} else if (symbolEventSubStep.Edit) {
-				if (!symbol_identifier.fs_file_path) {
-					continue;
-				}
-				const editEvent = symbolEventSubStep.Edit;
-
-				// UX handle for code correction tool usage - consider using
-				if (editEvent.CodeCorrectionTool) { }
-
-				if (editEvent.ThinkingForEdit) {
-					// TODO(@skcd42): This event currently gets sent multiple times, and doesn't contain the text we'd ideally like to show the user.
-					// It also seems to contain the search/replace block in the text, which we don't want to show.
-					// response.markdown(new vscode.MarkdownString(editEvent.ThinkingForEdit.thinking));
-				}
-				if (editEvent.RangeSelectionForEdit) {
-					// response.breakdown({
-					// 	reference: {
-					// 		uri: vscode.Uri.file(symbol_identifier.fs_file_path),
-					// 		name: symbol_identifier.symbol_name,
-					// 	}
-					// });
-				} else if (editEvent.EditCodeStreaming) {
-					// we have to do some state management over here
-					// we send 3 distinct type of events over here
-					// - start
-					// - delta
-					// - end
-					const editStreamEvent = editEvent.EditCodeStreaming;
-					if ('Start' === editStreamEvent.event) {
-						const fileDocument = editStreamEvent.fs_file_path;
-						const document = await vscode.workspace.openTextDocument(fileDocument);
-						if (document === undefined || document === null) {
-							continue;
-						}
-						const documentLines = document.getText().split(/\r\n|\r|\n/g);
-						console.log('editStreaming.start', editStreamEvent.fs_file_path);
-						console.log(editStreamEvent.range);
-						editsMap.set(editStreamEvent.edit_request_id, {
-							answerSplitter: new AnswerSplitOnNewLineAccumulatorStreaming(),
-							streamProcessor: new StreamProcessor(
-								documentLines,
-								undefined,
-								vscode.Uri.file(editStreamEvent.fs_file_path),
-								editStreamEvent.range,
-								limiter,
-								iterationEdits,
-								false,
-								// hack for now, we will figure out the right way to
-								// handle this
-								'plan_0',
-							)
-						});
-					} else if ('End' === editStreamEvent.event) {
-						// drain the lines which might be still present
-						const editsManager = editsMap.get(editStreamEvent.edit_request_id);
-						while (true) {
-							const currentLine = editsManager.answerSplitter.getLine();
-							if (currentLine === null) {
-								break;
-							}
-							console.log('end::process_line');
-							await editsManager.streamProcessor.processLine(currentLine);
-						}
-						console.log('end::cleanup');
-						editsManager.streamProcessor.cleanup();
-						// delete this from our map
-						editsMap.delete(editStreamEvent.edit_request_id);
-						// we have the updated code (we know this will be always present, the types are a bit meh)
-					} else if (editStreamEvent.event.Delta) {
-						const editsManager = editsMap.get(editStreamEvent.edit_request_id);
-						if (editsManager !== undefined) {
-							editsManager.answerSplitter.addDelta(editStreamEvent.event.Delta);
-							while (true) {
-								const currentLine = editsManager.answerSplitter.getLine();
-								if (currentLine === null) {
-									break;
-								}
-								console.log('delta::process_line');
-								await editsManager.streamProcessor.processLine(currentLine);
-							}
-						}
-					}
-				}
+				// removed code here since it was a duplicate
 			} else if (symbolEventSubStep.Probe) {
 				if (!symbol_identifier.fs_file_path) {
 					continue;
@@ -526,6 +445,7 @@ export class StreamProcessor {
 		iterationEdits: vscode.WorkspaceEdit,
 		applyDirectly: boolean,
 		uniqueId: string,
+		activeWindow: vscode.TextEditor,
 	) {
 		// Initialize document with the given parameters
 		this.document = new DocumentManager(
@@ -537,6 +457,7 @@ export class StreamProcessor {
 			iterationEdits,
 			applyDirectly,
 			uniqueId,
+			activeWindow,
 		);
 		this.documentLineLimit = Math.min(range.endPosition.line, this.document.getLineCount() - 1);
 
@@ -638,6 +559,7 @@ class DocumentManager {
 	iterationEdits: vscode.WorkspaceEdit;
 	applyDirectly: boolean;
 	uniqueId: string;
+	activeWindow: vscode.TextEditor;
 
 	constructor(
 		lines: string[],
@@ -649,7 +571,9 @@ class DocumentManager {
 		iterationEdits: vscode.WorkspaceEdit,
 		applyDirectly: boolean,
 		uniqueId: string,
+		activeWindow: vscode.TextEditor,
 	) {
+		this.activeWindow = activeWindow;
 		this.uniqueId = uniqueId;
 		this.limiter = limiter;
 		this.lines = []; // Stores all the lines in the document
@@ -713,7 +637,13 @@ class DocumentManager {
 			});
 			this.iterationEdits.delete(this.uri, new vscode.Range(index, 0, index, 1000));
 			if (this.applyDirectly) {
-				await vscode.workspace.applyEdit(edits);
+				await this.activeWindow.edit((editBuilder) => {
+					return editBuilder.delete(new vscode.Range(index, 0, index, 1000));
+				}, {
+					undoStopAfter: false,
+					undoStopBefore: false,
+				});
+				// await vscode.workspace.applyEdit(edits);
 			}
 			return index + 1;
 		} else {
@@ -724,7 +654,13 @@ class DocumentManager {
 			});
 			this.iterationEdits.replace(this.uri, new vscode.Range(index, 0, index, 1000), newLine.adjustedContent);
 			if (this.applyDirectly) {
-				await vscode.workspace.applyEdit(edits);
+				await this.activeWindow.edit((editBuilder) => {
+					return editBuilder.replace(new vscode.Range(index, 0, index, 1000), newLine.adjustedContent);
+				}, {
+					undoStopAfter: false,
+					undoStopBefore: false,
+				});
+				// await vscode.workspace.applyEdit(edits);
 			}
 			return index + 1;
 		}
@@ -755,7 +691,13 @@ class DocumentManager {
 			});
 			this.iterationEdits.replace(this.uri, new vscode.Range(startIndex, 0, endIndex, 1000), newLine.adjustedContent);
 			if (this.applyDirectly) {
-				await vscode.workspace.applyEdit(edits);
+				await this.activeWindow.edit((editBuilder) => {
+					return editBuilder.replace(new vscode.Range(startIndex, 0, endIndex, 1000), newLine.adjustedContent);
+				}, {
+					undoStopAfter: false,
+					undoStopBefore: false,
+				});
+				// await vscode.workspace.applyEdit(edits);
 			}
 			return startIndex + 1;
 		}
@@ -778,7 +720,13 @@ class DocumentManager {
 		});
 		this.iterationEdits.replace(this.uri, new vscode.Range(this.lines.length - 2, 1000, this.lines.length - 2, 1000), '\n' + newLine.adjustedContent);
 		if (this.applyDirectly) {
-			await vscode.workspace.applyEdit(edits);
+			await this.activeWindow.edit((editBuilder) => {
+				return editBuilder.replace(new vscode.Range(this.lines.length - 2, 1000, this.lines.length - 2, 1000), '\n' + newLine.adjustedContent);
+			}, {
+				undoStopAfter: false,
+				undoStopBefore: false,
+			});
+			// await vscode.workspace.applyEdit(edits);
 		}
 		return this.lines.length;
 	}
@@ -800,7 +748,13 @@ class DocumentManager {
 		});
 		this.iterationEdits.replace(this.uri, new vscode.Range(index, 1000, index, 1000), '\n' + newLine.adjustedContent);
 		if (this.applyDirectly) {
-			await vscode.workspace.applyEdit(edits);
+			await this.activeWindow.edit((editBuilder) => {
+				return editBuilder.replace(new vscode.Range(index, 1000, index, 1000), '\n' + newLine.adjustedContent);
+			}, {
+				undoStopAfter: false,
+				undoStopBefore: false,
+			});
+			// await vscode.workspace.applyEdit(edits);
 		}
 		return index + 2;
 	}
