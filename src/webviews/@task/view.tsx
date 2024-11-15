@@ -88,8 +88,8 @@ export function TaskView(props: TaskViewProps) {
           </div>
         </div>
       </header>
-      <div className={cn("px-4 py-2 flex flex-col gap-2 ", exchanges.length > 0 && "flex-grow")}>
-        <section className="flex-grow">
+      <div className={cn("flex flex-col gap-2 ", exchanges.length > 0 && "flex-grow")}>
+        <section className="flex-grow p-2">
           {exchanges && (
             <ol>
               {exchanges.map((exchange) => (
@@ -98,7 +98,7 @@ export function TaskView(props: TaskViewProps) {
             </ol>
           )}
         </section>
-        <form className="sticky bottom-2 bg-panel-background flex flex-col gap-2" onSubmit={onSubmit} ref={formRef}>
+        <form className="sticky bottom-0 bg-panel-background flex flex-col gap-2 p-2" onSubmit={onSubmit} ref={formRef}>
           <Textarea
             className="w-full"
             name="query"
