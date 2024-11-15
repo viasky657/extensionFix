@@ -197,6 +197,23 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     }
   }
 
+  /**
+   * Returns if the exchange exists on the session
+   */
+  public doesExchangeExist(sessionId: string, exchangeId: string): boolean {
+    if (this._runningTask && this._runningTask.sessionId === sessionId) {
+      if (this._runningTask.exchanges.find((exchange) => {
+        return exchange.exchangeId === exchangeId;
+      })) {
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
+
   public createNewExchangeResponse(sessionId: string): string | undefined {
     if (this._runningTask && this._runningTask.sessionId === sessionId) {
       const exchangeId = v4();

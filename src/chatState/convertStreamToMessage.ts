@@ -325,7 +325,6 @@ export const reportAgentEventsToChat = async (
 						editsMap.set(editStreamEvent.edit_request_id, {
 							answerSplitter: new AnswerSplitOnNewLineAccumulatorStreaming(),
 							streamProcessor: new StreamProcessor(
-								response,
 								documentLines,
 								undefined,
 								vscode.Uri.file(editStreamEvent.fs_file_path),
@@ -518,7 +517,7 @@ export class StreamProcessor {
 	documentLineIndex: number;
 	sentEdits: boolean;
 	documentLineLimit: number;
-	constructor(progress: AideAgentResponseStream,
+	constructor(
 		lines: string[],
 		indentStyle: IndentStyleSpaces | undefined,
 		uri: vscode.Uri,
@@ -530,7 +529,6 @@ export class StreamProcessor {
 	) {
 		// Initialize document with the given parameters
 		this.document = new DocumentManager(
-			progress,
 			lines,
 			range,
 			indentStyle,
@@ -632,7 +630,6 @@ export class StreamProcessor {
 
 class DocumentManager {
 	indentStyle: IndentStyleSpaces;
-	progress: AideAgentResponseStream;
 	lines: LineContent[];
 	firstSentLineIndex: number;
 	firstRangeLine: number;
@@ -643,7 +640,6 @@ class DocumentManager {
 	uniqueId: string;
 
 	constructor(
-		progress: AideAgentResponseStream,
 		lines: string[],
 		// Fix the way we provide context over here?
 		range: SidecarRequestRange,
@@ -656,7 +652,6 @@ class DocumentManager {
 	) {
 		this.uniqueId = uniqueId;
 		this.limiter = limiter;
-		this.progress = progress; // Progress tracking
 		this.lines = []; // Stores all the lines in the document
 		this.indentStyle = IndentationHelper.getDocumentIndentStyle(lines, indentStyle);
 		this.iterationEdits = iterationEdits;
@@ -720,13 +715,6 @@ class DocumentManager {
 			if (this.applyDirectly) {
 				await vscode.workspace.applyEdit(edits);
 			}
-			else if (this.limiter === null) {
-				await this.progress.codeEdit(edits);
-			} else {
-				await this.limiter.queue(async () => {
-					await this.progress.codeEdit(edits);
-				});
-			}
 			return index + 1;
 		} else {
 			// console.log('What line are we replaceLine', newLine.adjustedContent);
@@ -737,13 +725,6 @@ class DocumentManager {
 			this.iterationEdits.replace(this.uri, new vscode.Range(index, 0, index, 1000), newLine.adjustedContent);
 			if (this.applyDirectly) {
 				await vscode.workspace.applyEdit(edits);
-			}
-			else if (this.limiter === null) {
-				await this.progress.codeEdit(edits);
-			} else {
-				await this.limiter.queue(async () => {
-					await this.progress.codeEdit(edits);
-				});
 			}
 			return index + 1;
 		}
@@ -776,13 +757,6 @@ class DocumentManager {
 			if (this.applyDirectly) {
 				await vscode.workspace.applyEdit(edits);
 			}
-			else if (this.limiter === null) {
-				await this.progress.codeEdit(edits);
-			} else {
-				await this.limiter.queue(async () => {
-					await this.progress.codeEdit(edits);
-				});
-			}
 			return startIndex + 1;
 		}
 	}
@@ -806,13 +780,6 @@ class DocumentManager {
 		if (this.applyDirectly) {
 			await vscode.workspace.applyEdit(edits);
 		}
-		else if (this.limiter === null) {
-			await this.progress.codeEdit(edits);
-		} else {
-			await this.limiter.queue(async () => {
-				await this.progress.codeEdit(edits);
-			});
-		}
 		return this.lines.length;
 	}
 
@@ -834,13 +801,6 @@ class DocumentManager {
 		this.iterationEdits.replace(this.uri, new vscode.Range(index, 1000, index, 1000), '\n' + newLine.adjustedContent);
 		if (this.applyDirectly) {
 			await vscode.workspace.applyEdit(edits);
-		}
-		else if (this.limiter === null) {
-			await this.progress.codeEdit(edits);
-		} else {
-			await this.limiter.queue(async () => {
-				await this.progress.codeEdit(edits);
-			});
 		}
 		return index + 2;
 	}
