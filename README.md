@@ -1,6 +1,6 @@
-# SōtaPR
+# SotaSWE
 
-Welcome to SōtaPR, the agentic framework that is State ot The Art on SWE-bench!
+Welcome to SotaSWE, the agentic framework that is State ot The Art on SWE-bench!
 
 ## How to run
 

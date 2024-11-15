@@ -71,7 +71,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Show the panel immediately
   context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider("sota-pr-panel", panelProvider)
+    vscode.window.registerWebviewViewProvider("sota-swe-panel", panelProvider)
   );
 
   // sidecar binary download in background

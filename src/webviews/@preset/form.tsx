@@ -51,7 +51,7 @@ export function PresetForm(props: PresetFormProps) {
 
       <fieldset>
         <legend>Permissions</legend>
-        <p>SōtaPR is smart, careful, and uses git to save changes - it works best with all permissions set to 'always'.</p>
+        <p>SotaSWE is smart, careful, and uses git to save changes - it works best with all permissions set to 'always'.</p>
         <ul className="grid grid-cols-[auto,_1fr]">
           <li className="contents">
             <label htmlFor="permissions.list-files">

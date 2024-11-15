@@ -16,24 +16,24 @@
     "commands": [
       {
         "command": "extension.start",
-        "title": "Start SōtaPR"
+        "title": "Start SotaSWE"
       }
     ],
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "sota-pr",
-          "title": "SōtaPR",
+          "id": "sota-swe",
+          "title": "SotaSWE",
           "icon": "./src/icon.svg"
         }
       ]
     },
     "views": {
-      "sota-pr": [
+      "sota-swe": [
         {
           "type": "webview",
-          "id": "sota-pr-panel",
-          "name": "SōtaPR"
+          "id": "sota-swe-panel",
+          "name": "SotaSWE"
         }
       ]
     }
