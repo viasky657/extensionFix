@@ -35,7 +35,6 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
     // Handle messages from the webview
     webviewView.webview.onDidReceiveMessage((data) => {
-      console.log(data);
       this._onMessageFromWebview.fire(data);
       switch (data.type) {
         case "init":
@@ -45,6 +44,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     });
 
     this._runningTask = {
+      query: '',
       sessionId: v4(),
       context: [],
       cost: 0,
@@ -258,6 +258,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
   public addExchangeRequest(sessionId: string, exchangeId: string, request: string) {
     if (this._runningTask) {
+      this._runningTask.query = request;
       this._runningTask.exchanges.push({
         type: "request",
         message: request,

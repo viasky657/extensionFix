@@ -138,6 +138,7 @@ export interface Usage {
 }
 
 export interface Task {
+  query: string;
   sessionId: string;
   preset: Preset;
   responseOnGoing: boolean;

@@ -26,7 +26,7 @@ export function TaskView(props: TaskViewProps) {
     }
   };
 
-  const { exchanges, preset, cost, usage } = task;
+  const { exchanges, preset, cost, usage, query } = task;
 
   const [summaryShown, setSummaryShown] = React.useState(false);
 
@@ -35,13 +35,13 @@ export function TaskView(props: TaskViewProps) {
 
   return (
     <main className="flex flex-col h-full">
-      <header className="sticky top-0">
+      <header className="sticky top-0 bg-panel-background">
         <div>
           <div
-            className="px-4 py-2 cursor-pointer hover:bg-[rgba(128,128,128,0.1)] rounded-sm select-none"
+            className="py-2 cursor-pointer hover:bg-[rgba(128,128,128,0.1)] rounded-sm select-none"
             onClick={() => setSummaryShown(!summaryShown)}
           >
-            {/* <h2>{summary}</h2> */}
+            <h2>{query}</h2>
             <dl className="flex items-baseline">
               <dt className="sr-only">Preset</dt>
               <dd className="text-descriptionForeground mr-auto flex items-center">

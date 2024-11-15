@@ -91,6 +91,7 @@ export const initialState: AppState = {
   view: View.Task,
   isSidecarReady: false, // this is extra
   currentTask: {
+    query: '',
     sessionId: v4(),
     context: [],
     cost: 0,
