@@ -168,6 +168,36 @@ export class StreamProcessor {
 		if (answerStreamLine.context !== AnswerStreamContext.InCodeBlock) {
 			return;
 		}
+
+		// console.log('documentLineIndex', this.documentLineIndex);
+
+		// updating the decorations
+		// Clear previous decoration
+		if (vscode.window.activeTextEditor?.document.uri.fsPath === this.activeWindow.document.uri.fsPath) {
+			if (this.previousDecorationRange) {
+				vscode.window.activeTextEditor.setDecorations(this.editLineDecorationType, []);
+			}
+
+			// Get the range for the current line
+			let lineNumber = this.documentLineIndex;
+			const lineCount = vscode.window.activeTextEditor.document.lineCount;
+			if (lineNumber >= lineCount) {
+				lineNumber = vscode.window.activeTextEditor.document.lineCount - 1;
+			}
+
+			// guard against empty files
+			if (lineNumber >= 0) {
+				const lineRange = vscode.window.activeTextEditor.document.lineAt(lineNumber).range;
+
+				// Apply the decoration
+				vscode.window.activeTextEditor.setDecorations(this.editLineDecorationType, [lineRange]);
+
+				// Update the previous decoration range
+				this.previousDecorationRange = lineRange;
+			}
+		}
+
+
 		const line = answerStreamLine.line;
 		if (this.previousLine) {
 			// if previous line is there, then we can reindent the current line
@@ -206,23 +236,6 @@ export class StreamProcessor {
 			const adjustedInitialLine = this.previousLine.reindent(line, this.document.indentStyle);
 			this.documentLineIndex = await this.document.replaceLine(initialAnchor, adjustedInitialLine);
 		}
-		// console.log('documentLineIndex', this.documentLineIndex);
-
-		// updating the decorations
-		// Clear previous decoration
-		if (this.previousDecorationRange) {
-			this.activeWindow.setDecorations(this.editLineDecorationType, []);
-		}
-
-		// Get the range for the current line
-		const lineNumber = this.documentLineIndex;
-		const lineRange = this.activeWindow.document.lineAt(lineNumber).range;
-
-		// Apply the decoration
-		this.activeWindow.setDecorations(this.editLineDecorationType, [lineRange]);
-
-		// Update the previous decoration range
-		this.previousDecorationRange = lineRange;
 	}
 
 	// Find the initial anchor line in the document
