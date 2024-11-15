@@ -11,9 +11,9 @@ export function Select(props: SelectProps) {
   const { children, className, ...rest } = props
   return (
     <RUISelect.Root {...rest}>
-      <RUISelect.Trigger className={cn(className, "flex items-start p-1 bg-settings-dropdownBackground text-settings-dropdownForeground rounded mr-auto gap-2")}>
-        <RUISelect.Value className="mr-auto" />
-        <span aria-hidden className="codicon codicon-chevron-down flex-shrink-0 translate-y-0.5" />
+      <RUISelect.Trigger className={cn(className, "flex items-start p-1 border border-settings-dropdownBorder bg-settings-dropdownBackground text-settings-dropdownForeground rounded mr-auto gap-2")}>
+        <RUISelect.Value />
+        <span aria-hidden className="ml-auto codicon codicon-chevron-down flex-shrink-0 translate-y-0.5" />
       </RUISelect.Trigger>
 
       <RUISelect.Portal>

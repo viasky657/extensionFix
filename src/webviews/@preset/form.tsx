@@ -28,7 +28,6 @@ export function PresetForm(props: PresetFormProps) {
         </Select>
       </label>
 
-
       <fieldset>
         <legend aria-hidden>API</legend>
         <label htmlFor="api-key">
@@ -50,7 +49,6 @@ export function PresetForm(props: PresetFormProps) {
         </Select>
       </label>
 
-
       <fieldset>
         <legend>Permissions</legend>
         <p>SōtaPR is smart, careful, and uses git to save changes - it works best with all permissions set to 'always'.</p>
@@ -59,50 +57,49 @@ export function PresetForm(props: PresetFormProps) {
             <label htmlFor="code-editing">
               Code editing
             </label>
-            <PermissionSelect className="w-full" id="write-code" name="permissions[code-editing]" />
+            <PermissionSelect className="w-full border-none" id="write-code" name="permissions[code-editing]" />
           </li>
           <li className="contents">
             <label htmlFor="permissions.terminal-commands">
               Run terminal commands
             </label>
-            <PermissionSelect className="w-full" id="permissions.terminal-commands" name="permissions[terminal-commands]" />
+            <PermissionSelect className="w-full border-none" id="permissions.terminal-commands" name="permissions[terminal-commands]" />
           </li>
           <li className="contents">
             <label htmlFor="permissions.list-files">
               List files
             </label>
-            <PermissionSelect className="w-full" id="permissions.list-files" name="permissions[list-files]" />
+            <PermissionSelect className="w-full border-none" id="permissions.list-files" name="permissions[list-files]" />
           </li>
           <li className="contents">
             <label htmlFor="permissions.search-file-content-with-regex">
               Search file content with regex
             </label>
-            <PermissionSelect className="w-full" id="permissions.search-file-content-with-regex" name="permissions[search-file-content-with-regex]" />
+            <PermissionSelect className="w-full border-none" id="permissions.search-file-content-with-regex" name="permissions[search-file-content-with-regex]" />
           </li>
           <li className="contents">
             <label htmlFor="permissions.open-files">
               Open files
             </label>
-            <PermissionSelect className="w-full" id="permissions.oapen-files" name="permissions[open-files]" />
+            <PermissionSelect className="w-full border-none" id="permissions.oapen-files" name="permissions[open-files]" />
           </li>
           <li className="contents">
             <label htmlFor="permissions.lsp-diagnostics">
               Use LSP diagnostics
             </label>
-            <PermissionSelect className="w-full" id="permissions.lsp-diagnostics" name="permissions[lsp-diagnostics]" />
+            <PermissionSelect className="w-full border-none" id="permissions.lsp-diagnostics" name="permissions[lsp-diagnostics]" />
           </li>
           <li className="contents">
             <label htmlFor="permissions.followup-questions">
               Ask followup questions
             </label>
-            <PermissionSelect className="w-full" id="permissions.followup-questions" name="permissions[followup-questions]" />
+            <PermissionSelect className="w-full border-none" id="permissions.followup-questions" name="permissions[followup-questions]" />
           </li>
         </ul>
       </fieldset>
 
       <label htmlFor="name">
         Preset name
-
         <Input className="w-full" id="name" name="name" />
       </label>
 
@@ -111,7 +108,6 @@ export function PresetForm(props: PresetFormProps) {
         Custom instructions
         <Textarea className="w-full" id='custom-instructions' name="custom-instructions" />
       </label>
-
 
       <Button type="submit">Send</Button>
     </form>
