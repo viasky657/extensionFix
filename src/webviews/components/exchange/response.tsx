@@ -253,6 +253,7 @@ function renderPart(part: ResponsePart, index: number, allParts: ResponsePart[])
         ListFiles: 'List files',
         OpenFile: 'Open file',
         SearchFileContentWithRegex: 'Search content file with regex',
+        TerminalCommand: 'Terminal command',
       };
 
       label = toolTypeLabels[part.toolType] || "Unknown tool type";
