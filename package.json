@@ -79,10 +79,13 @@
   },
   "dependencies": {
     "@google-cloud/storage": "^7.0.1",
+    "@radix-ui/react-checkbox": "^1.1.2",
     "@radix-ui/react-select": "^2.1.2",
+    "@radix-ui/react-slot": "^1.1.0",
     "@vscode-elements/elements": "^1.8.0",
     "@vscode/codicons": "^0.0.36",
     "axios": "^1.7.7",
+    "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "delay": "^6.0.0",
     "diff": "^5.1.0",
