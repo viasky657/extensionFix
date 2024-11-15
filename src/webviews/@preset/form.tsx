@@ -18,7 +18,7 @@ export function PresetForm(props: PresetFormProps) {
   const [didSetName, setDidSetName] = React.useState(false)
 
   return (
-    <form {...rest}>
+    <form {...rest} className="text-descriptionForeground">
       <label htmlFor="provider">
         Provider
         <Select className="w-full" id="provider" name="provider" defaultValue={initialData?.provider || Provider.Anthropic}>
@@ -34,9 +34,9 @@ export function PresetForm(props: PresetFormProps) {
           APIKey
           <Input className="w-full" id="api-key" name="api-key" type="password" />
         </label>
-        <label>
+        <label className="flex items-start">
           <Checkbox name="custom-base-URL" />
-          Use custom base URL
+          <span className="ml-2">Use custom base URL</span>
         </label>
       </fieldset>
 
