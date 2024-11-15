@@ -112,7 +112,41 @@ type FrameworkEvent = {
 	AgenticTopLevelThinking: string;
 	AgenticSymbolLevelThinking: StepListItem;
 	ToolUseDetected: ToolUseDetectedEvent;
+	ToolThinking: ToolThinkingEvent;
+	ToolNotFound: ToolNotFoundEvent;
+	ToolTypeFound: ToolTypeFoundEvent;
+	ToolParameterFound: ToolParameterFoundEvent;
 };
+
+interface ToolParameterFoundEvent {
+	tool_parameter_input: {
+		field_name: string,
+		field_content_up_until_now: string,
+		field_content_delta: string,
+	}
+}
+
+type ToolType = 'ListFiles' |
+	'SearchFileContentWithRegex' |
+	'OpenFile' |
+	'CodeEditing' |
+	'LSPDiagnostics' |
+	'AskFollowupQuestions' |
+	'AttemptCompletion' |
+	'RepoMapGeneration'
+
+
+interface ToolTypeFoundEvent {
+	tool_type: ToolType,
+}
+
+interface ToolThinkingEvent {
+	thinking: string;
+}
+
+interface ToolNotFoundEvent {
+	full_output: string;
+}
 
 interface ToolUseDetectedEvent {
 	tool_use_partial_input: ToolInputPartial;

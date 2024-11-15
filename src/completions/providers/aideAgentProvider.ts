@@ -481,14 +481,26 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 			if ('done' in event) {
 				continue;
 			}
-			// const sessionId = event.request_id;
-			// const exchangeId = event.exchange_id;
+			const sessionId = event.request_id;
+			const exchangeId = event.exchange_id;
 
 			if (event.event.ChatEvent) {
 				// responses to the chat
-				const sessionId = event.request_id;
-				const exchangeId = event.exchange_id;
 				this.panelProvider.addChatMessage(sessionId, exchangeId, event.event.ChatEvent.delta);
+			}
+			if (event.event.FrameworkEvent) {
+				if (event.event.FrameworkEvent.ToolThinking) {
+					const toolThinking = event.event.FrameworkEvent.ToolThinking;
+					this.panelProvider.addToolThinking(sessionId, exchangeId, toolThinking.thinking);
+				}
+				if (event.event.FrameworkEvent.ToolTypeFound) {
+					const toolType = event.event.FrameworkEvent.ToolTypeFound.tool_type;
+					this.panelProvider.addToolTypeFound(sessionId, exchangeId, toolType);
+				}
+				if (event.event.FrameworkEvent.ToolParameterFound) {
+					const toolParameter = event.event.FrameworkEvent.ToolParameterFound.tool_parameter_input;
+					this.panelProvider.addToolParameterFound(sessionId, exchangeId, toolParameter.field_name, toolParameter.field_content_delta, toolParameter.field_content_up_until_now);
+				}
 			}
 			// const responseStream = this.responseStreamCollection.getResponseStream({
 			// 	sessionId,

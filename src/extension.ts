@@ -97,7 +97,18 @@ export async function activate(context: vscode.ExtensionContext) {
         panelProvider.addExchangeRequest(sessionId, exchangeId, query);
 
         // - ping the sidecar over here. currentRepo can be undefined, which will 422 sidecar
-        const stream = SIDECAR_CLIENT!.agentSessionChat(query, sessionId, exchangeId, agentSessionProvider.editorUrl!, AideAgentMode.Chat, [], currentRepo ?? "", projectContext.labels, '');
+        const stream = SIDECAR_CLIENT!.agentSessionPlanStep(
+          query,
+          sessionId,
+          exchangeId,
+          agentSessionProvider.editorUrl!,
+          AideAgentMode.Chat,
+          [],
+          currentRepo ?? "",
+          projectContext.labels,
+          false,
+          'workos-fake-id',
+        );
         // - have a respose somewhere and the chat model would update
         agentSessionProvider.reportAgentEventsToChat(true, stream);
         // and the model will have a on did change
@@ -113,20 +124,6 @@ export async function activate(context: vscode.ExtensionContext) {
       panelProvider.updateState();
     })
   );
-
-  // The command has been defined in the package.json file
-  // Now provide the implementation of the command with registerCommand
-  // The commandId parameter must match the command field in package.json
-  const command = vscode.commands.registerCommand(
-    "extension.helloWorld",
-    () => {
-      // The code you place here will be executed every time your command is executed
-      // Display a message box to the user
-      vscode.window.showInformationMessage("Hello World from extension!");
-    }
-  );
-
-  context.subscriptions.push(command);
 }
 
 // This method is called when your extension is deactivated

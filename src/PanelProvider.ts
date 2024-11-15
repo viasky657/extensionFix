@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { ClientRequest, Task, View } from "./model";
+import { ClientRequest, Task, ToolThinkingToolTypeEnum, ToolThinkingToolTypeResponsePart, View } from "./model";
 import { Response, } from "./model";
 import { getNonce } from "./webviews/utils/nonce";
 import { uniqueId } from "lodash";
@@ -79,6 +79,97 @@ export class PanelProvider implements vscode.WebviewViewProvider {
         loadedTasks: new Map()
       }
     });
+  }
+
+  public addToolTypeFound(sessionId: string, exchangeId: string, toolType: ToolThinkingToolTypeEnum) {
+    if (this._runningTask && this._runningTask.sessionId === sessionId) {
+      const exchangePossible = this._runningTask.exchanges.find((exchange) => {
+        return exchange.exchangeId === exchangeId;
+      }) as Response | undefined;
+      if (exchangePossible) {
+        exchangePossible.parts.push({
+          type: 'toolType',
+          toolType,
+        });
+      }
+
+      // we update our webview with the latest state
+      this._view?.webview.postMessage({
+        command: 'state-updated',
+        initialAppState: {
+          extensionReady: false,
+          view: View.Task,
+          currentTask: this._runningTask,
+          loadedTasks: new Map()
+        }
+      });
+    }
+  }
+
+  public addToolParameterFound(sessionId: string, exchangeId: string, fieldName: string, fieldContentDelta: string, fieldContentUpUntilNow: string) {
+    if (this._runningTask && this._runningTask.sessionId === sessionId) {
+      const exchangePossible = this._runningTask.exchanges.find((exchange) => {
+        return exchange.exchangeId === exchangeId;
+      }) as Response | undefined;
+      if (exchangePossible) {
+        const index = exchangePossible.parts.findIndex((part) => {
+          return (part.type === 'toolParameter' && part.toolParameters.parameterName === fieldName);
+        });
+        if (index !== -1) {
+          if (exchangePossible.parts[index].type === 'toolParameter') {
+            exchangePossible.parts[index].toolParameters.contentUpUntilNow = fieldContentUpUntilNow;
+          }
+        } else {
+          exchangePossible.parts.push({
+            type: 'toolParameter',
+            toolParameters: {
+              contentDelta: fieldContentDelta,
+              contentUpUntilNow: fieldContentUpUntilNow,
+              parameterName: fieldName,
+            }
+          });
+        }
+      }
+
+      // we update our webview with the latest state
+      this._view?.webview.postMessage({
+        command: 'state-updated',
+        initialAppState: {
+          extensionReady: false,
+          view: View.Task,
+          currentTask: this._runningTask,
+          loadedTasks: new Map()
+        }
+      });
+    }
+  }
+
+  public addToolThinking(sessionId: string, exchangeId: string, thinking: string | null) {
+    if (this._runningTask && this._runningTask.sessionId === sessionId) {
+      const exchangePossible = this._runningTask.exchanges.find((exchange) => {
+        return exchange.exchangeId === exchangeId;
+      }) as Response | undefined;
+      if (exchangePossible && thinking) {
+        exchangePossible.parts.push({
+          type: 'toolThinking',
+          markdown: {
+            type: "markdown",
+            rawMarkdown: thinking,
+          }
+        });
+      }
+
+      // we update our webview with the latest state
+      this._view?.webview.postMessage({
+        command: 'state-updated',
+        initialAppState: {
+          extensionReady: false,
+          view: View.Task,
+          currentTask: this._runningTask,
+          loadedTasks: new Map()
+        }
+      });
+    }
   }
 
   public addChatMessage(sessionId: string, exchangeId: string, delta: string | null) {
