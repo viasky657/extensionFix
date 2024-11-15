@@ -1,6 +1,5 @@
 
 import { ANTHROPIC_MODELS, PermissionState, Preset, Provider } from "../../model";
-import { VSCodeLabel } from "vscode-elements/label";
 import * as React from "react";
 import { Checkbox } from "components/checkbox";
 import { Select, Option, SelectProps } from "components/select";
@@ -20,14 +19,15 @@ export function PresetForm(props: PresetFormProps) {
 
   return (
     <form {...rest}>
-      <VSCodeLabel htmlFor="provider">
+      <label htmlFor="provider">
         Provider
-      </VSCodeLabel>
-      <Select className="w-full" id="provider" name="provider" defaultValue={initialData?.provider || Provider.Anthropic}>
-        {Object.values(Provider).map((provider) => (
-          <Option key={provider} value={provider}>{provider}</Option>
-        ))}
-      </Select>
+        <Select className="w-full" id="provider" name="provider" defaultValue={initialData?.provider || Provider.Anthropic}>
+          {Object.values(Provider).map((provider) => (
+            <Option key={provider} value={provider}>{provider}</Option>
+          ))}
+        </Select>
+      </label>
+
 
       <fieldset>
         <legend aria-hidden>API</legend>
