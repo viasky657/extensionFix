@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 import * as http from 'http';
 import * as vscode from 'vscode';
-import { SidecarApplyEditsRequest, LSPDiagnostics, SidecarGoToDefinitionRequest, SidecarGoToImplementationRequest, SidecarGoToReferencesRequest, SidecarOpenFileToolRequest, LSPQuickFixInvocationRequest, SidecarQuickFixRequest, SidecarSymbolSearchRequest, SidecarInlayHintsRequest, SidecarGetOutlineNodesRequest, EditedCodeStreamingRequest, SidecarRecentEditsRetrieverRequest, SidecarRecentEditsRetrieverResponse, SidecarCreateFileRequest, LSPFileDiagnostics, SidecarGetPreviousWordRangeRequest, SidecarDiagnosticsResponse, SidecarCreateNewExchangeRequest, SidecarUndoPlanStep, SidecarExecuteTerminalCommandRequest } from './types';
+import { SidecarApplyEditsRequest, LSPDiagnostics, SidecarGoToDefinitionRequest, SidecarGoToImplementationRequest, SidecarGoToReferencesRequest, SidecarOpenFileToolRequest, LSPQuickFixInvocationRequest, SidecarQuickFixRequest, SidecarSymbolSearchRequest, SidecarInlayHintsRequest, SidecarGetOutlineNodesRequest, EditedCodeStreamingRequest, SidecarRecentEditsRetrieverRequest, SidecarRecentEditsRetrieverResponse, SidecarCreateFileRequest, LSPFileDiagnostics, SidecarGetPreviousWordRangeRequest, SidecarDiagnosticsResponse, SidecarCreateNewExchangeRequest, SidecarUndoPlanStep, SidecarExecuteTerminalCommandRequest, SidecarTerminalFreshOutputRequest } from './types';
 import { Position, Range } from 'vscode';
 import { getDiagnosticsFromEditor, getEnrichedDiagnostics, getFileDiagnosticsFromEditor, getFullWorkspaceDiagnostics, getHoverInformation } from './diagnostics';
 import { openFileEditor } from './openFile';
@@ -20,7 +20,7 @@ import { createFileResponse } from './createFile';
 import { getPreviousWordAtPosition } from './previousWordCommand';
 import { goToTypeDefinition } from './goToTypeDefinition';
 import { getRipGrepPath } from '../utilities/ripGrep';
-import { executeTerminalCommand, TerminalManager } from '../terminal/TerminalManager';
+import { executeTerminalCommand, getTerminalOutputPending, TerminalManager } from '../terminal/TerminalManager';
 
 // Helper function to read the request body
 function readRequestBody(req: http.IncomingMessage): Promise<string> {
@@ -255,8 +255,12 @@ export function handleRequest(
 				const body = await readRequestBody(req);
 				const request: SidecarExecuteTerminalCommandRequest = JSON.parse(body);
 				const response = await executeTerminalCommand(request.command, vscode.workspace.rootPath ?? process.cwd(), terminalManager);
-				console.log('executeTerminalCommand', response);
-
+				res.writeHead(200, { 'Content-Type': 'application/json' });
+				res.end(JSON.stringify({ output: response }));
+			} else if (req.method === 'POST' && req.url === '/terminal_output_new') {
+				const body = await readRequestBody(req);
+				const request: SidecarTerminalFreshOutputRequest = JSON.parse(body);
+				const response = await getTerminalOutputPending(terminalManager, request);
 				res.writeHead(200, { 'Content-Type': 'application/json' });
 				res.end(JSON.stringify({ output: response }));
 			} else {
