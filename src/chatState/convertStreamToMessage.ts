@@ -104,6 +104,9 @@ export class StreamProcessor {
 	documentLineIndex: number;
 	sentEdits: boolean;
 	documentLineLimit: number;
+	editLineDecorationType: vscode.TextEditorDecorationType;
+	activeWindow: vscode.TextEditor;
+	private previousDecorationRange: vscode.Range | null = null;
 	constructor(
 		lines: string[],
 		indentStyle: IndentStyleSpaces | undefined,
@@ -115,6 +118,17 @@ export class StreamProcessor {
 		uniqueId: string,
 		activeWindow: vscode.TextEditor,
 	) {
+		this.activeWindow = activeWindow;
+		this.editLineDecorationType = vscode.window.createTextEditorDecorationType(
+			{
+				isWholeLine: true,
+				backgroundColor: { id: "diffEditor.insertedLineBackground" },
+				outlineWidth: "1px",
+				outlineStyle: "solid",
+				outlineColor: { id: "diffEditor.insertedTextBorder" },
+				rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
+			},
+		);
 		// Initialize document with the given parameters
 		this.document = new DocumentManager(
 			lines,
@@ -142,6 +156,7 @@ export class StreamProcessor {
 		if (this.documentLineIndex <= this.documentLineLimit) {
 			this.document.replaceLines(this.documentLineIndex, this.documentLineLimit, new AdjustedLineContent('', 0, '', 0));
 		}
+		this.editLineDecorationType.dispose();
 	}
 
 	async processLine(answerStreamLine: AnswerStreamLine) {
@@ -192,6 +207,22 @@ export class StreamProcessor {
 			this.documentLineIndex = await this.document.replaceLine(initialAnchor, adjustedInitialLine);
 		}
 		// console.log('documentLineIndex', this.documentLineIndex);
+
+		// updating the decorations
+		// Clear previous decoration
+		if (this.previousDecorationRange) {
+			this.activeWindow.setDecorations(this.editLineDecorationType, []);
+		}
+
+		// Get the range for the current line
+		const lineNumber = this.documentLineIndex;
+		const lineRange = this.activeWindow.document.lineAt(lineNumber).range;
+
+		// Apply the decoration
+		this.activeWindow.setDecorations(this.editLineDecorationType, [lineRange]);
+
+		// Update the previous decoration range
+		this.previousDecorationRange = lineRange;
 	}
 
 	// Find the initial anchor line in the document
@@ -357,6 +388,7 @@ class DocumentManager {
 				label: this.uniqueId.toString(),
 				needsConfirmation: false,
 			});
+			console.log('changedLineRange', startIndex, endIndex);
 			this.iterationEdits.replace(this.uri, new vscode.Range(startIndex, 0, endIndex, 1000), newLine.adjustedContent);
 			if (this.applyDirectly) {
 				await this.activeWindow.edit((editBuilder) => {
@@ -386,6 +418,7 @@ class DocumentManager {
 			label: this.uniqueId.toString(),
 			needsConfirmation: false,
 		});
+		console.log('changedLine', this.lines.length - 1);
 		this.iterationEdits.replace(this.uri, new vscode.Range(this.lines.length - 2, 1000, this.lines.length - 2, 1000), '\n' + newLine.adjustedContent);
 		if (this.applyDirectly) {
 			await this.activeWindow.edit((editBuilder) => {
@@ -414,6 +447,7 @@ class DocumentManager {
 			label: this.uniqueId.toString(),
 			needsConfirmation: false,
 		});
+		console.log('changedLine', index);
 		this.iterationEdits.replace(this.uri, new vscode.Range(index, 1000, index, 1000), '\n' + newLine.adjustedContent);
 		if (this.applyDirectly) {
 			await this.activeWindow.edit((editBuilder) => {
