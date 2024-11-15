@@ -149,7 +149,7 @@ export function ResponseViewItem(props: Response) {
   return (
     <Exchange>
       <ExchangeHeader>SOTA-SWE</ExchangeHeader>
-      <ExchangeContent className="flex flex-col gap-6">
+      <ExchangeContent className="flex flex-col gap-4">
         {parts.length === 0 ? (
           <React.Fragment>
             <Spinner />
@@ -157,10 +157,10 @@ export function ResponseViewItem(props: Response) {
           </React.Fragment>
         ) : (
           parts.map((part, index) => (
-            <div key={`${part.type}-${index}`}>
+            <React.Fragment key={`${part.type}-${index}`}>
               {renderPart(part, index, parts)}
               {renderParameter(part)}
-            </div>
+            </React.Fragment>
           ))
         )}
         {context.length > 0 && <ContextSummary context={context} />}
@@ -172,14 +172,14 @@ export function ResponseViewItem(props: Response) {
 function renderParameter(responsePart: ResponsePart) {
   if (responsePart.type === 'toolParameter') {
     const { parameterName, contentDelta, contentUpUntilNow } = responsePart.toolParameters
-    return <React.Fragment>
+    return <div className="-mt-2">
       <span className="sr-only">{parameterName}</span>
       <ParameterContent
         type={parameterName}
         content={contentUpUntilNow}
         delta={contentDelta}
       />
-    </React.Fragment>
+    </div>
   }
   return null
 }

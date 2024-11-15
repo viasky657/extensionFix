@@ -7,6 +7,7 @@ import ClaudeLogo from "../assets/claude.svg";
 import { ObjectEntry } from "../utils/types";
 import { Textarea } from "components/textarea";
 import { Button } from "components/button";
+import { cn } from "utils/cn";
 
 export interface TaskViewProps {
   task: Task;
@@ -33,8 +34,8 @@ export function TaskView(props: TaskViewProps) {
   const showUsage = Object.keys(usage).length > 0; // usageKeys.some((key) => key in usage);
 
   return (
-    <main className="flex flex-col flex-grow">
-      <header>
+    <main className="flex flex-col h-full">
+      <header className="sticky top-0">
         <div>
           <div
             className="px-4 py-2 cursor-pointer hover:bg-[rgba(128,128,128,0.1)] rounded-sm select-none"
@@ -87,7 +88,7 @@ export function TaskView(props: TaskViewProps) {
           </div>
         </div>
       </header>
-      <div className="px-4 py-2 flex flex-col gap-2">
+      <div className={cn("px-4 py-2 flex flex-col gap-2 ", exchanges.length > 0 && "flex-grow")}>
         <section className="flex-grow">
           {exchanges && (
             <ol>
@@ -97,13 +98,15 @@ export function TaskView(props: TaskViewProps) {
             </ol>
           )}
         </section>
-        <form onSubmit={onSubmit} ref={formRef}>
+        <form className="sticky bottom-2 bg-panel-background flex flex-col gap-2" onSubmit={onSubmit} ref={formRef}>
           <Textarea
             className="w-full"
             name="query"
             onKeyDown={handleKeyDown}
           />
-          <Button type="submit">Send</Button>
+          <div className="flex justify-end">
+            <Button type="submit">Send</Button>
+          </div>
         </form>
       </div>
     </main>
