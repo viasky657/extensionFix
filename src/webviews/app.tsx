@@ -5,6 +5,7 @@ import { PresetView } from "@preset/view";
 import LoadingSpinner from "components/loading-spinner";
 import { processFormData } from './utils/form';
 import { v4 } from "uuid";
+import { useSubmenuContext } from "store/submenuContext";
 
 declare global {
   interface Window {
@@ -121,6 +122,13 @@ export const initialState: AppState = {
 
 const App = () => {
   const [state, dispatch] = React.useReducer(reducer, initialState);
+  const initializeContextProviders = useSubmenuContext(state => state.initializeContextProviders);
+  const initializeSubmenuItems = useSubmenuContext(state => state.initializeSubmenuItems);
+
+  React.useEffect(() => {
+    initializeContextProviders();
+    initializeSubmenuItems();
+  }, [initializeSubmenuItems, initializeContextProviders]);
 
   React.useEffect(() => {
     console.log({ state })

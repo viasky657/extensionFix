@@ -57,7 +57,18 @@ interface OpenFile {
   fs_file_path: string;
 }
 
-export type ClientRequest = TaskFeedback | OpenFile | InitRequest
+interface FetchContextProviders {
+  type: "context/fetchProviders";
+  id: string,
+}
+
+interface LoadSubmenuItems {
+  type: "context/loadSubmenuItems",
+  id: string,
+  title: string,
+}
+
+export type ClientRequest = TaskFeedback | OpenFile | InitRequest | FetchContextProviders | LoadSubmenuItems;
 
 export type Event = OpenTaskEvent | TaskResponseEvent | InitResponse | InitialState | TaskUpdate | SidecarReadyState;
 

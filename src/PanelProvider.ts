@@ -1,14 +1,19 @@
-import * as vscode from "vscode";
-import { ClientRequest, Task, ToolThinkingToolTypeEnum, View } from "./model";
-import { Response, } from "./model";
-import { getNonce } from "./webviews/utils/nonce";
 import { v4 } from 'uuid';
+import * as vscode from "vscode";
+import FileContextProvider from './context/providers/FileContextProvider';
+import { IContextProvider } from "./context/providers/types";
+import { ClientRequest, Response, Task, ToolThinkingToolTypeEnum, View } from "./model";
+import { getNonce } from "./webviews/utils/nonce";
+import { VSCodeIDE } from './ide';
 
 export class PanelProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
   private _isSidecarReady: boolean = false;
+  private ide: VSCodeIDE;
 
-  constructor(private readonly _extensionUri: vscode.Uri) { }
+  constructor(private readonly _extensionUri: vscode.Uri) {
+    this.ide = new VSCodeIDE();
+  }
 
   private _onMessageFromWebview = new vscode.EventEmitter<ClientRequest>();
   onMessageFromWebview = this._onMessageFromWebview.event;
@@ -30,15 +35,33 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     };
 
     this._onDidWebviewBecomeVisible.fire();
-
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
+    const providers: IContextProvider[] = [
+      new FileContextProvider({})
+    ];
+
     // Handle messages from the webview
-    webviewView.webview.onDidReceiveMessage((data) => {
+    webviewView.webview.onDidReceiveMessage(async (data: ClientRequest) => {
       this._onMessageFromWebview.fire(data);
       switch (data.type) {
         case "init":
           webviewView.webview.postMessage({ type: "init-response", task: this._runningTask, view: View.Task, isSidecarReady: this._isSidecarReady });
+          break;
+        case "context/fetchProviders":
+          webviewView.webview.postMessage({
+            type: "context/fetchProviders/response",
+            providers: providers.map(provider => provider.description),
+            id: data.id
+          });
+          break;
+        case "context/loadSubmenuItems":
+          const items = await providers.find(provider => provider.description.title === data.title)
+            ?.loadSubmenuItems({
+              ide: this.ide,
+              fetch: (url, init) => fetch(url, init)
+            });
+          webviewView.webview.postMessage({ type: "context/loadSubmenuItems/response", items: items || [], id: data.id });
           break;
       }
     });

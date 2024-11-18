@@ -1,14 +1,12 @@
-import * as React from "react";
 import { RequestViewItem } from "components/exchange/request";
 import { ResponseViewItem } from "components/exchange/response";
+import Tiptap from "components/input/TipTapEditor";
 import { TaskDD, TaskDL, TaskDT } from "components/task-definition-list";
+import * as React from "react";
+import { cn } from "utils/cn";
 import { Exchange, Task, Usage } from "../../model";
 import ClaudeLogo from "../assets/claude.svg";
 import { ObjectEntry } from "../utils/types";
-import { Textarea } from "components/textarea";
-import { Button } from "components/button";
-import { cn } from "utils/cn";
-import Tiptap from "components/input/TipTapEditor";
 
 export interface TaskViewProps {
   task: Task;
@@ -17,16 +15,6 @@ export interface TaskViewProps {
 
 export function TaskView(props: TaskViewProps) {
   const { task, onSubmit } = props;
-
-  const formRef = React.useRef<HTMLFormElement>(null);
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      formRef.current?.requestSubmit();
-    }
-  };
-
   const { exchanges, preset, cost, usage, query } = task;
 
   const [summaryShown, setSummaryShown] = React.useState(false);
@@ -109,7 +97,9 @@ export function TaskView(props: TaskViewProps) {
             <Button type="submit">Send</Button>
           </div>
         </form> */}
-        <Tiptap className="sticky bottom-0 p-2" />
+        <Tiptap
+          availableContextProviders={availableContextProviders ?? []}
+        />
       </div>
     </main>
   );
