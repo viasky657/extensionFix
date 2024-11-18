@@ -1,24 +1,11 @@
 import * as React from "react";
-import { Event, View, AppState, ClientRequest } from "../model";
-import { TaskView } from "@task/view";
-import { PresetView } from "@settings/preset-view";
+import { Event, View, ClientRequest, Task, AppState, ViewType, Preset, NewPreset } from "../model";
+import { TaskView, TaskViewProps } from "@task/view";
+import { PresetView, PresetViewProps } from "@settings/preset-view";
 import LoadingSpinner from "components/loading-spinner";
-import { processFormData } from './utils/form';
 import { v4 } from "uuid";
-import { SettingsView } from "@settings/settings-view";
-import { WelcomeView } from "@settings/welcome-view";
-
-declare global {
-  interface Window {
-    vscode: {
-      postMessage(message: ClientRequest): void;
-    }
-  }
-
-  const vscode: {
-    postMessage(message: ClientRequest): void;
-  }
-}
+import { SettingsView, SettingsViewProps } from "@settings/settings-view";
+import { WelcomeView, WelcomeViewProps } from "@settings/welcome-view";
 
 function onMessage(event: React.FormEvent<HTMLFormElement>, sessionId: string | undefined) {
   event.preventDefault();
@@ -38,13 +25,6 @@ function onMessage(event: React.FormEvent<HTMLFormElement>, sessionId: string | 
 
   // resets the form
   form.reset();
-}
-
-function onNewPreset(event: React.FormEvent<HTMLFormElement>) {
-  event.preventDefault();
-  const form = event.currentTarget;
-  const data = new FormData(form);
-  console.log(processFormData(data))
 }
 
 function reducer(state: AppState, action: Event) {
@@ -94,43 +74,20 @@ function reducer(state: AppState, action: Event) {
   return newState;
 }
 
-export const initialState: AppState = {
-  extensionReady: false,
-  isSidecarReady: false, // this is extra
-  view: View.Task,
-  presets: [],
-  currentTask: {
-    query: '',
-    sessionId: v4(),
-    context: [],
-    cost: 0,
-    usage: {
-      inputTokens: 0,
-      outputTokens: 0,
-      cacheReads: 0,
-      cacheWrites: 0,
-    },
-    exchanges: [],
-    preset: {
-      createdOn: new Date().toISOString(),
-      provider: "anthropic",
-      model: "claude-3-5-sonnet-20241022",
-      apiKey: "exampleApiKey123",
-      customBaseUrl: "https://api.anthropic.com",
-      permissions: {
-        readData: "ask",
-        writeData: "ask",
-      },
-      customInstructions: "Answer as concisely as possible",
-      name: "claude-sonnet-3.5",
-    },
-    responseOnGoing: false,
-  },
-  loadedTasks: new Map()
-};
+export type OpenViewFn = <T extends keyof typeof routes>(view: T, viewProps: Parameters<(typeof routes)[T]>[0]) => void
 
 const App = () => {
+
   const [state, dispatch] = React.useReducer(reducer, initialState);
+  const [viewProps, setViewProps] = React.useState<Parameters<typeof routes[keyof typeof routes]>[0]>();
+
+  function openView<T extends keyof typeof routes>(
+    view: T,
+    viewProps: Parameters<typeof routes[T]>[0]
+  ) {
+    dispatch({ type: 'open-view', view });
+    setViewProps(viewProps);
+  }
 
   React.useEffect(() => {
     // fetches state from the extension
@@ -177,24 +134,81 @@ const App = () => {
 
   return (
     <div className="h-full">
-      {state.isSidecarReady ? renderView(state) : <LoadingSpinner />}
+      {state.isSidecarReady ? renderView(state, viewProps, openView) : <LoadingSpinner />}
     </div>
   );
 }
-
-function renderView(state: AppState) {
+// TODO (@g-danna) fix this mess
+function renderView(state: AppState, viewProps: PresetViewProps | TaskViewProps | SettingsViewProps | WelcomeViewProps | undefined, openView: OpenViewFn) {
   switch (state.view) {
-    case View.Welcome:
-      return <WelcomeView onSubmit={onNewPreset} />
+    //case View.Welcome:
+    //  return <WelcomeView />
     case View.Task:
       return <TaskView task={state.currentTask} onSubmit={(event) => onMessage(event, state.currentTask?.sessionId)} />;
     case View.Settings:
-      return <SettingsView presets={state.presets} />
+      return <SettingsView openView={openView} />
     case View.Preset:
-      return <PresetView onSubmit={onNewPreset} />
+      return <PresetView />
     default:
       return "View not implemented";
   }
 }
 
 export default App;
+
+
+const routes = {
+  [View.Preset]: PresetView,
+  [View.Task]: TaskView,
+  [View.Settings]: SettingsView,
+  [View.Welcome]: WelcomeView,
+}
+
+export const initialState: AppState = {
+  extensionReady: false,
+  isSidecarReady: false, // this is extra
+  view: View.Task,
+  presets: [],
+  currentTask: {
+    query: '',
+    sessionId: v4(),
+    context: [],
+    cost: 0,
+    usage: {
+      inputTokens: 0,
+      outputTokens: 0,
+      cacheReads: 0,
+      cacheWrites: 0,
+    },
+    exchanges: [],
+    preset: {
+      type: 'preset',
+      id: v4(),
+      createdOn: new Date().toISOString(),
+      provider: "anthropic",
+      model: "claude-3-5-sonnet-20241022",
+      apiKey: "exampleApiKey123",
+      customBaseUrl: "https://api.anthropic.com",
+      permissions: {
+        readData: "ask",
+        writeData: "ask",
+      },
+      customInstructions: "Answer as concisely as possible",
+      name: "claude-sonnet-3.5",
+    },
+    responseOnGoing: false,
+  },
+  loadedTasks: new Map()
+};
+
+declare global {
+  interface Window {
+    vscode: {
+      postMessage(message: ClientRequest): void;
+    }
+  }
+
+  const vscode: {
+    postMessage(message: ClientRequest): void;
+  }
+}

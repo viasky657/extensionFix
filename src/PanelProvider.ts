@@ -8,6 +8,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
   private _view?: vscode.WebviewView;
   private _runningTask: Task | undefined;
+  private _activePreset: Preset | undefined;
   private _isSidecarReady: boolean = false;
   private readonly _extensionUri: vscode.Uri;
 
@@ -60,12 +61,26 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
     // Handle messages from the webview
-    webviewView.webview.onDidReceiveMessage((data) => {
+    webviewView.webview.onDidReceiveMessage((data: ClientRequest) => {
       this._onMessageFromWebview.fire(data);
       switch (data.type) {
         case "init":
           webviewView.webview.postMessage({ type: "init-response", task: this._runningTask, view: View.Task, isSidecarReady: this._isSidecarReady });
           break;
+        case "get-presets": {
+          const presets = this.context.globalState.get('presets') as Preset[] || [];
+          webviewView.webview.postMessage({ type: "presets-loaded", presets });
+          break;
+        }
+        case 'add-preset': {
+          const newPreset = {
+            ...data.preset,
+            createdOn: new Date().toISOString(),
+            id: v4()
+          };
+          const existingPresets = this.context.globalState.get('presets') as Preset[] || [];
+          this.context.globalState.update('presets', [...existingPresets, newPreset]);
+        }
       }
     });
 
@@ -82,6 +97,8 @@ export class PanelProvider implements vscode.WebviewViewProvider {
       },
       exchanges: [],
       preset: {
+        type: 'preset',
+        id: v4(),
         provider: "anthropic",
         model: "claude-3-5-sonnet-20241022",
         apiKey: "exampleApiKey123",
@@ -97,20 +114,13 @@ export class PanelProvider implements vscode.WebviewViewProvider {
       responseOnGoing: false,
     };
 
-
-    const presets = this.context.globalState.get('presets') as Preset[] | undefined;
-    const hasNoPresets = !presets || presets.length === 0;
-
-
-    console.log(hasNoPresets, hasNoPresets ? View.Welcome : View.Task);
-
     // on initialisation we are able to pipe it
     this._view.webview.postMessage({
       command: 'initial-state',
       initialAppState: {
         extensionReady: false,
-        view: hasNoPresets ? View.Welcome : View.Task,
-        presets,
+        view: View.Task,
+        presets: [],
         currentTask: this._runningTask,
         loadedTasks: new Map()
       }

@@ -25,7 +25,26 @@ interface OpenFile {
   fs_file_path: string;
 }
 
-export type ClientRequest = TaskFeedback | OpenFile | InitRequest
+interface GetPresets {
+  type: 'get-presets';
+}
+
+interface AddPreset {
+  type: 'add-preset';
+  preset: NewPreset;
+}
+
+interface UpdatePreset {
+  type: 'update-preset';
+  preset: Preset;
+}
+
+export type ClientRequest = TaskFeedback | OpenFile | InitRequest | GetPresets | AddPreset | UpdatePreset
+
+interface PresetsLoaded {
+  type: 'presets-loaded';
+  presets: Preset[];
+}
 
 interface OpenTaskEvent {
   type: "open-task";
@@ -60,14 +79,13 @@ interface SidecarReadyState {
   isSidecarReady: boolean,
 }
 
-
 interface OpenView {
   type: 'open-view',
   view: ViewType,
 }
 
 
-export type Event = OpenView | OpenTaskEvent | TaskResponseEvent | InitResponse | InitialState | TaskUpdate | SidecarReadyState;
+export type Event = OpenView | PresetsLoaded | OpenTaskEvent | TaskResponseEvent | InitResponse | InitialState | TaskUpdate | SidecarReadyState;
 
 export type NewSessionRequest = {
   type: "new-request";
@@ -191,7 +209,7 @@ type Permissions = Record<string, PermissionStateType>;
 
 type ProviderType = `${Provider}`;
 
-export interface Preset {
+type BasePreset = {
   provider: ProviderType;
   model: Model;
   apiKey: string;
@@ -199,7 +217,16 @@ export interface Preset {
   permissions: Permissions;
   customInstructions: string;
   name: string;
+}
+
+export type Preset = BasePreset & {
+  type: 'preset';
+  id: string;
   createdOn: string,
+}
+
+export type NewPreset = BasePreset & {
+  type: 'new-preset';
 }
 
 export interface AppState {

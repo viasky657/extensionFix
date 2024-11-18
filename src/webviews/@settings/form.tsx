@@ -1,4 +1,3 @@
-
 import { ANTHROPIC_MODELS, PermissionState, Preset, Provider } from "../../model";
 import * as React from "react";
 import { Checkbox } from "components/checkbox";
@@ -30,9 +29,9 @@ export function PresetForm(props: PresetFormProps) {
 
       <fieldset>
         <legend aria-hidden>API</legend>
-        <label htmlFor="api-key">
+        <label htmlFor="apiKey">
           APIKey
-          <Input className="w-full" id="api-key" name="api-key" type="password" />
+          <Input className="w-full" id="apiKey" name="apiKey" type="password" />
         </label>
         <label className="flex items-start">
           <Checkbox name="custom-base-URL" />
@@ -42,10 +41,9 @@ export function PresetForm(props: PresetFormProps) {
 
       <label>
         Model
-        <Select className="w-full" defaultValue={initialData?.model || ANTHROPIC_MODELS[0]}>
-          {ANTHROPIC_MODELS.map((model) => (
-            <Option key={model} value={model}>{model}</Option>
-          ))}
+        <Select className="w-full" name='model' defaultValue={initialData?.model || ANTHROPIC_MODELS[0]}>          {ANTHROPIC_MODELS.map((model) => (
+          <Option key={model} value={model}>{model}</Option>
+        ))}
         </Select>
       </label>
 
@@ -80,9 +78,9 @@ export function PresetForm(props: PresetFormProps) {
       </label>
 
 
-      <label htmlFor="custom-instructions">
+      <label htmlFor="customInstructions">
         Custom instructions
-        <Textarea className="w-full" id='custom-instructions' name="custom-instructions" />
+        <Textarea className="w-full" id='customInstructions' name="customInstructions" />
       </label>
 
       <Button type="submit">Send</Button>
