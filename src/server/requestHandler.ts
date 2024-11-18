@@ -255,6 +255,7 @@ export function handleRequest(
 				const body = await readRequestBody(req);
 				const request: SidecarExecuteTerminalCommandRequest = JSON.parse(body);
 				const response = await executeTerminalCommand(request.command, vscode.workspace.rootPath ?? process.cwd(), terminalManager);
+				console.log('response', response);
 				res.writeHead(200, { 'Content-Type': 'application/json' });
 				res.end(JSON.stringify({ output: response }));
 			} else if (req.method === 'POST' && req.url === '/terminal_output_new') {
