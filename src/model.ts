@@ -199,6 +199,7 @@ export interface Preset {
   permissions: Permissions;
   customInstructions: string;
   name: string;
+  createdOn: string,
 }
 
 export interface AppState {
@@ -206,5 +207,6 @@ export interface AppState {
   view: ViewType;
   currentTask: Task;
   loadedTasks: Map<string, Task>;
+  presets: Preset[];
   isSidecarReady: boolean;
 }

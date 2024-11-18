@@ -1,10 +1,12 @@
 import * as React from "react";
 import { Event, View, AppState, ClientRequest } from "../model";
 import { TaskView } from "@task/view";
-import { PresetView } from "@preset/view";
+import { PresetView } from "@settings/preset-view";
 import LoadingSpinner from "components/loading-spinner";
 import { processFormData } from './utils/form';
 import { v4 } from "uuid";
+import { SettingsView } from "@settings/settings-view";
+import { WelcomeView } from "@settings/welcome-view";
 
 declare global {
   interface Window {
@@ -46,7 +48,9 @@ function onNewPreset(event: React.FormEvent<HTMLFormElement>) {
 }
 
 function reducer(state: AppState, action: Event) {
+
   const newState = structuredClone(state);
+  console.log('State will update', { action, prevState: state });
 
   if (action.type === 'initial-state') {
     newState.currentTask = action.initialAppState.currentTask;
@@ -64,7 +68,6 @@ function reducer(state: AppState, action: Event) {
   }
 
   if (action.type === "init-response") {
-    console.log("init", action.task);
     newState.extensionReady = true;
 
     const task = action.task;
@@ -95,6 +98,7 @@ export const initialState: AppState = {
   extensionReady: false,
   isSidecarReady: false, // this is extra
   view: View.Task,
+  presets: [],
   currentTask: {
     query: '',
     sessionId: v4(),
@@ -108,6 +112,7 @@ export const initialState: AppState = {
     },
     exchanges: [],
     preset: {
+      createdOn: new Date().toISOString(),
       provider: "anthropic",
       model: "claude-3-5-sonnet-20241022",
       apiKey: "exampleApiKey123",
@@ -128,7 +133,6 @@ const App = () => {
   const [state, dispatch] = React.useReducer(reducer, initialState);
 
   React.useEffect(() => {
-    console.log({ state })
     // fetches state from the extension
     vscode.postMessage({
       type: 'init',
@@ -180,10 +184,12 @@ const App = () => {
 
 function renderView(state: AppState) {
   switch (state.view) {
-    case "task":
+    case View.Welcome:
+      return <WelcomeView onSubmit={onNewPreset} />
+    case View.Task:
       return <TaskView task={state.currentTask} onSubmit={(event) => onMessage(event, state.currentTask?.sessionId)} />;
-    // /case View.Settings:
-    //return <SettingsView />
+    case View.Settings:
+      return <SettingsView presets={state.presets} />
     case View.Preset:
       return <PresetView onSubmit={onNewPreset} />
     default:

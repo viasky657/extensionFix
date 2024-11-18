@@ -36,7 +36,7 @@ export function TaskView(props: TaskViewProps) {
 
   return (
     <main className="flex flex-col h-full">
-      <header className="sticky top-0å bg-panel-background">
+      <header className="sticky top-0 bg-panel-background">
         <div>
           <div
             className="p-2 cursor-pointer hover:bg-[rgba(128,128,128,0.1)] rounded-sm select-none"

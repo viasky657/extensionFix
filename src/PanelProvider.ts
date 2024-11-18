@@ -1,15 +1,17 @@
 import * as vscode from "vscode";
-import { ClientRequest, Task, ToolThinkingToolTypeEnum, View } from "./model";
+import { ClientRequest, Preset, Task, ToolThinkingToolTypeEnum, View } from "./model";
 import { Response, } from "./model";
 import { getNonce } from "./webviews/utils/nonce";
 import { v4 } from 'uuid';
 
 export class PanelProvider implements vscode.WebviewViewProvider {
+
   private _view?: vscode.WebviewView;
+  private _runningTask: Task | undefined;
   private _isSidecarReady: boolean = false;
   private readonly _extensionUri: vscode.Uri;
 
-  constructor(context: vscode.ExtensionContext) {
+  constructor(private readonly context: vscode.ExtensionContext) {
     this._extensionUri = context.extensionUri;
 
     const goToHistory = vscode.commands.registerCommand('sota-swe.go-to-history', () => {
@@ -39,7 +41,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
   private _onDidWebviewBecomeVisible = new vscode.EventEmitter<void>();
   onDidWebviewBecomeVisible = this._onDidWebviewBecomeVisible.event;
-  private _runningTask: Task | undefined;
+
 
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -88,18 +90,27 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           readData: "ask",
           writeData: "ask",
         },
+        createdOn: new Date().toISOString(),
         customInstructions: "Answer as concisely as possible",
         name: "claude-sonnet-3.5",
       },
       responseOnGoing: false,
     };
 
+
+    const presets = this.context.globalState.get('presets') as Preset[] | undefined;
+    const hasNoPresets = !presets || presets.length === 0;
+
+
+    console.log(hasNoPresets, hasNoPresets ? View.Welcome : View.Task);
+
     // on initialisation we are able to pipe it
     this._view.webview.postMessage({
       command: 'initial-state',
       initialAppState: {
         extensionReady: false,
-        view: View.Task,
+        view: hasNoPresets ? View.Welcome : View.Task,
+        presets,
         currentTask: this._runningTask,
         loadedTasks: new Map()
       }
