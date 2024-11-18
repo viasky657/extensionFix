@@ -116,7 +116,22 @@ type FrameworkEvent = {
 	ToolNotFound: ToolNotFoundEvent;
 	ToolTypeFound: ToolTypeFoundEvent;
 	ToolParameterFound: ToolParameterFoundEvent;
+	ToolOutput: ToolOutputEvent;
 };
+
+type ToolOutputEvent = {
+	ToolTypeForOutput: ToolTypeForOutputEvent;
+	ToolOutputResponse: ToolOutputResponseEvent;
+}
+
+interface ToolTypeForOutputEvent {
+	tool_type: ToolType;
+}
+
+interface ToolOutputResponseEvent {
+	delta: string;
+	answer_up_until_now: string;
+}
 
 interface ToolParameterFoundEvent {
 	tool_parameter_input: {
