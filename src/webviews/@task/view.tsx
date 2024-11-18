@@ -8,6 +8,7 @@ import { ObjectEntry } from "../utils/types";
 import { Textarea } from "components/textarea";
 import { Button } from "components/button";
 import { cn } from "utils/cn";
+import Tiptap from "components/input/TipTapEditor";
 
 export interface TaskViewProps {
   task: Task;
@@ -98,7 +99,7 @@ export function TaskView(props: TaskViewProps) {
             </ol>
           )}
         </section>
-        <form className="sticky bottom-0 bg-panel-background flex flex-col gap-2 p-2" onSubmit={onSubmit} ref={formRef}>
+        {/* <form className="sticky bottom-0 bg-panel-background flex flex-col gap-2 p-2" onSubmit={onSubmit} ref={formRef}>
           <Textarea
             className="w-full"
             name="query"
@@ -107,7 +108,8 @@ export function TaskView(props: TaskViewProps) {
           <div className="flex justify-end">
             <Button type="submit">Send</Button>
           </div>
-        </form>
+        </form> */}
+        <Tiptap className="sticky bottom-0 p-2" />
       </div>
     </main>
   );
