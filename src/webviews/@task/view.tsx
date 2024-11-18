@@ -27,6 +27,7 @@ export function TaskView(props: TaskViewProps) {
   };
 
   const { exchanges, preset, cost, usage, query } = task;
+  const isQueryEmpty = query === ''
 
   const [summaryShown, setSummaryShown] = React.useState(false);
 
@@ -35,37 +36,39 @@ export function TaskView(props: TaskViewProps) {
 
   return (
     <main className="flex flex-col h-full">
-      <header className="sticky top-0 bg-panel-background">
+      <header className="sticky top-0å bg-panel-background">
         <div>
           <div
             className="p-2 cursor-pointer hover:bg-[rgba(128,128,128,0.1)] rounded-sm select-none"
             onClick={() => setSummaryShown(!summaryShown)}
           >
-            <h2>{query}</h2>
-            <dl className="flex items-baseline">
-              <dt className="sr-only">Preset</dt>
-              <dd className="text-descriptionForeground mr-auto flex items-center">
-                <ClaudeLogo width={12} height={12} className="mr-1" />
-                <span className="whitespace-nowrap">
-                  {preset.name}
-                </span>
-              </dd>
-              {cost && (
-                <React.Fragment>
-                  <dt className="sr-only">API cost</dt>
-                  <dd>
-                    <span>{cost}$</span>
-                  </dd>
-                </React.Fragment>
-              )}
-            </dl>
+            <h2 className={cn(isQueryEmpty && "text-descriptionForeground text-base")}>{isQueryEmpty ? 'New request' : query}</h2>
+            {!summaryShown && (
+              <dl className="flex items-baseline">
+                <dt className="sr-only">Preset</dt>
+                <dd className="text-descriptionForeground mr-auto flex items-center">
+                  <ClaudeLogo width={12} height={12} className="mr-1" />
+                  <span className="whitespace-nowrap">
+                    {preset.name}
+                  </span>
+                </dd>
+                {cost && (
+                  <React.Fragment>
+                    <dt className="sr-only">API cost</dt>
+                    <dd>
+                      <span>{cost}$</span>
+                    </dd>
+                  </React.Fragment>
+                )}
+              </dl>
+            )}
           </div>
-          <div style={{ display: summaryShown ? 'block' : 'none' }} className="px-4 py-2">
+          <div className={cn(summaryShown ? "block" : "hidden", "px-4 py-2")}>
             <TaskDL>
               <TaskDT>Query</TaskDT>
-              {/* <TaskDD>{originalQuery}</TaskDD> */}
+              <TaskDD className={cn(isQueryEmpty && "No ")}>{isQueryEmpty ? 'No query made yet' : query}</TaskDD>
               <TaskDT>Preset</TaskDT>
-              <TaskDD>{preset.name}</TaskDD>
+              <TaskDD><ClaudeLogo width={12} height={12} className="mr-1" /> {preset.name}</TaskDD>
               {cost && (
                 <React.Fragment>
                   <TaskDT>API cost</TaskDT>

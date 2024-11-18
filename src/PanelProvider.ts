@@ -7,8 +7,32 @@ import { v4 } from 'uuid';
 export class PanelProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
   private _isSidecarReady: boolean = false;
+  private readonly _extensionUri: vscode.Uri;
 
-  constructor(private readonly _extensionUri: vscode.Uri) { }
+  constructor(context: vscode.ExtensionContext) {
+    this._extensionUri = context.extensionUri;
+
+    const goToHistory = vscode.commands.registerCommand('sota-swe.go-to-history', () => {
+      if (this._view) {
+        this._view.webview.postMessage({ type: 'open-view', view: View.History });
+      }
+    });
+
+    const openNewTask = vscode.commands.registerCommand('sota-swe.go-to-new-task', () => {
+      if (this._view) {
+        this._view.webview.postMessage({ type: 'open-view', view: View.Settings });
+      }
+    });
+
+    const goToSettings = vscode.commands.registerCommand('sota-swe.go-to-settings', () => {
+      if (this._view) {
+        this._view.webview.postMessage({ type: 'open-view', view: View.Settings });
+      }
+    });
+
+    context.subscriptions.push(goToHistory, openNewTask, goToSettings);
+
+  }
 
   private _onMessageFromWebview = new vscode.EventEmitter<ClientRequest>();
   onMessageFromWebview = this._onMessageFromWebview.event;

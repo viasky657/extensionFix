@@ -52,6 +52,7 @@ function reducer(state: AppState, action: Event) {
     newState.currentTask = action.initialAppState.currentTask;
     return newState;
   }
+
   if (action.type === 'task-update') {
     newState.currentTask = action.currentTask;
     return newState;
@@ -83,13 +84,17 @@ function reducer(state: AppState, action: Event) {
     newState.currentTask = task;
   }
 
+  if (action.type === "open-view") {
+    newState.view = action.view;
+  }
+
   return newState;
 }
 
 export const initialState: AppState = {
   extensionReady: false,
-  view: View.Task,
   isSidecarReady: false, // this is extra
+  view: View.Task,
   currentTask: {
     query: '',
     sessionId: v4(),
@@ -177,6 +182,8 @@ function renderView(state: AppState) {
   switch (state.view) {
     case "task":
       return <TaskView task={state.currentTask} onSubmit={(event) => onMessage(event, state.currentTask?.sessionId)} />;
+    // /case View.Settings:
+    //return <SettingsView />
     case View.Preset:
       return <PresetView onSubmit={onNewPreset} />
     default:

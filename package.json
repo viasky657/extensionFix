@@ -15,10 +15,40 @@
   "contributes": {
     "commands": [
       {
-        "command": "extension.start",
-        "title": "Start SotaSWE"
+        "command": "sota-swe.go-to-new-task",
+        "title": "Start new task 0",
+        "icon": "$(add)"
+      },
+      {
+        "command": "sota-swe.go-to-history",
+        "title": "Show history",
+        "icon": "$(history)"
+      },
+      {
+        "command": "sota-swe.go-to-settings",
+        "title": "Show settings",
+        "icon": "$(settings-gear)"
       }
     ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "sota-swe.go-to-settings",
+          "when": "view == sota-swe-panel",
+          "group": "navigation"
+        },
+        {
+          "command": "sota-swe.go-to-history",
+          "when": "view == sota-swe-panel",
+          "group": "navigation"
+        },
+        {
+          "command": "sota-swe.go-to-new-task",
+          "when": "view == sota-swe-panel",
+          "group": "navigation"
+        }
+      ]
+    },
     "viewsContainers": {
       "activitybar": [
         {

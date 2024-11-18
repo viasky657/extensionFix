@@ -30,7 +30,8 @@ Example flow:
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
-  const panelProvider = new PanelProvider(context.extensionUri);
+
+  const panelProvider = new PanelProvider(context);
   let rootPath = vscode.workspace.rootPath;
   if (!rootPath) {
     rootPath = "";

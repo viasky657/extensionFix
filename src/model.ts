@@ -16,6 +16,17 @@ interface TaskFeedback {
   sessionId: string,
 }
 
+interface InitRequest {
+  type: "init";
+}
+
+interface OpenFile {
+  type: 'open-file';
+  fs_file_path: string;
+}
+
+export type ClientRequest = TaskFeedback | OpenFile | InitRequest
+
 interface OpenTaskEvent {
   type: "open-task";
   task: Task;
@@ -26,9 +37,6 @@ interface TaskResponseEvent {
   response: Response;
 }
 
-interface InitRequest {
-  type: "init";
-}
 
 interface InitResponse {
   type: "init-response";
@@ -52,14 +60,14 @@ interface SidecarReadyState {
   isSidecarReady: boolean,
 }
 
-interface OpenFile {
-  type: 'open-file';
-  fs_file_path: string;
+
+interface OpenView {
+  type: 'open-view',
+  view: ViewType,
 }
 
-export type ClientRequest = TaskFeedback | OpenFile | InitRequest
 
-export type Event = OpenTaskEvent | TaskResponseEvent | InitResponse | InitialState | TaskUpdate | SidecarReadyState;
+export type Event = OpenView | OpenTaskEvent | TaskResponseEvent | InitResponse | InitialState | TaskUpdate | SidecarReadyState;
 
 export type NewSessionRequest = {
   type: "new-request";
