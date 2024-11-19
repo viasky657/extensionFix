@@ -17,7 +17,7 @@ body {
 }
 
 .tiptap .is-empty::before {
-  @apply text-input-placeholderForeground;
+  @apply text-input-placeholder-foreground;
   @apply content-[attr(data-placeholder)];
   @apply float-left;
   @apply pointer-events-none;

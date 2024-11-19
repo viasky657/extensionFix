@@ -199,12 +199,12 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     }, [allItems]);
 
     return (
-        <div className="rounded-lg shadow-lg text-sm overflow-x-hidden overflow-y-auto max-h-[330px] p-0.5 relative bg-quickInput-background">
+        <div className="rounded-lg shadow-lg text-sm overflow-x-hidden overflow-y-auto max-h-[330px] p-0.5 relative bg-dropdown-background">
             {querySubmenuItem ? (
                 <textarea
                     rows={1}
                     ref={queryInputRef}
-                    className="bg-white/10 border border-foreground-30 rounded-lg p-1 w-60 text-foreground focus:outline-none font-inherit resize-none"
+                    className="bg-input-background border border-input-border rounded-lg p-1 w-60 text-input-foreground focus:outline-none font-inherit resize-none"
                     placeholder={querySubmenuItem.description}
                     onKeyDown={(e) => {
                         if (queryInputRef.current && e.key === "Enter") {
@@ -230,7 +230,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                     {allItems.length ? (
                         allItems.map((item, index) => (
                             <div
-                                className={`bg-transparent border border-transparent rounded-lg block m-0 py-0.5 px-1.5 text-left w-full text-foreground cursor-pointer hover:bg-list-activeBackground hover:text-list-activeForeground ${index === selectedIndex ? "bg-list-activeBackground text-list-activeForeground" : ""}`}
+                                className={`bg-transparent border border-transparent rounded-lg block m-0 py-0.5 px-1.5 text-left w-full text-foreground cursor-pointer hover:bg-selection hover:text-foreground ${index === selectedIndex ? "bg-selection text-foreground" : ""}`}
                                 key={index}
                                 ref={(el) => (itemRefs.current[index] = el as HTMLButtonElement | null)}
                                 onClick={() => selectItem(index)}
@@ -251,7 +251,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                                         {"  "}
                                     </div>
                                     <span
-                                        className={`ml-2 flex items-center overflow-hidden overflow-ellipsis whitespace-nowrap text-list-activeForeground float-right text-right min-w-[30px] ${index !== selectedIndex ? 'opacity-0' : 'opacity-100'}`}
+                                        className={`ml-2 flex items-center overflow-hidden overflow-ellipsis whitespace-nowrap text-foreground float-right text-right min-w-[30px] ${index !== selectedIndex ? 'opacity-0' : 'opacity-100'}`}
                                     >
                                         {item.description}
                                         {item.type === "contextProvider" &&
