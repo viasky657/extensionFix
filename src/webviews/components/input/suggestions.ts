@@ -35,7 +35,31 @@ export function getContextProviderDropdownOptions(
                 (provider) =>
                     provider.title.toLowerCase().includes(query.toLowerCase()) ||
                     provider.displayTitle.toLowerCase().includes(query.toLowerCase())
-            ) || [];
+            )
+                .map((provider) => ({
+                    name: provider.displayTitle,
+                    description: provider.description,
+                    id: provider.title,
+                    title: provider.displayTitle,
+                    label: provider.displayTitle,
+                    renderInlineAs: provider.renderInlineAs,
+                    type: "contextProvider" as ComboBoxItemType,
+                    contextProvider: provider,
+                }))
+                .sort((c, _) => (c.id === "file" ? -1 : 1)) || [];
+
+        if (mainResults.length === 0) {
+            const results = getSubmenuContextItems(undefined, query);
+            return results.map((result) => {
+                return {
+                    ...result,
+                    label: result.title,
+                    type: result.providerTitle as ComboBoxItemType,
+                    query: result.id,
+                    icon: result.icon,
+                };
+            });
+        }
 
         return mainResults;
     };

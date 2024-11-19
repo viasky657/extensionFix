@@ -3,13 +3,14 @@ import History from '@tiptap/extension-history'
 import Paragraph from '@tiptap/extension-paragraph'
 import Placeholder from '@tiptap/extension-placeholder'
 import Text from '@tiptap/extension-text'
-import { Editor, EditorContent, useEditor } from '@tiptap/react'
-import { ContextProviderDescription } from '../../../context/providers/types'
+import { Editor, EditorContent, JSONContent, useEditor } from '@tiptap/react'
+import { useInputHistory } from 'hooks/useInputHistory'
 import useUpdatingRef from 'hooks/useUpdatingRef'
 import { useRef } from 'react'
+import { useSubmenuContext } from 'store/submenuContext'
+import { ContextProviderDescription } from '../../../context/providers/types'
 import { Mention } from './MentionExtension'
 import { getContextProviderDropdownOptions } from './suggestions'
-import { useSubmenuContext } from 'store/submenuContext'
 
 const InputBoxDiv = (
     { children }: { children: React.ReactNode }
@@ -23,6 +24,8 @@ const InputBoxDiv = (
 
 interface TipTapEditorProps {
     availableContextProviders: ContextProviderDescription[];
+    historyKey: string;
+    onEnter: (editorState: JSONContent, editor: Editor) => void;
 }
 
 const Tiptap = (props: TipTapEditorProps) => {
@@ -75,6 +78,8 @@ const Tiptap = (props: TipTapEditorProps) => {
         inDropdownRef.current = true;
     };
 
+    const { prevRef, nextRef, addRef } = useInputHistory(props.historyKey);
+
     const editor = useEditor({
         extensions: [
             Document,
@@ -82,7 +87,65 @@ const Tiptap = (props: TipTapEditorProps) => {
             Placeholder.configure({
                 placeholder: "Ask anything. Use '@' to add context"
             }),
-            Paragraph.configure({
+            Paragraph.extend({
+                addKeyboardShortcuts() {
+                    return {
+                        Enter: () => {
+                            if (inDropdownRef.current) {
+                                return false;
+                            }
+
+                            onEnterRef.current();
+                            return true;
+                        },
+                        "Shift-Enter": () =>
+                            this.editor.commands.first(({ commands }) => [
+                                () => commands.newlineInCode(),
+                                () => commands.createParagraphNear(),
+                                () => commands.liftEmptyBlock(),
+                                () => commands.splitBlock(),
+                            ]),
+                        ArrowUp: () => {
+                            if (this.editor.state.selection.anchor > 1) {
+                                return false;
+                            }
+
+                            const previousInput = prevRef.current(
+                                this.editor.state.toJSON().doc,
+                            );
+                            if (previousInput) {
+                                this.editor.commands.setContent(previousInput);
+                                setTimeout(() => {
+                                    this.editor.commands.blur();
+                                    this.editor.commands.focus("start");
+                                }, 0);
+                                return true;
+                            }
+
+                            return false;
+                        },
+                        ArrowDown: () => {
+                            if (
+                                this.editor.state.selection.anchor <
+                                this.editor.state.doc.content.size - 1
+                            ) {
+                                return false;
+                            }
+                            const nextInput = nextRef.current();
+                            if (nextInput) {
+                                this.editor.commands.setContent(nextInput);
+                                setTimeout(() => {
+                                    this.editor.commands.blur();
+                                    this.editor.commands.focus("end");
+                                }, 0);
+                                return true;
+                            }
+
+                            return false;
+                        },
+                    };
+                },
+            }).configure({
                 HTMLAttributes: {
                     class: "my-1",
                 },
@@ -113,6 +176,27 @@ const Tiptap = (props: TipTapEditorProps) => {
         },
         content: "",
     });
+
+    const onEnterRef = useUpdatingRef(
+        () => {
+            if (!editor) {
+                return;
+            }
+
+            const json = editor.getJSON();
+
+            // Don't do anything if input box is empty
+            if (!json.content?.some((c) => c.content)) {
+                return;
+            }
+
+            props.onEnter(json, editor);
+
+            const content = editor.state.toJSON().doc;
+            addRef.current(content);
+        },
+        [props.onEnter, editor],
+    );
 
     return (
         <div>

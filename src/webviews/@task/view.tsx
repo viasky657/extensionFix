@@ -80,7 +80,7 @@ export function TaskView(props: TaskViewProps) {
           </div>
         </div>
       </header>
-      <div className={cn("flex flex-col gap-2 ", exchanges.length > 0 && "flex-grow")}>
+      <div className="flex flex-col gap-2 flex-grow">
         <section className="flex-grow p-2">
           {exchanges && (
             <ol>
@@ -100,9 +100,15 @@ export function TaskView(props: TaskViewProps) {
             <Button type="submit">Send</Button>
           </div>
         </form> */}
-        <Tiptap
-          availableContextProviders={availableContextProviders ?? []}
-        />
+        <div className="sticky bottom-0 p-2">
+          <Tiptap
+            availableContextProviders={availableContextProviders ?? []}
+            historyKey="chat"
+            onEnter={() => {
+              // TODO(g-danna) Submit
+            }}
+          />
+        </div>
       </div>
     </main>
   );

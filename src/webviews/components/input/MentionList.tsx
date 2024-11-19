@@ -5,7 +5,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "re
 import { ComboBoxItem, ComboBoxItemType } from "./types";
 
 const ICONS_FOR_DROPDOWN: { [key: string]: string } = {
-    file: 'folder',
+    file: 'file',
     code: 'code',
 };
 
@@ -199,12 +199,12 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     }, [allItems]);
 
     return (
-        <div className="rounded-lg shadow-lg text-sm overflow-x-hidden overflow-y-auto max-h-[330px] p-0.5 relative bg-[var(--vscode-quickInput-background)]">
+        <div className="rounded-lg shadow-lg text-sm overflow-x-hidden overflow-y-auto max-h-[330px] p-0.5 relative bg-quickInput-background">
             {querySubmenuItem ? (
                 <textarea
                     rows={1}
                     ref={queryInputRef}
-                    className="bg-white/10 border border-[var(--vscode-foreground-30)] rounded-lg p-1 w-60 text-[var(--vscode-foreground)] focus:outline-none font-inherit resize-none"
+                    className="bg-white/10 border border-foreground-30 rounded-lg p-1 w-60 text-foreground focus:outline-none font-inherit resize-none"
                     placeholder={querySubmenuItem.description}
                     onKeyDown={(e) => {
                         if (queryInputRef.current && e.key === "Enter") {
@@ -226,12 +226,11 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                 />
             ) : (
                 <>
-                    {subMenuTitle && <div className="mb-2 bg-transparent border border-transparent rounded-lg block m-0 p-1 text-left w-full text-[var(--vscode-foreground)] cursor-pointer">{subMenuTitle}</div>}
+                    {subMenuTitle && <div className="mb-2 bg-transparent border border-transparent rounded-lg block m-0 p-1 text-left w-full text-foreground cursor-pointer">{subMenuTitle}</div>}
                     {allItems.length ? (
                         allItems.map((item, index) => (
                             <div
-                                className={`bg-transparent border border-transparent rounded-lg block m-0 py-0.5 px-1.5 text-left w-full text-[var(--vscode-foreground)] cursor-pointer hover:bg-[var(--vscode-list-activeBackground)] hover:text-[var(--vscode-list-activeForeground)] ${index === selectedIndex ? "bg-[var(--vscode-list-activeBackground)] text-[var(--vscode-list-activeForeground)]" : ""
-                                    }`}
+                                className={`bg-transparent border border-transparent rounded-lg block m-0 py-0.5 px-1.5 text-left w-full text-foreground cursor-pointer hover:bg-list-activeBackground hover:text-list-activeForeground ${index === selectedIndex ? "bg-list-activeBackground text-list-activeForeground" : ""}`}
                                 key={index}
                                 ref={(el) => (itemRefs.current[index] = el as HTMLButtonElement | null)}
                                 onClick={() => selectItem(index)}
@@ -239,58 +238,32 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                             >
                                 <span className="flex w-full items-center justify-between">
                                     <div className="flex items-center justify-center">
-                                        {showFileIconForItem(item) && (
+                                        {showFileIconForItem(item) ? (
                                             <FileIcon
                                                 height="20px"
                                                 width="20px"
                                                 filename={item.description}
-                                            ></FileIcon>
-                                        )}
-                                        {!showFileIconForItem(item) && (
-                                            <>
-                                                <DropdownIcon item={item} className="mr-2" />
-                                            </>
+                                            />
+                                        ) : (
+                                            <DropdownIcon item={item} className="mr-2" />
                                         )}
                                         <span title={item.id}>{item.title}</span>
                                         {"  "}
                                     </div>
                                     <span
-                                        style={{
-                                            color: "var(--vscode-list-activeForeground)",
-                                            float: "right",
-                                            textAlign: "right",
-                                            opacity: index !== selectedIndex ? 0 : 1,
-                                            minWidth: "30px",
-                                        }}
-                                        className="ml-2 flex items-center overflow-hidden overflow-ellipsis whitespace-nowrap"
+                                        className={`ml-2 flex items-center overflow-hidden overflow-ellipsis whitespace-nowrap text-list-activeForeground float-right text-right min-w-[30px] ${index !== selectedIndex ? 'opacity-0' : 'opacity-100'}`}
                                     >
                                         {item.description}
                                         {item.type === "contextProvider" &&
                                             item.contextProvider?.type === "submenu" && (
                                                 <i className="codicon codicon-chevron-right ml-2 flex-shrink-0" style={{ fontSize: '1.2em' }} />
                                             )}
-                                        {/* {item.subActions?.map((subAction) => {
-                                            const iconName = ICONS_FOR_DROPDOWN[subAction.icon];
-                                            return (
-                                                <HeaderButtonWithToolTip
-                                                    onClick={(e) => {
-                                                        subAction.action(item);
-                                                        e.stopPropagation();
-                                                        e.preventDefault();
-                                                        props.onClose();
-                                                    }}
-                                                    text={undefined}
-                                                >
-                                                    <i className={`codicon codicon-${iconName}`} style={{ fontSize: '1.2em' }} />
-                                                </HeaderButtonWithToolTip>
-                                            );
-                                        })} */}
                                     </span>
                                 </span>
                             </div>
                         ))
                     ) : (
-                        <div className="bg-transparent border border-transparent rounded-lg block m-0 py-0.5 px-1.5 text-left w-full text-[var(--vscode-foreground)] cursor-pointer">No results</div>
+                        <div className="bg-transparent border border-transparent rounded-lg block m-0 py-0.5 px-1.5 text-left w-full text-foreground cursor-pointer">No results</div>
                     )}
                 </>
             )}
