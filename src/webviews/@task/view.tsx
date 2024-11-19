@@ -7,6 +7,7 @@ import { cn } from "utils/cn";
 import { Exchange, Task, Usage } from "../../model";
 import ClaudeLogo from "../assets/claude.svg";
 import { ObjectEntry } from "../utils/types";
+import { useSubmenuContext } from "store/submenuContext";
 
 export interface TaskViewProps {
   task: Task;
@@ -21,6 +22,8 @@ export function TaskView(props: TaskViewProps) {
 
   // TODO(g-danna) Improve this
   const showUsage = Object.keys(usage).length > 0; // usageKeys.some((key) => key in usage);
+
+  const availableContextProviders = useSubmenuContext(state => state.contextProviderDescriptions);
 
   return (
     <main className="flex flex-col h-full">

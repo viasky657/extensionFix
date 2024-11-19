@@ -126,8 +126,12 @@ const App = () => {
   const initializeSubmenuItems = useSubmenuContext(state => state.initializeSubmenuItems);
 
   React.useEffect(() => {
-    initializeContextProviders();
-    initializeSubmenuItems();
+    const initalize = async () => {
+      await initializeContextProviders();
+      await initializeSubmenuItems();
+    };
+
+    initalize();
   }, [initializeSubmenuItems, initializeContextProviders]);
 
   React.useEffect(() => {

@@ -15,3 +15,11 @@ body {
 #root {
   height: 100vh;
 }
+
+.tiptap .is-empty::before {
+  @apply text-input-placeholderForeground;
+  @apply content-[attr(data-placeholder)];
+  @apply float-left;
+  @apply pointer-events-none;
+  @apply h-0;
+}

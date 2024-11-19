@@ -12,6 +12,7 @@ const MAX_LENGTH = 70;
 
 interface SubmenuContextState {
     contextProviderDescriptions: ContextProviderDescription[];
+    initializeContextProviders: () => Promise<void>;
 
     minisearches: { [id: string]: MiniSearch };
     fallbackResults: { [id: string]: ContextSubmenuItem[] };
@@ -29,6 +30,23 @@ interface SubmenuContextState {
 
 export const useSubmenuContext = create<SubmenuContextState>()((set, get) => ({
     contextProviderDescriptions: [],
+    initializeContextProviders: async () => {
+        const id = v4();
+        vscode.postMessage({ type: 'context/fetchProviders', id });
+
+        const response = await new Promise<ContextProviderDescription[]>((resolve) => {
+            const handler = (event: MessageEvent) => {
+                const message = event.data;
+                if (message.id === id) {
+                    window.removeEventListener('message', handler);
+                    resolve(message.providers);
+                }
+            };
+            window.addEventListener('message', handler);
+        });
+
+        set({ contextProviderDescriptions: response });
+    },
 
     minisearches: {},
     fallbackResults: {},
