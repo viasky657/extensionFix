@@ -15,7 +15,7 @@ const InputBoxDiv = (
     { children }: { children: React.ReactNode }
 ) => {
     return (
-        <div className={`flex min-h-[80px] w-full rounded-xs border border-settings-textInputBackground bg-editor-background px-3 py-2 text-sm ring-offset-background  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50`}>
+        <div className={`flex min-h-[80px] w-full rounded-xs border border-settings-textInputBackground bg-editor-background px-2 py-1 text-sm ring-offset-background  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50`}>
             {children}
         </div>
     );
