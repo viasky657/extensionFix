@@ -6,7 +6,7 @@ export type PresetsData = {
 	activePresetId?: string;
 };
 
-export async function loadPresets() {
+export async function getPresets() {
 	return new Promise<PresetsData>((resolve) => {
 		const handleMessage = (event: MessageEvent<Event>) => {
 			if (event.data.type === 'presets-loaded') {
@@ -27,8 +27,8 @@ export async function loadPresets() {
 	});
 }
 
-export function usePresets() {
-	const presets = useAsync<PresetsData>(loadPresets);
+export function usePresets(initialData?: PresetsData) {
+	const presets = useAsync<PresetsData>(getPresets, { enabled: !!initialData });
 
 	function addPreset(preset: NewPreset) {
 		vscode.postMessage({

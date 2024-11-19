@@ -2,20 +2,32 @@ import { z } from 'zod';
 import * as React from 'react';
 import { ANTHROPIC_MODELS, NewPreset, PermissionState, Preset, Provider, View } from '../../model';
 import { PresetForm } from './form';
-import { usePresets } from './use-preset';
+import { getPresets, PresetsData, usePresets } from './use-preset';
 import { processFormData } from 'utils/form';
-import { Link, LoaderFunctionArgs, useNavigate, useParams } from 'react-router-dom';
+import { Link, LoaderFunctionArgs, useLoaderData, useNavigate } from 'react-router-dom';
 import { Button } from 'components/button';
+import { LoaderData } from 'utils/types';
+
+type ViewData = {
+	presetsData: PresetsData;
+	selectedPreset?: Preset;
+};
+
+export async function loadPresets({ params }: LoaderFunctionArgs): Promise<ViewData> {
+	const presetId = params.presetId as string;
+	const presetsData = await getPresets();
+	const selectedPreset = presetsData.presets.get(presetId);
+	return {
+		presetsData,
+		selectedPreset,
+	};
+}
 
 export function PresetView() {
-	const presets = usePresets();
-	const { presetId } = useParams();
-	const navigate = useNavigate();
+	const { presetsData, selectedPreset } = useLoaderData() as LoaderData<typeof loadPresets>;
+	const { updatePreset, addPreset, deletePreset, setActivePreset } = usePresets(presetsData);
 
-	let preset: Preset | undefined;
-	if (presetId) {
-		preset = presets.data?.presets.get(presetId);
-	}
+	const navigate = useNavigate();
 
 	const stableId = React.useId();
 
@@ -25,9 +37,9 @@ export function PresetView() {
 		try {
 			const result = parsePresetFormData(new FormData(form));
 			if (result.type === 'preset') {
-				presets.updatePreset(result);
+				updatePreset(result);
 			} else if (result.type === 'new-preset') {
-				presets.addPreset(result);
+				addPreset(result);
 			}
 			navigate(`/${View.Settings}`);
 		} catch (err) {
@@ -36,8 +48,8 @@ export function PresetView() {
 	}
 
 	function onDeletePreset() {
-		if (preset) {
-			presets.deletePreset(preset.id);
+		if (selectedPreset) {
+			deletePreset(selectedPreset.id);
 			navigate(`/${View.Settings}`);
 		}
 	}
@@ -45,9 +57,11 @@ export function PresetView() {
 	return (
 		<main className="flex flex-grow flex-col gap-2 p-2">
 			<header className="mb-2">
-				<h2 className="text-base text-description">{preset?.name || 'New preset'}</h2>
+				<h2 className="text-base text-description">
+					{selectedPreset?.name || 'New preset'}
+				</h2>
 			</header>
-			<PresetForm formId={stableId} onSubmit={onSubmit} initialData={preset} />
+			<PresetForm formId={stableId} onSubmit={onSubmit} initialData={selectedPreset} />
 			<div className="flex justify-end gap-2">
 				<Button variant="secondary" asChild>
 					<Link to={`/${View.Settings}`}>Cancel</Link>

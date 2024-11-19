@@ -24,10 +24,10 @@ export function SettingsView() {
 					<Link to={`/${View.Preset}`}>Create new preset</Link>
 				</Button>
 			</header>
-			{presets.status === 'loading' && (
+			{presets.isLoading && (
 				<div className="flex items-center justify-center">Loading...</div>
 			)}
-			{presets.status === 'success' && presetsArray.length > 0 && (
+			{presets.isSuccess && presetsArray.length > 0 && (
 				<ol className="flex flex-col gap-0.5">
 					{presetsArray.map((preset) => (
 						<li key={preset.id}>
@@ -40,7 +40,7 @@ export function SettingsView() {
 					))}
 				</ol>
 			)}
-			{presets.status === 'success' && presetsArray.length === 0 && (
+			{presets.isSuccess && presetsArray.length === 0 && (
 				<div>
 					<p>No presets yet</p>
 					<Button variant="secondary" type="button" asChild>

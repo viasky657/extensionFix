@@ -1,4 +1,4 @@
-import { PresetView } from '@settings/preset-view';
+import { loadPresets, PresetView } from '@settings/preset-view';
 import { TaskView } from '@task/view';
 import App from 'app';
 import { createMemoryRouter, useNavigate } from 'react-router-dom';
@@ -31,6 +31,7 @@ export const router = createMemoryRouter(
 				{
 					path: `${View.Preset}/:presetId?`,
 					element: <PresetView />,
+					loader: loadPresets,
 				},
 			],
 		},
