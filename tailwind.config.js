@@ -20,7 +20,10 @@ export default {
 				widget: {
 					border: 'var(--vscode-widget-border)',
 				},
-				selection: 'var(--vscode-selection-background)',
+				selection: {
+					background: 'var(--vscode-selection-background)',
+					foreground: 'var(--vscode-selection-foreground)',
+				},
 				error: 'var(--vscode-error-foreground)',
 				link: {
 					foreground: 'var(--vscode-textLink-foreground)',
