@@ -15,7 +15,7 @@ export function TaskDL(props: TaskDLProps) {
 
 export function TaskDT(props: HTMLElementProps) {
   const { children, ...rest } = props;
-  return <dd {...rest}>{children}</dd>;
+  return <dd className="text-descriptionForeground text-xs" {...rest}>{children}</dd>;
 }
 
 export function TaskDD(props: HTMLElementProps) {

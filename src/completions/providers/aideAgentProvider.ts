@@ -489,6 +489,16 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 					const toolParameter = event.event.FrameworkEvent.ToolParameterFound.tool_parameter_input;
 					this.panelProvider.addToolParameterFound(sessionId, exchangeId, toolParameter.field_name, toolParameter.field_content_delta, toolParameter.field_content_up_until_now);
 				}
+				// TODO(willis): Make sure that the tool output gets rendered properly
+				if (event.event.FrameworkEvent.ToolOutput) {
+					if (event.event.FrameworkEvent.ToolOutput.ToolOutputResponse) {
+						// This contains the tool output response, which shows you that we have the delta over here and the answer up until now
+						// we can just send the answer up until now completely and have it displayed on the extension layer
+					}
+					if (event.event.FrameworkEvent.ToolOutput.ToolTypeForOutput) {
+						// This contains the tool type for which we are generating the output over here
+					}
+				}
 			}
 		}
 	}

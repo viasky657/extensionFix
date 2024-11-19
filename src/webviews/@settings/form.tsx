@@ -1,24 +1,24 @@
-
-import { ANTHROPIC_MODELS, PermissionState, Preset, Provider } from "../../model";
+import { ANTHROPIC_MODELS, PermissionState, Preset, Provider, View } from "../../model";
 import * as React from "react";
 import { Checkbox } from "components/checkbox";
 import { Select, Option, SelectProps } from "components/select";
 import { Input } from "components/input";
 import { Textarea } from "components/textarea";
-import { Button } from "components/button";
 
 
 interface PresetFormProps extends React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement> {
+  formId: string,
   initialData?: Preset
 }
 
 export function PresetForm(props: PresetFormProps) {
-  const { initialData, ...rest } = props
+  const { formId, initialData, ...rest } = props
 
-  const [didSetName, setDidSetName] = React.useState(false)
+  console.log('initialData', initialData)
 
   return (
-    <form {...rest} className="text-descriptionForeground">
+    <form id={formId} {...rest} className="text-descriptionForeground">
+      {initialData?.id && <input type="hidden" name="id" value={initialData?.id} />}
       <label htmlFor="provider">
         Provider
         <Select className="w-full" id="provider" name="provider" defaultValue={initialData?.provider || Provider.Anthropic}>
@@ -30,9 +30,9 @@ export function PresetForm(props: PresetFormProps) {
 
       <fieldset>
         <legend aria-hidden>API</legend>
-        <label htmlFor="api-key">
+        <label htmlFor="apiKey">
           APIKey
-          <Input className="w-full" id="api-key" name="api-key" type="password" />
+          <Input className="w-full" id="apiKey" name="apiKey" type="password" defaultValue={initialData?.apiKey} />
         </label>
         <label className="flex items-start">
           <Checkbox name="custom-base-URL" />
@@ -42,10 +42,9 @@ export function PresetForm(props: PresetFormProps) {
 
       <label>
         Model
-        <Select className="w-full" defaultValue={initialData?.model || ANTHROPIC_MODELS[0]}>
-          {ANTHROPIC_MODELS.map((model) => (
-            <Option key={model} value={model}>{model}</Option>
-          ))}
+        <Select className="w-full" name='model' defaultValue={initialData?.model || ANTHROPIC_MODELS[0]}>          {ANTHROPIC_MODELS.map((model) => (
+          <Option key={model} value={model}>{model}</Option>
+        ))}
         </Select>
       </label>
 
@@ -57,42 +56,40 @@ export function PresetForm(props: PresetFormProps) {
             <label htmlFor="permissions.list-files">
               List files
             </label>
-            <PermissionSelect className="w-full border-none" id="permissions.list-files" name="permissions[list-files]" />
+            <PermissionSelect className="w-full border-none" id="permissions.list-files" name="permissions[listFiles]" defaultValue={initialData?.permissions?.listFiles} />
           </li>
           <li className="contents">
             <label htmlFor="code-editing">
               Edit files
             </label>
-            <PermissionSelect className="w-full border-none" id="write-code" name="permissions[code-editing]" />
+            <PermissionSelect className="w-full border-none" id="write-code" name="permissions[codeEditing]" defaultValue={initialData?.permissions?.codeEditing} />
           </li>
           <li className="contents">
             <label htmlFor="permissions.terminal-commands">
               Run terminal commands
             </label>
-            <PermissionSelect className="w-full border-none" id="permissions.terminal-commands" name="permissions[terminal-commands]" />
+            <PermissionSelect className="w-full border-none" id="permissions.terminal-commands" name="permissions[terminalCommands]" defaultValue={initialData?.permissions?.terminalCommands} />
           </li>
         </ul>
       </fieldset>
 
       <label htmlFor="name">
         Preset name
-        <Input className="w-full" id="name" name="name" />
+        <Input className="w-full" id="name" name="name" defaultValue={initialData?.name} />
       </label>
 
 
-      <label htmlFor="custom-instructions">
+      <label htmlFor="customInstructions">
         Custom instructions
-        <Textarea className="w-full" id='custom-instructions' name="custom-instructions" />
+        <Textarea className="w-full" id='customInstructions' name="customInstructions" defaultValue={initialData?.customInstructions} />
       </label>
-
-      <Button type="submit">Send</Button>
     </form>
   )
 }
 
 export function PermissionSelect(props: SelectProps) {
   return (
-    <Select {...props} defaultValue={PermissionState.Always}>
+    <Select {...props}>
       {Object.values(PermissionState).map((ps) => (
         <Option key={ps} value={ps}>{ps}</Option>
       ))}

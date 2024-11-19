@@ -3,25 +3,55 @@ import { ResponseViewItem } from "components/exchange/response";
 import Tiptap from "components/input/TipTapEditor";
 import { TaskDD, TaskDL, TaskDT } from "components/task-definition-list";
 import * as React from "react";
+import { Navigate } from "react-router-dom";
 import { cn } from "utils/cn";
-import { Exchange, Task, Usage } from "../../model";
+import { Exchange, Task, Usage, View } from "../../model";
 import ClaudeLogo from "../assets/claude.svg";
 import { ObjectEntry } from "../utils/types";
+import { useTask } from "./use-task";
 import { useSubmenuContext } from "store/submenuContext";
 
-export interface TaskViewProps {
-  task: Task;
-  onSubmit: React.FormEventHandler<HTMLFormElement>;
-}
+export function TaskView() {
+  const formRef = React.useRef<HTMLFormElement>(null);
 
-export function TaskView(props: TaskViewProps) {
-  const { task, onSubmit } = props;
-  const { exchanges, preset, cost, usage, query } = task;
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      formRef.current?.requestSubmit();
+    }
+  };
+
+  const task = useTask();
 
   const [summaryShown, setSummaryShown] = React.useState(false);
 
-  // TODO(g-danna) Improve this
-  const showUsage = Object.keys(usage).length > 0; // usageKeys.some((key) => key in usage);
+  function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const query = data.get("query") as string;
+    const sessionId = task.data?.task.sessionId;
+    if (sessionId === undefined) {
+      return;
+    }
+    task.sendRequest(query, sessionId);
+    // resets the form
+    form.reset();
+  }
+
+
+  if (task.data === undefined) {
+    return <div>Loading...</div>;
+  }
+
+  if (!task.data.task || !task.data.task.preset) {
+    return <Navigate to={`/${View.Preset}`} />;
+  }
+
+
+  const { exchanges, preset, cost, usage, query } = task.data.task;
+  const isQueryEmpty = query === '';
+  const showUsage = Object.keys(usage).length > 0;
 
   const availableContextProviders = useSubmenuContext(state => state.contextProviderDescriptions);
 
@@ -33,31 +63,33 @@ export function TaskView(props: TaskViewProps) {
             className="p-2 cursor-pointer hover:bg-[rgba(128,128,128,0.1)] rounded-sm select-none"
             onClick={() => setSummaryShown(!summaryShown)}
           >
-            <h2>{query}</h2>
-            <dl className="flex items-baseline">
-              <dt className="sr-only">Preset</dt>
-              <dd className="text-descriptionForeground mr-auto flex items-center">
-                <ClaudeLogo width={12} height={12} className="mr-1" />
-                <span className="whitespace-nowrap">
-                  {preset.name}
-                </span>
-              </dd>
-              {cost && (
-                <React.Fragment>
-                  <dt className="sr-only">API cost</dt>
-                  <dd>
-                    <span>{cost}$</span>
-                  </dd>
-                </React.Fragment>
-              )}
-            </dl>
+            <h2 className={cn(isQueryEmpty && "text-descriptionForeground text-base")}>{isQueryEmpty ? 'New request' : query}</h2>
+            {!summaryShown && (
+              <dl className="flex items-baseline">
+                <dt className="sr-only">Preset</dt>
+                <dd className="text-descriptionForeground mr-auto flex items-center">
+                  <ClaudeLogo width={12} height={12} className="mr-1" />
+                  <span className="whitespace-nowrap">
+                    {preset.name}
+                  </span>
+                </dd>
+                {cost && (
+                  <React.Fragment>
+                    <dt className="sr-only">API cost</dt>
+                    <dd>
+                      <span>{cost}$</span>
+                    </dd>
+                  </React.Fragment>
+                )}
+              </dl>
+            )}
           </div>
-          <div style={{ display: summaryShown ? 'block' : 'none' }} className="px-4 py-2">
+          <div className={cn(summaryShown ? "block" : "hidden", "px-4 py-2")}>
             <TaskDL>
               <TaskDT>Query</TaskDT>
-              {/* <TaskDD>{originalQuery}</TaskDD> */}
+              <TaskDD className={cn(isQueryEmpty && "No ")}>{isQueryEmpty ? 'No query made yet' : query}</TaskDD>
               <TaskDT>Preset</TaskDT>
-              <TaskDD>{preset.name}</TaskDD>
+              <TaskDD><ClaudeLogo width={12} height={12} className="mr-1" /> {preset.name}</TaskDD>
               {cost && (
                 <React.Fragment>
                   <TaskDT>API cost</TaskDT>
@@ -105,7 +137,7 @@ export function TaskView(props: TaskViewProps) {
             availableContextProviders={availableContextProviders ?? []}
             historyKey="chat"
             onEnter={() => {
-              // TODO(g-danna) Submit
+              // TODO(@ghostwriternr): Re-implement submit button
             }}
           />
         </div>

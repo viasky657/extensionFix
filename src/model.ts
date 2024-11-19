@@ -16,6 +16,58 @@ interface TaskFeedback {
   sessionId: string,
 }
 
+interface InitRequest {
+  type: "init";
+}
+
+interface OpenFile {
+  type: 'open-file';
+  fs_file_path: string;
+}
+
+interface GetPresets {
+  type: 'get-presets';
+}
+
+interface AddPreset {
+  type: 'add-preset';
+  preset: NewPreset;
+}
+
+interface UpdatePreset {
+  type: 'update-preset';
+  preset: Preset;
+}
+
+interface SetActivePreset {
+  type: 'set-active-preset';
+  presetId: string;
+}
+
+interface DeletePreset {
+  type: 'delete-preset';
+  presetId: string;
+}
+
+interface FetchContextProviders {
+  type: "context/fetchProviders";
+  id: string,
+}
+
+interface LoadSubmenuItems {
+  type: "context/loadSubmenuItems",
+  id: string,
+  title: string,
+}
+
+export type ClientRequest = TaskFeedback | SetActivePreset | DeletePreset | OpenFile | InitRequest | GetPresets | AddPreset | UpdatePreset | FetchContextProviders | LoadSubmenuItems;
+
+export interface PresetsLoaded {
+  type: 'presets-loaded';
+  presets: [string, Preset][];
+  activePresetId?: string;
+}
+
 interface OpenTaskEvent {
   type: "open-task";
   task: Task;
@@ -26,14 +78,10 @@ interface TaskResponseEvent {
   response: Response;
 }
 
-interface InitRequest {
-  type: "init";
-}
 
 interface InitResponse {
   type: "init-response";
   task: Task;
-  view: ViewType;
   isSidecarReady: boolean;
 }
 
@@ -52,25 +100,12 @@ interface SidecarReadyState {
   isSidecarReady: boolean,
 }
 
-interface OpenFile {
-  type: 'open-file';
-  fs_file_path: string;
+interface OpenView {
+  type: 'open-view',
+  view: ViewType,
 }
 
-interface FetchContextProviders {
-  type: "context/fetchProviders";
-  id: string,
-}
-
-interface LoadSubmenuItems {
-  type: "context/loadSubmenuItems",
-  id: string,
-  title: string,
-}
-
-export type ClientRequest = TaskFeedback | OpenFile | InitRequest | FetchContextProviders | LoadSubmenuItems;
-
-export type Event = OpenTaskEvent | TaskResponseEvent | InitResponse | InitialState | TaskUpdate | SidecarReadyState;
+export type Event = OpenView | PresetsLoaded | OpenTaskEvent | TaskResponseEvent | InitResponse | InitialState | TaskUpdate | SidecarReadyState;
 
 export type NewSessionRequest = {
   type: "new-request";
@@ -190,11 +225,15 @@ export enum PermissionState {
 
 type PermissionStateType = `${PermissionState}`;
 
-type Permissions = Record<string, PermissionStateType>;
+type Permissions = {
+  codeEditing: PermissionStateType,
+  listFiles: PermissionStateType,
+  terminalCommands: PermissionStateType,
+}
 
 type ProviderType = `${Provider}`;
 
-export interface Preset {
+type BasePreset = {
   provider: ProviderType;
   model: Model;
   apiKey: string;
@@ -204,10 +243,19 @@ export interface Preset {
   name: string;
 }
 
+export type Preset = BasePreset & {
+  type: 'preset';
+  id: string;
+  createdOn: string,
+}
+
+export type NewPreset = BasePreset & {
+  type: 'new-preset';
+}
+
 export interface AppState {
   extensionReady: boolean;
-  view: ViewType;
-  currentTask: Task;
-  loadedTasks: Map<string, Task>;
   isSidecarReady: boolean;
+  currentTask?: Task;
+  activePreset?: Preset,
 }
