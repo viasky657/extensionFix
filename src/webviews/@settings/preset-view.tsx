@@ -4,7 +4,7 @@ import { ANTHROPIC_MODELS, NewPreset, PermissionState, Preset, Provider, View } 
 import { PresetForm } from './form';
 import { usePresets } from './use-preset';
 import { processFormData } from 'utils/form';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, LoaderFunctionArgs, useNavigate, useParams } from 'react-router-dom';
 import { Button } from 'components/button';
 
 export function PresetView() {

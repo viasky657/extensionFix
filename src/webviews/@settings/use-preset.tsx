@@ -1,84 +1,67 @@
-import * as React from "react";
-import { Event, NewPreset, Preset } from "../../model";
+import { Event, NewPreset, Preset } from '../../model';
+import { useAsync } from 'utils/hooks/use-async';
 
+export type PresetsData = {
+	presets: Map<string, Preset>;
+	activePresetId?: string;
+};
 
-export enum Status {
-  Idle = "idle",
-  Loading = "loading",
-  Success = "success",
-  Error = "error",
-}
+export async function loadPresets() {
+	return new Promise<PresetsData>((resolve) => {
+		const handleMessage = (event: MessageEvent<Event>) => {
+			if (event.data.type === 'presets-loaded') {
+				const { presets: presetsTuples, activePresetId } = event.data;
+				const presetsMap = new Map<string, Preset>();
+				presetsTuples.forEach(([presetId, preset]) => {
+					presetsMap.set(presetId, preset);
+				});
+				resolve({ presets: presetsMap, activePresetId });
+				window.removeEventListener('message', handleMessage);
+			}
+		};
+		window.addEventListener('message', handleMessage);
 
-type AsyncState<T> =
-  | { status: Status.Idle; data: undefined }
-  | { status: Status.Loading; data: undefined }
-  | { status: Status.Success; data: T }
-  | { status: Status.Error; data: undefined };
-
-
-function getPresets() {
-  vscode.postMessage({
-    type: 'get-presets'
-  });
+		vscode.postMessage({
+			type: 'get-presets',
+		});
+	});
 }
 
 export function usePresets() {
-  const [state, setState] = React.useState<AsyncState<{ presets: Map<string, Preset>, activePresetId?: string }>>({ status: Status.Idle, data: undefined });
+	const presets = useAsync<PresetsData>(loadPresets);
 
-  React.useEffect(() => {
-    setState({ data: undefined, status: Status.Loading });
-    getPresets();
-  }, [])
+	function addPreset(preset: NewPreset) {
+		vscode.postMessage({
+			type: 'add-preset',
+			preset,
+		});
+		presets.execute();
+	}
 
-  React.useEffect(() => {
-    const handleMessage = (event: MessageEvent<Event>) => {
-      if (event.data.type === 'presets-loaded') {
-        const { presets: presetsTuples, activePresetId } = event.data;
-        const presetsMap = new Map<string, Preset>();
-        presetsTuples.forEach(([presetId, preset]) => {
-          presetsMap.set(presetId, preset);
-        });
-        setState({ status: Status.Success, data: { presets: presetsMap, activePresetId } });
-      }
-    };
-    window.addEventListener("message", handleMessage);
-    return () => {
-      window.removeEventListener("message", handleMessage);
-    };
-  }, []);
+	function updatePreset(preset: Preset) {
+		vscode.postMessage({
+			type: 'update-preset',
+			preset,
+		});
+		presets.execute();
+	}
 
+	function deletePreset(presetId: string) {
+		vscode.postMessage({
+			type: 'delete-preset',
+			presetId,
+		});
+		presets.execute();
+	}
 
-  function addPreset(preset: NewPreset) {
-    vscode.postMessage({
-      type: 'add-preset',
-      preset,
-    });
-    getPresets();
-  }
+	function setActivePreset(presetId: string) {
+		vscode.postMessage({
+			type: 'set-active-preset',
+			presetId,
+		});
+		presets.execute();
+	}
 
-  function updatePreset(preset: Preset) {
-    vscode.postMessage({
-      type: 'update-preset',
-      preset,
-    });
-    getPresets();
-  }
-
-  function deletePreset(presetId: string) {
-    vscode.postMessage({
-      type: 'delete-preset',
-      presetId,
-    });
-    getPresets();
-  }
-
-  function setActivePreset(presetId: string) {
-    vscode.postMessage({
-      type: 'set-active-preset',
-      presetId,
-    });
-    getPresets();
-  }
-
-  return Object.assign(state, { addPreset, updatePreset, deletePreset, setActivePreset });
+	return Object.assign(presets, { addPreset, updatePreset, deletePreset, setActivePreset });
 }
+
