@@ -16,10 +16,30 @@ body {
   height: 100vh;
 }
 
+.mention {
+  @apply rounded bg-badge-background px-[0.15em] py-[0.05em] text-[0.9em] text-badge-foreground transition-colors duration-200;
+}
+
+.command-suggestion {
+  @apply rounded bg-badge-background px-[0.15em] py-[0.05em] text-[0.9em] text-badge-foreground transition-colors duration-200;
+}
+
 .tiptap .is-empty::before {
   @apply text-input-placeholder-foreground;
   @apply content-[attr(data-placeholder)];
   @apply float-left;
   @apply pointer-events-none;
   @apply h-0;
+}
+
+.gap-cursor {
+  @apply border-t border-white;
+}
+
+.tiptap img {
+  @apply h-auto max-w-[96%] border border-transparent;
+}
+
+.tiptap img.ProseMirror-selectednode {
+  @apply border border-badge-background;
 }
