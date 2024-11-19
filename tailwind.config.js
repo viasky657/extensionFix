@@ -20,10 +20,7 @@ export default {
 				widget: {
 					border: 'var(--vscode-widget-border)',
 				},
-				selection: {
-					background: 'var(--vscode-selection-background)',
-					foreground: 'var(--vscode-selection-foreground)',
-				},
+				selection: 'var(--vscode-selection-background)',
 				error: 'var(--vscode-error-foreground)',
 				link: {
 					foreground: 'var(--vscode-textLink-foreground)',
@@ -88,6 +85,10 @@ export default {
 					background: 'var(--vscode-panel-background)',
 					border: 'var(--vscode-panel-border)',
 				},
+				list: {
+					'selection-background': 'var(--vscode-list-activeSelectionBackground)',
+					'selection-foreground': 'var(--vscode-list-activeSelectionForeground)',
+				}
 			},
 			screens: {
 				touch: { raw: '(pointer: coarse)' },

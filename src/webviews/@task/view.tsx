@@ -12,32 +12,9 @@ import { ObjectEntry } from '../utils/types';
 import { useTask } from './use-task';
 
 export function TaskView() {
-  const formRef = React.useRef<HTMLFormElement>(null);
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      formRef.current?.requestSubmit();
-    }
-  };
-
   const task = useTask();
   const [summaryShown, setSummaryShown] = React.useState(false);
-  const availableContextProviders = useSubmenuContext(state => state.contextProviderDescriptions);
-
-  function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const data = new FormData(form);
-    const query = data.get('query') as string;
-    const sessionId = task.data?.task.sessionId;
-    if (sessionId === undefined) {
-      return;
-    }
-    task.sendRequest(query, sessionId);
-    // resets the form
-    form.reset();
-  }
+  const availableContextProviders = useSubmenuContext((state) => state.contextProviderDescriptions);
 
   if (task.data === undefined) {
     return <div>Loading...</div>;
@@ -53,7 +30,7 @@ export function TaskView() {
 
   return (
     <main className="flex h-full flex-col">
-      <header className="bg-panel-background sticky top-0 z-10">
+      <header className="sticky top-0 z-10 bg-panel-background">
         <div>
           <div
             className="cursor-pointer select-none rounded-sm p-2"
@@ -100,11 +77,7 @@ export function TaskView() {
                 <React.Fragment>
                   <TaskDT>Data</TaskDT>
                   <TaskDD>
-                    <ul>
-                      {(Object.entries(usage) as ObjectEntry<Usage>[]).map(
-                        renderUsagePart
-                      )}
-                    </ul>
+                    <ul>{(Object.entries(usage) as ObjectEntry<Usage>[]).map(renderUsagePart)}</ul>
                   </TaskDD>
                 </React.Fragment>
               )}
@@ -122,22 +95,21 @@ export function TaskView() {
             </ol>
           )}
         </section>
-        {/* <form
-          className="bg-panel-background sticky bottom-0 flex flex-col gap-2 p-2"
-          onSubmit={onSubmit}
-          ref={formRef}
-        >
-          <Textarea className="w-full" name="query" onKeyDown={handleKeyDown} />
-          <div className="flex justify-end">
-            <Button type="submit">Send</Button>
-          </div>
-        </form> */}
         <div className="sticky bottom-0 p-2">
           <Tiptap
             availableContextProviders={availableContextProviders ?? []}
             historyKey="chat"
-            onEnter={() => {
-              // TODO(@ghostwriternr): Re-implement submit button
+            onEnter={(editorState) => {
+              const sessionId = task.data?.task.sessionId;
+              if (sessionId === undefined) {
+                return;
+              }
+
+              const query = editorState.content?.[0]?.content?.[0]?.text || '';
+              task.sendRequest(query, sessionId);
+
+              // Clear the editor after sending
+              editorState.editor.commands.clearContent();
             }}
           />
         </div>
@@ -204,4 +176,3 @@ function formatNumber(n: number): string {
     return n.toString();
   }
 }
-

@@ -1,6 +1,5 @@
 import { v4 } from 'uuid';
 import * as vscode from "vscode";
-import CodeContextProvider from './context/providers/CodeSymbolContextProvider';
 import FileContextProvider from './context/providers/FileContextProvider';
 import { IContextProvider } from "./context/providers/types";
 import { VSCodeIDE } from './ide';
@@ -68,8 +67,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
     const providers: IContextProvider[] = [
-      new FileContextProvider({}),
-      new CodeContextProvider({})
+      new FileContextProvider({})
     ];
 
     // Handle messages from the webview
