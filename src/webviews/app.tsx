@@ -1,11 +1,10 @@
 import * as React from "react";
-import { Event, View, ClientRequest, Task, AppState, ViewType, Preset, NewPreset } from "../model";
-import { TaskView, TaskViewProps } from "@task/view";
-import { PresetView, PresetViewProps } from "@settings/preset-view";
+import { Event, View, ClientRequest, AppState } from "../model";
+import { TaskView } from "@task/view";
+import { PresetView } from "@settings/preset-view";
 import LoadingSpinner from "components/loading-spinner";
-import { v4 } from "uuid";
-import { SettingsView, SettingsViewProps } from "@settings/settings-view";
-import { WelcomeView, WelcomeViewProps } from "@settings/welcome-view";
+import { SettingsView } from "@settings/settings-view";
+import { WelcomeView } from "@settings/welcome-view";
 
 function onMessage(event: React.FormEvent<HTMLFormElement>, sessionId: string | undefined) {
   event.preventDefault();
@@ -33,6 +32,11 @@ function reducer(state: AppState, action: Event) {
   console.log('State will update', { action, prevState: state });
 
   if (action.type === 'initial-state') {
+    if (!newState.activePreset) {
+      newState.view = View.Preset;
+      return newState;
+    }
+    newState.activePreset = action.initialAppState.activePreset;
     newState.currentTask = action.initialAppState.currentTask;
     return newState;
   }
@@ -49,20 +53,12 @@ function reducer(state: AppState, action: Event) {
 
   if (action.type === "init-response") {
     newState.extensionReady = true;
-
     const task = action.task;
-    if (!newState.loadedTasks.has(task.sessionId)) {
-      newState.loadedTasks.set(task.sessionId, task);
-    }
     newState.view = action.view;
     newState.currentTask = task;
-
     newState.isSidecarReady = action.isSidecarReady;
   } else if (action.type === "open-task") {
     const task = action.task;
-    if (!newState.loadedTasks.has(task.sessionId)) {
-      newState.loadedTasks.set(task.sessionId, task);
-    }
     newState.view = View.Task;
     newState.currentTask = task;
   }
@@ -74,19 +70,51 @@ function reducer(state: AppState, action: Event) {
   return newState;
 }
 
-export type OpenViewFn = <T extends keyof typeof routes>(view: T, viewProps: Parameters<(typeof routes)[T]>[0]) => void
+// export type OpenViewFn = <T extends keyof typeof routes>(view: T, viewProps: Parameters<(typeof routes)[T]>[0]) => void
+
+
+const routes = {
+  [View.Preset]: PresetView,
+  [View.Task]: TaskView,
+  [View.Settings]: SettingsView,
+  [View.Welcome]: WelcomeView,
+}
+// First, let's create some helper types
+type RouteComponents = typeof routes;
+type RouteKey = keyof RouteComponents;
+
+// This type maps a View to its corresponding props type
+type RoutePropsMap = {
+  [K in RouteKey]: Parameters<RouteComponents[K]>[0];
+};
+
+// This is the type for our route state
+type RouteState<V extends RouteKey = RouteKey> = {
+  view: V;
+  props: RoutePropsMap[V];
+};
+
+function isRouteState<V extends RouteKey>(
+  route: RouteState,
+  view: V
+): route is RouteState<V> {
+  return route.view === view;
+}
+
+export type OpenViewFn = <T extends RouteKey>(view: T, viewProps: Parameters<RouteComponents[T]>[0]) => void
+
 
 const App = () => {
 
   const [state, dispatch] = React.useReducer(reducer, initialState);
-  const [viewProps, setViewProps] = React.useState<Parameters<typeof routes[keyof typeof routes]>[0]>();
+  const [currentRoute, setCurrentRoute] = React.useState<RouteState>({ view: View.Welcome, props: {} });
 
-  function openView<T extends keyof typeof routes>(
+  function openView<T extends RouteKey>(
     view: T,
     viewProps: Parameters<typeof routes[T]>[0]
   ) {
     dispatch({ type: 'open-view', view });
-    setViewProps(viewProps);
+    setCurrentRoute({ view, props: viewProps });
   }
 
   React.useEffect(() => {
@@ -132,73 +160,34 @@ const App = () => {
     return () => window.removeEventListener('message', messageHandler);
   }, []);
 
+  let view: React.JSX.Element;
+  if (isRouteState(currentRoute, View.Welcome)) {
+    view = <WelcomeView />
+  } else if (isRouteState(currentRoute, View.Task)) {
+    view = <TaskView {...currentRoute.props} onSubmit={(event) => onMessage(event, state.currentTask?.sessionId)} />;
+  } else if (isRouteState(currentRoute, View.Settings)) {
+    view = <SettingsView openView={openView} />
+  } else if (isRouteState(currentRoute, View.Preset)) {
+    view = <PresetView {...currentRoute.props} />
+  } else {
+    view = <span>View not implemented</span>
+  }
+
   return (
     <div className="h-full">
-      {state.isSidecarReady ? renderView(state, viewProps, openView) : <LoadingSpinner />}
+      {state.isSidecarReady ? view : <LoadingSpinner />}
     </div>
   );
-}
-// TODO (@g-danna) fix this mess
-function renderView(state: AppState, viewProps: PresetViewProps | TaskViewProps | SettingsViewProps | WelcomeViewProps | undefined, openView: OpenViewFn) {
-  switch (state.view) {
-    //case View.Welcome:
-    //  return <WelcomeView />
-    case View.Task:
-      return <TaskView task={state.currentTask} onSubmit={(event) => onMessage(event, state.currentTask?.sessionId)} />;
-    case View.Settings:
-      return <SettingsView openView={openView} />
-    case View.Preset:
-      return <PresetView />
-    default:
-      return "View not implemented";
-  }
 }
 
 export default App;
 
 
-const routes = {
-  [View.Preset]: PresetView,
-  [View.Task]: TaskView,
-  [View.Settings]: SettingsView,
-  [View.Welcome]: WelcomeView,
-}
 
 export const initialState: AppState = {
   extensionReady: false,
   isSidecarReady: false, // this is extra
   view: View.Task,
-  presets: [],
-  currentTask: {
-    query: '',
-    sessionId: v4(),
-    context: [],
-    cost: 0,
-    usage: {
-      inputTokens: 0,
-      outputTokens: 0,
-      cacheReads: 0,
-      cacheWrites: 0,
-    },
-    exchanges: [],
-    preset: {
-      type: 'preset',
-      id: v4(),
-      createdOn: new Date().toISOString(),
-      provider: "anthropic",
-      model: "claude-3-5-sonnet-20241022",
-      apiKey: "exampleApiKey123",
-      customBaseUrl: "https://api.anthropic.com",
-      permissions: {
-        readData: "ask",
-        writeData: "ask",
-      },
-      customInstructions: "Answer as concisely as possible",
-      name: "claude-sonnet-3.5",
-    },
-    responseOnGoing: false,
-  },
-  loadedTasks: new Map()
 };
 
 declare global {

@@ -8,7 +8,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
   private _view?: vscode.WebviewView;
   private _runningTask: Task | undefined;
-  private _activePreset: Preset | undefined;
+  private _presets: Map<string, Preset> = new Map();
   private _isSidecarReady: boolean = false;
   private readonly _extensionUri: vscode.Uri;
 
@@ -35,6 +35,10 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
     context.subscriptions.push(goToHistory, openNewTask, goToSettings);
 
+    const presetsArray = this.context.globalState.get('presets') as Preset[] || [];
+    presetsArray.forEach((preset) => {
+      this._presets.set(preset.id, preset);
+    });
   }
 
   private _onMessageFromWebview = new vscode.EventEmitter<ClientRequest>();
@@ -69,62 +73,82 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           break;
         case "get-presets": {
           const presets = this.context.globalState.get('presets') as Preset[] || [];
-          webviewView.webview.postMessage({ type: "presets-loaded", presets });
+          const activePresetId = this.context.globalState.get('active-preset-id') as string || presets.at(0)?.['id'];
+          webviewView.webview.postMessage({ type: "presets-loaded", presets, activePresetId });
           break;
         }
         case 'add-preset': {
           const newPreset = {
             ...data.preset,
+            type: 'preset',
             createdOn: new Date().toISOString(),
             id: v4()
-          };
-          const existingPresets = this.context.globalState.get('presets') as Preset[] || [];
-          this.context.globalState.update('presets', [...existingPresets, newPreset]);
+          } as Preset; // Why do we need casting?
+          this._presets.set(newPreset.id, newPreset);
+          this.context.globalState.update('presets', Array.from(this._presets.values()));
+          break;
+        }
+        case 'update-preset': {
+          if (this._presets.has(data.preset.id)) {
+            this._presets.set(data.preset.id, data.preset);
+            this.context.globalState.update('presets', Array.from(this._presets.values()));
+          }
+          break;
+        }
+        case 'set-active-preset': {
+          this.context.globalState.update('active-preset-id', data.presetId);
+          break;
         }
       }
     });
 
-    this._runningTask = {
-      query: '',
-      sessionId: v4(),
-      context: [],
-      cost: 0,
-      usage: {
-        inputTokens: 0,
-        outputTokens: 0,
-        cacheReads: 0,
-        cacheWrites: 0,
-      },
-      exchanges: [],
-      preset: {
-        type: 'preset',
-        id: v4(),
-        provider: "anthropic",
-        model: "claude-3-5-sonnet-20241022",
-        apiKey: "exampleApiKey123",
-        customBaseUrl: "https://api.anthropic.com",
-        permissions: {
-          readData: "ask",
-          writeData: "ask",
-        },
-        createdOn: new Date().toISOString(),
-        customInstructions: "Answer as concisely as possible",
-        name: "claude-sonnet-3.5",
-      },
-      responseOnGoing: false,
-    };
 
-    // on initialisation we are able to pipe it
-    this._view.webview.postMessage({
-      command: 'initial-state',
-      initialAppState: {
-        extensionReady: false,
-        view: View.Task,
-        presets: [],
-        currentTask: this._runningTask,
-        loadedTasks: new Map()
-      }
-    });
+    const activePresetId = this.context.globalState.get('active-preset-id') as string || undefined;
+    const presets = this.context.globalState.get('presets') as Preset[] || [];
+
+    if (presets.length === 0) {
+      // on initialisation we are able to pipe it
+      this._view.webview.postMessage({
+        command: 'initial-state',
+        initialAppState: {
+          extensionReady: false,
+          view: View.Preset,
+          loadedTasks: new Map()
+        }
+      });
+    } else {
+      // on initialisation we are able to pipe it
+
+      const activePreset = presets.find((preset) => preset.id === activePresetId) || presets[0];
+
+
+      this._runningTask = {
+        query: '',
+        sessionId: v4(),
+        context: [],
+        cost: 0,
+        preset: activePreset,
+        usage: {
+          inputTokens: 0,
+          outputTokens: 0,
+          cacheReads: 0,
+          cacheWrites: 0,
+        },
+        exchanges: [],
+        responseOnGoing: false,
+      };
+
+      this._view.webview.postMessage({
+        command: 'initial-state',
+        initialAppState: {
+          extensionReady: false,
+          view: View.Task,
+          activePreset,
+          currentTask: this._runningTask,
+          loadedTasks: new Map()
+        }
+      });
+    }
   }
 
   public addToolTypeFound(sessionId: string, exchangeId: string, toolType: ToolThinkingToolTypeEnum) {

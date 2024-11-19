@@ -14,10 +14,11 @@ interface PresetFormProps extends React.DetailedHTMLProps<React.FormHTMLAttribut
 export function PresetForm(props: PresetFormProps) {
   const { initialData, ...rest } = props
 
-  const [didSetName, setDidSetName] = React.useState(false)
+  console.log('initialData', initialData)
 
   return (
-    <form {...rest} className="text-descriptionForeground">
+    <form key={initialData?.id} {...rest} className="text-descriptionForeground">
+      <input type="hidden" name="id" value={initialData?.id} />
       <label htmlFor="provider">
         Provider
         <Select className="w-full" id="provider" name="provider" defaultValue={initialData?.provider || Provider.Anthropic}>
@@ -31,7 +32,7 @@ export function PresetForm(props: PresetFormProps) {
         <legend aria-hidden>API</legend>
         <label htmlFor="apiKey">
           APIKey
-          <Input className="w-full" id="apiKey" name="apiKey" type="password" />
+          <Input className="w-full" id="apiKey" name="apiKey" type="password" defaultValue={initialData?.apiKey} />
         </label>
         <label className="flex items-start">
           <Checkbox name="custom-base-URL" />
@@ -55,32 +56,32 @@ export function PresetForm(props: PresetFormProps) {
             <label htmlFor="permissions.list-files">
               List files
             </label>
-            <PermissionSelect className="w-full border-none" id="permissions.list-files" name="permissions[list-files]" />
+            <PermissionSelect className="w-full border-none" id="permissions.list-files" name="permissions[listFiles]" defaultValue={initialData?.permissions?.listFiles} />
           </li>
           <li className="contents">
             <label htmlFor="code-editing">
               Edit files
             </label>
-            <PermissionSelect className="w-full border-none" id="write-code" name="permissions[code-editing]" />
+            <PermissionSelect className="w-full border-none" id="write-code" name="permissions[codeEditing]" defaultValue={initialData?.permissions?.codeEditing} />
           </li>
           <li className="contents">
             <label htmlFor="permissions.terminal-commands">
               Run terminal commands
             </label>
-            <PermissionSelect className="w-full border-none" id="permissions.terminal-commands" name="permissions[terminal-commands]" />
+            <PermissionSelect className="w-full border-none" id="permissions.terminal-commands" name="permissions[terminalCommands]" defaultValue={initialData?.permissions?.terminalCommands} />
           </li>
         </ul>
       </fieldset>
 
       <label htmlFor="name">
         Preset name
-        <Input className="w-full" id="name" name="name" />
+        <Input className="w-full" id="name" name="name" defaultValue={initialData?.name} />
       </label>
 
 
       <label htmlFor="customInstructions">
         Custom instructions
-        <Textarea className="w-full" id='customInstructions' name="customInstructions" />
+        <Textarea className="w-full" id='customInstructions' name="customInstructions" defaultValue={initialData?.customInstructions} />
       </label>
 
       <Button type="submit">Send</Button>
@@ -89,8 +90,9 @@ export function PresetForm(props: PresetFormProps) {
 }
 
 export function PermissionSelect(props: SelectProps) {
+  console.log('PermissionSelect', props)
   return (
-    <Select {...props} defaultValue={PermissionState.Always}>
+    <Select {...props}>
       {Object.values(PermissionState).map((ps) => (
         <Option key={ps} value={ps}>{ps}</Option>
       ))}

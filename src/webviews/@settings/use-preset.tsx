@@ -15,20 +15,25 @@ type AsyncState<T> =
   | { status: Status.Success; data: T }
   | { status: Status.Error; data: undefined };
 
+
+function getPresets() {
+  vscode.postMessage({
+    type: 'get-presets'
+  });
+}
+
 export function usePresets() {
-  const [state, setState] = React.useState<AsyncState<Preset[]>>({ status: Status.Idle, data: undefined });
+  const [state, setState] = React.useState<AsyncState<{ presets: Preset[], activePresetId: string }>>({ status: Status.Idle, data: undefined });
 
   React.useEffect(() => {
     setState({ data: undefined, status: Status.Loading });
-    vscode.postMessage({
-      type: 'get-presets'
-    });
+    getPresets();
   }, [])
 
   React.useEffect(() => {
     const handleMessage = (event: MessageEvent<Event>) => {
       if (event.data.type === 'presets-loaded') {
-        setState({ status: Status.Success, data: event.data.presets });
+        setState({ status: Status.Success, data: event.data });
       }
     };
     window.addEventListener("message", handleMessage);
@@ -43,6 +48,7 @@ export function usePresets() {
       type: 'add-preset',
       preset,
     });
+    getPresets();
   }
 
   function updatePreset(preset: Preset) {
@@ -50,7 +56,16 @@ export function usePresets() {
       type: 'update-preset',
       preset,
     });
+    getPresets();
   }
 
-  return Object.assign(state, { addPreset, updatePreset });
+  function setActivePreset(presetId: string) {
+    vscode.postMessage({
+      type: 'set-active-preset',
+      presetId,
+    });
+    getPresets();
+  }
+
+  return Object.assign(state, { addPreset, updatePreset, setActivePreset });
 }

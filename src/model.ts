@@ -39,11 +39,17 @@ interface UpdatePreset {
   preset: Preset;
 }
 
-export type ClientRequest = TaskFeedback | OpenFile | InitRequest | GetPresets | AddPreset | UpdatePreset
+interface SetActivePreset {
+  type: 'set-active-preset';
+  presetId: string;
+}
+
+export type ClientRequest = TaskFeedback | SetActivePreset | OpenFile | InitRequest | GetPresets | AddPreset | UpdatePreset
 
 interface PresetsLoaded {
   type: 'presets-loaded';
   presets: Preset[];
+  activePresetId: string;
 }
 
 interface OpenTaskEvent {
@@ -205,7 +211,11 @@ export enum PermissionState {
 
 type PermissionStateType = `${PermissionState}`;
 
-type Permissions = Record<string, PermissionStateType>;
+type Permissions = {
+  codeEditing: PermissionStateType,
+  listFiles: PermissionStateType,
+  terminalCommands: PermissionStateType,
+}
 
 type ProviderType = `${Provider}`;
 
@@ -231,9 +241,8 @@ export type NewPreset = BasePreset & {
 
 export interface AppState {
   extensionReady: boolean;
-  view: ViewType;
-  currentTask: Task;
-  loadedTasks: Map<string, Task>;
-  presets: Preset[];
   isSidecarReady: boolean;
+  view: ViewType;
+  currentTask?: Task;
+  activePreset?: Preset,
 }
