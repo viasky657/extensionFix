@@ -1,24 +1,24 @@
-import { ANTHROPIC_MODELS, PermissionState, Preset, Provider } from "../../model";
+import { ANTHROPIC_MODELS, PermissionState, Preset, Provider, View } from "../../model";
 import * as React from "react";
 import { Checkbox } from "components/checkbox";
 import { Select, Option, SelectProps } from "components/select";
 import { Input } from "components/input";
 import { Textarea } from "components/textarea";
-import { Button } from "components/button";
 
 
 interface PresetFormProps extends React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement> {
+  formId: string,
   initialData?: Preset
 }
 
 export function PresetForm(props: PresetFormProps) {
-  const { initialData, ...rest } = props
+  const { formId, initialData, ...rest } = props
 
   console.log('initialData', initialData)
 
   return (
-    <form key={initialData?.id} {...rest} className="text-descriptionForeground">
-      <input type="hidden" name="id" value={initialData?.id} />
+    <form id={formId} {...rest} className="text-descriptionForeground">
+      {initialData?.id && <input type="hidden" name="id" value={initialData?.id} />}
       <label htmlFor="provider">
         Provider
         <Select className="w-full" id="provider" name="provider" defaultValue={initialData?.provider || Provider.Anthropic}>
@@ -83,8 +83,6 @@ export function PresetForm(props: PresetFormProps) {
         Custom instructions
         <Textarea className="w-full" id='customInstructions' name="customInstructions" defaultValue={initialData?.customInstructions} />
       </label>
-
-      <Button type="submit">Send</Button>
     </form>
   )
 }

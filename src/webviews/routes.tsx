@@ -1,6 +1,5 @@
 
 import { PresetView } from "@settings/preset-view";
-import { WelcomeView } from "@settings/welcome-view";
 import { TaskView } from "@task/view";
 import App from "app";
 import { createMemoryRouter, useNavigate } from "react-router-dom";
@@ -15,10 +14,14 @@ export const router = createMemoryRouter([
     children: [
       {
         path: View.Welcome,
-        element: <WelcomeView />,
+        element: <PresetView />,
       },
       {
         path: View.Task,
+        element: <TaskView />,
+      },
+      {
+        path: View.History,
         element: <TaskView />,
       },
       {
@@ -26,13 +29,13 @@ export const router = createMemoryRouter([
         element: <SettingsView />,
       },
       {
-        path: `${View.Preset}/:presetId`,
+        path: `${View.Preset}/:presetId?`,
         element: <PresetView />,
       }
     ]
   }
 ], {
-  initialEntries: ["/welcome"]
+  initialEntries: ["/task"]
 });
 
 export function useNavigationFromExtension() {

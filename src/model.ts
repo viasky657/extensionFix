@@ -44,7 +44,12 @@ interface SetActivePreset {
   presetId: string;
 }
 
-export type ClientRequest = TaskFeedback | SetActivePreset | OpenFile | InitRequest | GetPresets | AddPreset | UpdatePreset
+interface DeletePreset {
+  type: 'delete-preset';
+  presetId: string;
+}
+
+export type ClientRequest = TaskFeedback | SetActivePreset | DeletePreset | OpenFile | InitRequest | GetPresets | AddPreset | UpdatePreset
 
 export interface PresetsLoaded {
   type: 'presets-loaded';
@@ -66,7 +71,6 @@ interface TaskResponseEvent {
 interface InitResponse {
   type: "init-response";
   task: Task;
-  view: ViewType;
   isSidecarReady: boolean;
 }
 

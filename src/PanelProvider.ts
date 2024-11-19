@@ -69,19 +69,40 @@ export class PanelProvider implements vscode.WebviewViewProvider {
       this._onMessageFromWebview.fire(data);
 
       switch (data.type) {
-        case "init":
-          webviewView.webview.postMessage({ type: "init-response", task: this._runningTask, view: View.Task, isSidecarReady: this._isSidecarReady });
-          break;
-        case "get-presets": {
-          try {
-            const activePresetId = this.context.globalState.get<string>('active-preset-id');
-            const presetTuples = Array.from(this._presets.entries());
-            const firstPresetId = presetTuples.at(0)?.[0];
-            const message: PresetsLoaded = { type: "presets-loaded", presets: presetTuples, activePresetId: activePresetId || firstPresetId };
-            webviewView.webview.postMessage(message);
-          } catch (err) {
-            console.error('error getting presets', presets);
+        case "init": {
+          this.context.globalState.update('active-preset-id', undefined);
+
+
+          const firstPreset = Array.from(this._presets.values()).at(0);
+          let activePreset = firstPreset;
+
+          if (activePreset) {
+            this._runningTask = {
+              query: '',
+              sessionId: v4(),
+              context: [],
+              cost: 0,
+              preset: activePreset,
+              usage: {
+                inputTokens: 0,
+                outputTokens: 0,
+                cacheReads: 0,
+                cacheWrites: 0,
+              },
+              exchanges: [],
+              responseOnGoing: false,
+            };
           }
+
+          webviewView.webview.postMessage({ type: "init-response", task: this._runningTask, isSidecarReady: this._isSidecarReady });
+          break;
+        }
+        case "get-presets": {
+          const activePresetId = this.context.globalState.get<string>('active-preset-id');
+          const presetTuples = Array.from(this._presets.entries());
+          const firstPresetId = presetTuples.at(0)?.[0];
+          const message: PresetsLoaded = { type: "presets-loaded", presets: presetTuples, activePresetId: activePresetId || firstPresetId };
+          webviewView.webview.postMessage(message);
           break;
         }
         case 'add-preset': {
@@ -97,7 +118,15 @@ export class PanelProvider implements vscode.WebviewViewProvider {
         }
         case 'update-preset': {
           if (this._presets.has(data.preset.id)) {
-            this._presets.set(data.preset.id, data.preset);
+            const previousData = this._presets.get(data.preset.id);
+            this._presets.set(data.preset.id, { ...previousData, ...data.preset });
+            this.context.globalState.update('presets', Array.from(this._presets.values()));
+          }
+          break;
+        }
+        case 'delete-preset': {
+          if (this._presets.has(data.presetId)) {
+            this._presets.delete(data.presetId);
             this.context.globalState.update('presets', Array.from(this._presets.values()));
           }
           break;
@@ -110,51 +139,64 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     });
 
 
-    const activePresetId = this.context.globalState.get('active-preset-id') as string || undefined;
-    const presets = this.context.globalState.get('presets') as Preset[] || [];
 
-    if (presets.length === 0) {
+
+
+    if (this._presets.size === 0) {
       // on initialisation we are able to pipe it
       this._view.webview.postMessage({
         command: 'initial-state',
         initialAppState: {
           extensionReady: false,
           view: View.Preset,
-          loadedTasks: new Map()
         }
       });
     } else {
-      // on initialisation we are able to pipe it
-
-      const activePreset = presets.find((preset) => preset.id === activePresetId) || presets[0];
 
 
-      this._runningTask = {
-        query: '',
-        sessionId: v4(),
-        context: [],
-        cost: 0,
-        preset: activePreset,
-        usage: {
-          inputTokens: 0,
-          outputTokens: 0,
-          cacheReads: 0,
-          cacheWrites: 0,
-        },
-        exchanges: [],
-        responseOnGoing: false,
-      };
+      const firstPreset = Array.from(this._presets.values()).at(0);
+      let activePreset = firstPreset;
+
+      if (activePreset) {
+        this._runningTask = {
+          query: '',
+          sessionId: v4(),
+          context: [],
+          cost: 0,
+          preset: activePreset,
+          usage: {
+            inputTokens: 0,
+            outputTokens: 0,
+            cacheReads: 0,
+            cacheWrites: 0,
+          },
+          exchanges: [],
+          responseOnGoing: false,
+        };
+      }
+
 
       this._view.webview.postMessage({
         command: 'initial-state',
         initialAppState: {
           extensionReady: false,
-          view: View.Task,
           activePreset,
           currentTask: this._runningTask,
-          loadedTasks: new Map()
         }
       });
+
+      if (activePreset) {
+        this._view.webview.postMessage({
+          type: "open-view",
+          view: View.Task,
+        });
+      } else {
+        this._view.webview.postMessage({
+          type: "open-view",
+          view: View.Preset,
+        });
+      }
+
     }
   }
 

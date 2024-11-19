@@ -33,7 +33,6 @@ export function usePresets() {
   React.useEffect(() => {
     const handleMessage = (event: MessageEvent<Event>) => {
       if (event.data.type === 'presets-loaded') {
-        console.log('preset-event', event)
         const { presets: presetsTuples, activePresetId } = event.data;
         const presetsMap = new Map<string, Preset>();
         presetsTuples.forEach(([presetId, preset]) => {
@@ -65,6 +64,14 @@ export function usePresets() {
     getPresets();
   }
 
+  function deletePreset(presetId: string) {
+    vscode.postMessage({
+      type: 'delete-preset',
+      presetId,
+    });
+    getPresets();
+  }
+
   function setActivePreset(presetId: string) {
     vscode.postMessage({
       type: 'set-active-preset',
@@ -73,5 +80,5 @@ export function usePresets() {
     getPresets();
   }
 
-  return Object.assign(state, { addPreset, updatePreset, setActivePreset });
+  return Object.assign(state, { addPreset, updatePreset, deletePreset, setActivePreset });
 }

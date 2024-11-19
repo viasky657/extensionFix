@@ -2,13 +2,14 @@ import * as React from "react";
 import { RequestViewItem } from "components/exchange/request";
 import { ResponseViewItem } from "components/exchange/response";
 import { TaskDD, TaskDL, TaskDT } from "components/task-definition-list";
-import { Exchange, Task, Usage } from "../../model";
+import { Exchange, Task, Usage, View } from "../../model";
 import ClaudeLogo from "../assets/claude.svg";
 import { ObjectEntry } from "../utils/types";
 import { Textarea } from "components/textarea";
 import { Button } from "components/button";
 import { cn } from "utils/cn";
 import { useTask } from "./use-task";
+import { Navigate } from "react-router-dom";
 
 export function TaskView() {
 
@@ -42,6 +43,10 @@ export function TaskView() {
 
   if (task.data === undefined) {
     return <div>Loading...</div>;
+  }
+
+  if (!task.data.task || !task.data.task.preset) {
+    return <Navigate to={`/${View.Preset}`} />;
   }
 
 

@@ -22,7 +22,7 @@ export function SettingsView() {
       <header className="flex items-baseline gap-2">
         <h2 className="mr-auto">Your presets</h2>
         <Button variant="secondary" asChild>
-          <Link to={View.Preset}>Create new preset</Link>
+          <Link to={`/${View.Preset}`}>Create new preset</Link>
         </Button>
       </header>
       {presets.status === 'loading' && <div className="flex items-center justify-center">Loading...</div>}
@@ -37,7 +37,7 @@ export function SettingsView() {
         <div>
           <p>No presets yet</p>
           <Button variant="secondary" type='button' asChild>
-            <Link to={View.Preset}>Create new preset</Link>
+            <Link to={`/${View.Preset}`}>Create new preset</Link>
           </Button>
         </div>
       )}
