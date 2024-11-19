@@ -11,7 +11,6 @@ module.exports = {
   arrowParens: "always",
   proseWrap: "preserve",
   htmlWhitespaceSensitivity: "css",
-  endOfLine: "crlf",
   embeddedLanguageFormatting: "auto",
   plugins: [
     "prettier-plugin-tailwindcss"
