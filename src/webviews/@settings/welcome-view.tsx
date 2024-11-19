@@ -1,10 +1,7 @@
 import * as React from "react";
 import { PresetForm } from "./form";
 
-export type WelcomeViewProps = {}
-
-export function WelcomeView(props: WelcomeViewProps) {
-
+export function WelcomeView() {
   return (
     <main className="flex flex-col flex-grow">
       <header>

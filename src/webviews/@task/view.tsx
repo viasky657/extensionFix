@@ -8,14 +8,9 @@ import { ObjectEntry } from "../utils/types";
 import { Textarea } from "components/textarea";
 import { Button } from "components/button";
 import { cn } from "utils/cn";
+import { useTask } from "./use-task";
 
-export interface TaskViewProps {
-  task: Task;
-  onSubmit: React.FormEventHandler<HTMLFormElement>;
-}
-
-export function TaskView(props: TaskViewProps) {
-  const { task, onSubmit } = props;
+export function TaskView() {
 
   const formRef = React.useRef<HTMLFormElement>(null);
 
@@ -26,13 +21,33 @@ export function TaskView(props: TaskViewProps) {
     }
   };
 
-  const { exchanges, preset, cost, usage, query } = task;
-  const isQueryEmpty = query === ''
+  const task = useTask();
 
   const [summaryShown, setSummaryShown] = React.useState(false);
 
-  // TODO(g-danna) Improve this
-  const showUsage = Object.keys(usage).length > 0; // usageKeys.some((key) => key in usage);
+  function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const query = data.get("query") as string;
+    const sessionId = task.data?.task.sessionId;
+    if (sessionId === undefined) {
+      return;
+    }
+    task.sendRequest(query, sessionId);
+    // resets the form
+    form.reset();
+  }
+
+
+  if (task.data === undefined) {
+    return <div>Loading...</div>;
+  }
+
+
+  const { exchanges, preset, cost, usage, query } = task.data.task;
+  const isQueryEmpty = query === '';
+  const showUsage = Object.keys(usage).length > 0;
 
   return (
     <main className="flex flex-col h-full">

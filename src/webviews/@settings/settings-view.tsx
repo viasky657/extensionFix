@@ -3,40 +3,42 @@ import { Preset, View } from "../../model";
 import { Button } from "components/button";
 import { usePresets } from "./use-preset";
 import { cn } from "utils/cn";
-import { OpenViewFn } from "app";
+import { Link } from "react-router-dom";
 
 
-export type SettingsViewProps = {
-  openView: OpenViewFn;
-}
+export function SettingsView() {
 
-export function SettingsView(props: SettingsViewProps) {
-
-  const { openView } = props;
   const presets = usePresets();
 
-  function addPreset() {
-    openView(View.Preset, { preset: undefined });
+  let presetsArray: Preset[] = []
+
+  if (presets.status === 'success') {
+    presetsArray = Array.from(presets.data.presets.values())
+      .sort((a, b) => new Date(b.createdOn).getTime() - new Date(a.createdOn).getTime());
   }
 
   return (
     <main className="flex flex-col flex-grow">
       <header className="flex items-baseline gap-2">
         <h2 className="mr-auto">Your presets</h2>
-        <Button variant="secondary" type='button' onClick={addPreset}>New preset</Button>
+        <Button variant="secondary" asChild>
+          <Link to={View.Preset}>Create new preset</Link>
+        </Button>
       </header>
       {presets.status === 'loading' && <div className="flex items-center justify-center">Loading...</div>}
-      {presets.status === 'success' && presets.data.presets.length > 0 && (<ol className="p-2.5 flex flex-col gap-0.5">
-        {presets.data.presets.sort((a, b) => new Date(b.createdOn).getTime() - new Date(a.createdOn).getTime()).map((preset) => (
+      {presets.status === 'success' && presetsArray.length > 0 && (<ol className="p-2.5 flex flex-col gap-0.5">
+        {presetsArray.map((preset) => (
           <li key={preset.id}>
-            <PresetItem preset={preset} openView={openView} setActivePreset={presets.setActivePreset} isActivePreset={presets.data.activePresetId === preset.id} />
+            <PresetItem preset={preset} setActivePreset={presets.setActivePreset} isActivePreset={presets.data.activePresetId === preset.id} />
           </li>
         ))}
       </ol>)}
-      {presets.status === 'success' && presets.data.presets.length === 0 && (
+      {presets.status === 'success' && presetsArray.length === 0 && (
         <div>
           <p>No presets yet</p>
-          <Button variant="secondary" type='button' onClick={addPreset}>Add new preset</Button>
+          <Button variant="secondary" type='button' asChild>
+            <Link to={View.Preset}>Create new preset</Link>
+          </Button>
         </div>
       )}
     </main>
@@ -46,28 +48,22 @@ export function SettingsView(props: SettingsViewProps) {
 
 type PresetItemProps = React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement> & {
   preset: Preset;
-  openView: OpenViewFn;
   isActivePreset: boolean;
   setActivePreset: (presetId: string) => void
 }
 
 function PresetItem(props: PresetItemProps) {
 
-  const { preset, openView, setActivePreset, isActivePreset } = props;
+  const { preset, setActivePreset, isActivePreset } = props;
 
-  function onClickOpenPreset() {
-    console.log('onClickOpenPreset', preset)
-    openView(View.Preset, { preset });
-  }
-
-  function onClickSetActivePreset() {
+  function onSetActivePreset() {
     setActivePreset(preset.id)
   }
 
   return (
     <div className="flex gap-1.5 px-1.5 py-0.5 rounded hover:bg-[rgba(128,128,128,0.1)]">
-      <button className="flex-grow text-left" onClick={onClickOpenPreset} >{preset.name}</button>
-      <button className="w-8 h-full flex items-center justify-center" onClick={onClickSetActivePreset} disabled={isActivePreset}>
+      <Link to={`/preset/${preset.id}`} className="flex-grow text-left">{preset.name}</Link>
+      <button className="w-8 h-full flex items-center justify-center" onClick={onSetActivePreset} disabled={isActivePreset}>
         <span className={cn(isActivePreset ? "opacity-100" : "opacity-0", "codicon codicon-check")} />
         <span className="sr-only">{isActivePreset ? "Active preset" : "Click to set as active preset"}</span>
       </button>

@@ -4,16 +4,20 @@ import { ANTHROPIC_MODELS, NewPreset, PermissionState, Preset, Provider } from "
 import { PresetForm } from "./form";
 import { usePresets } from "./use-preset";
 import { processFormData } from "utils/form";
+import { useParams } from "react-router-dom";
 
 
-export interface PresetViewProps {
-  preset?: Preset;
-}
-
-export function PresetView(props: PresetViewProps) {
-  const { preset } = props;
+export function PresetView() {
 
   const presets = usePresets();
+  const { presetId } = useParams();
+
+  let preset: Preset | undefined;
+  if (presetId) {
+    preset = presets.data?.presets.get(presetId);
+  }
+
+  console.log(preset);
 
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();

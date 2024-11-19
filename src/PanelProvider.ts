@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { ClientRequest, Preset, Task, ToolThinkingToolTypeEnum, View } from "./model";
+import { ClientRequest, Preset, Task, ToolThinkingToolTypeEnum, View, PresetsLoaded } from "./model";
 import { Response, } from "./model";
 import { getNonce } from "./webviews/utils/nonce";
 import { v4 } from 'uuid';
@@ -23,7 +23,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
     const openNewTask = vscode.commands.registerCommand('sota-swe.go-to-new-task', () => {
       if (this._view) {
-        this._view.webview.postMessage({ type: 'open-view', view: View.Settings });
+        this._view.webview.postMessage({ type: 'open-view', view: View.Task });
       }
     });
 
@@ -33,8 +33,8 @@ export class PanelProvider implements vscode.WebviewViewProvider {
       }
     });
 
+    // load presets
     context.subscriptions.push(goToHistory, openNewTask, goToSettings);
-
     const presetsArray = this.context.globalState.get('presets') as Preset[] || [];
     presetsArray.forEach((preset) => {
       this._presets.set(preset.id, preset);
@@ -67,14 +67,21 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     // Handle messages from the webview
     webviewView.webview.onDidReceiveMessage((data: ClientRequest) => {
       this._onMessageFromWebview.fire(data);
+
       switch (data.type) {
         case "init":
           webviewView.webview.postMessage({ type: "init-response", task: this._runningTask, view: View.Task, isSidecarReady: this._isSidecarReady });
           break;
         case "get-presets": {
-          const presets = this.context.globalState.get('presets') as Preset[] || [];
-          const activePresetId = this.context.globalState.get('active-preset-id') as string || presets.at(0)?.['id'];
-          webviewView.webview.postMessage({ type: "presets-loaded", presets, activePresetId });
+          try {
+            const activePresetId = this.context.globalState.get<string>('active-preset-id');
+            const presetTuples = Array.from(this._presets.entries());
+            const firstPresetId = presetTuples.at(0)?.[0];
+            const message: PresetsLoaded = { type: "presets-loaded", presets: presetTuples, activePresetId: activePresetId || firstPresetId };
+            webviewView.webview.postMessage(message);
+          } catch (err) {
+            console.error('error getting presets', presets);
+          }
           break;
         }
         case 'add-preset': {

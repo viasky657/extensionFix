@@ -46,10 +46,10 @@ interface SetActivePreset {
 
 export type ClientRequest = TaskFeedback | SetActivePreset | OpenFile | InitRequest | GetPresets | AddPreset | UpdatePreset
 
-interface PresetsLoaded {
+export interface PresetsLoaded {
   type: 'presets-loaded';
-  presets: Preset[];
-  activePresetId: string;
+  presets: [string, Preset][];
+  activePresetId?: string;
 }
 
 interface OpenTaskEvent {
@@ -242,7 +242,6 @@ export type NewPreset = BasePreset & {
 export interface AppState {
   extensionReady: boolean;
   isSidecarReady: boolean;
-  view: ViewType;
   currentTask?: Task;
   activePreset?: Preset,
 }

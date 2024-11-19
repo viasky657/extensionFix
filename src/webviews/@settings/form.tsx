@@ -90,7 +90,6 @@ export function PresetForm(props: PresetFormProps) {
 }
 
 export function PermissionSelect(props: SelectProps) {
-  console.log('PermissionSelect', props)
   return (
     <Select {...props}>
       {Object.values(PermissionState).map((ps) => (

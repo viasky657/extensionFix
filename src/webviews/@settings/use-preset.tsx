@@ -23,7 +23,7 @@ function getPresets() {
 }
 
 export function usePresets() {
-  const [state, setState] = React.useState<AsyncState<{ presets: Preset[], activePresetId: string }>>({ status: Status.Idle, data: undefined });
+  const [state, setState] = React.useState<AsyncState<{ presets: Map<string, Preset>, activePresetId?: string }>>({ status: Status.Idle, data: undefined });
 
   React.useEffect(() => {
     setState({ data: undefined, status: Status.Loading });
@@ -33,7 +33,13 @@ export function usePresets() {
   React.useEffect(() => {
     const handleMessage = (event: MessageEvent<Event>) => {
       if (event.data.type === 'presets-loaded') {
-        setState({ status: Status.Success, data: event.data });
+        console.log('preset-event', event)
+        const { presets: presetsTuples, activePresetId } = event.data;
+        const presetsMap = new Map<string, Preset>();
+        presetsTuples.forEach(([presetId, preset]) => {
+          presetsMap.set(presetId, preset);
+        });
+        setState({ status: Status.Success, data: { presets: presetsMap, activePresetId } });
       }
     };
     window.addEventListener("message", handleMessage);
