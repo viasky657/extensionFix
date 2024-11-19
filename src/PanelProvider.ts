@@ -1,19 +1,22 @@
-import * as vscode from "vscode";
-import { ClientRequest, Preset, Task, ToolThinkingToolTypeEnum, View, PresetsLoaded } from "./model";
-import { Response, } from "./model";
-import { getNonce } from "./webviews/utils/nonce";
 import { v4 } from 'uuid';
+import * as vscode from "vscode";
+import FileContextProvider from './context/providers/FileContextProvider';
+import { IContextProvider } from "./context/providers/types";
+import { VSCodeIDE } from './ide';
+import { ClientRequest, Preset, Task, ToolThinkingToolTypeEnum, View, PresetsLoaded, Response } from "./model";
+import { getNonce } from "./webviews/utils/nonce";
 
 export class PanelProvider implements vscode.WebviewViewProvider {
-
   private _view?: vscode.WebviewView;
   private _runningTask: Task | undefined;
   private _presets: Map<string, Preset> = new Map();
   private _isSidecarReady: boolean = false;
   private readonly _extensionUri: vscode.Uri;
+  private ide: VSCodeIDE;
 
   constructor(private readonly context: vscode.ExtensionContext) {
     this._extensionUri = context.extensionUri;
+    this.ide = new VSCodeIDE();
 
     const goToHistory = vscode.commands.registerCommand('sota-swe.go-to-history', () => {
       if (this._view) {
@@ -61,11 +64,14 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     };
 
     this._onDidWebviewBecomeVisible.fire();
-
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
+    const providers: IContextProvider[] = [
+      new FileContextProvider({})
+    ];
+
     // Handle messages from the webview
-    webviewView.webview.onDidReceiveMessage((data: ClientRequest) => {
+    webviewView.webview.onDidReceiveMessage(async (data: ClientRequest) => {
       this._onMessageFromWebview.fire(data);
 
       switch (data.type) {
@@ -133,6 +139,23 @@ export class PanelProvider implements vscode.WebviewViewProvider {
         }
         case 'set-active-preset': {
           this.context.globalState.update('active-preset-id', data.presetId);
+          break;
+        }
+        case "context/fetchProviders": {
+          webviewView.webview.postMessage({
+            type: "context/fetchProviders/response",
+            providers: providers.map(provider => provider.description),
+            id: data.id
+          });
+          break;
+        }
+        case "context/loadSubmenuItems": {
+          const items = await providers.find(provider => provider.description.title === data.title)
+            ?.loadSubmenuItems({
+              ide: this.ide,
+              fetch: (url, init) => fetch(url, init)
+            });
+          webviewView.webview.postMessage({ type: "context/loadSubmenuItems/response", items: items || [], id: data.id });
           break;
         }
       }
@@ -446,7 +469,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           <html lang="en">
           <head>
               <meta charset="UTF-8">
-              <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
+              <meta http-equiv="Content-Security-Policy" content="default-src 'self' ${webview.cspSource}; style-src 'unsafe-inline' 'self' ${webview.cspSource}; script-src 'nonce-${nonce}';">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
               <title>Example View</title>
               <link rel="stylesheet" href="${codiconsUri}">
@@ -460,7 +483,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
                   console.log('HTML started up.');
                 };
             </script>
-            <script nonce="${nonce}" src="${scriptUri}"></script>
+            <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
           </body>
     </html>`;
   }

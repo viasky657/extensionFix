@@ -85,6 +85,10 @@ export default {
 					background: 'var(--vscode-panel-background)',
 					border: 'var(--vscode-panel-border)',
 				},
+				list: {
+					'selection-background': 'var(--vscode-list-activeSelectionBackground)',
+					'selection-foreground': 'var(--vscode-list-activeSelectionForeground)',
+				}
 			},
 			screens: {
 				touch: { raw: '(pointer: coarse)' },

@@ -1,8 +1,9 @@
-import * as React from "react";
-import { Event, ClientRequest, AppState } from "../model";
 import LoadingSpinner from "components/loading-spinner";
+import * as React from "react";
 import { Outlet } from "react-router-dom";
 import { useNavigationFromExtension } from "routes";
+import { useSubmenuContext } from "store/submenuContext";
+import { AppState, ClientRequest, Event } from "../model";
 
 function reducer(state: AppState, action: Event) {
 
@@ -33,6 +34,17 @@ const App = () => {
   useNavigationFromExtension();
 
   const [state, dispatch] = React.useReducer(reducer, initialState);
+  const initializeContextProviders = useSubmenuContext(state => state.initializeContextProviders);
+  const initializeSubmenuItems = useSubmenuContext(state => state.initializeSubmenuItems);
+
+  React.useEffect(() => {
+    const initalize = async () => {
+      await initializeContextProviders();
+      await initializeSubmenuItems();
+    };
+
+    initalize();
+  }, [initializeSubmenuItems, initializeContextProviders]);
 
   React.useEffect(() => {
     // fetches state from the extension

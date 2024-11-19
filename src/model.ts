@@ -49,7 +49,18 @@ interface DeletePreset {
   presetId: string;
 }
 
-export type ClientRequest = TaskFeedback | SetActivePreset | DeletePreset | OpenFile | InitRequest | GetPresets | AddPreset | UpdatePreset
+interface FetchContextProviders {
+  type: "context/fetchProviders";
+  id: string,
+}
+
+interface LoadSubmenuItems {
+  type: "context/loadSubmenuItems",
+  id: string,
+  title: string,
+}
+
+export type ClientRequest = TaskFeedback | SetActivePreset | DeletePreset | OpenFile | InitRequest | GetPresets | AddPreset | UpdatePreset | FetchContextProviders | LoadSubmenuItems;
 
 export interface PresetsLoaded {
   type: 'presets-loaded';
@@ -93,7 +104,6 @@ interface OpenView {
   type: 'open-view',
   view: ViewType,
 }
-
 
 export type Event = OpenView | PresetsLoaded | OpenTaskEvent | TaskResponseEvent | InitResponse | InitialState | TaskUpdate | SidecarReadyState;
 
