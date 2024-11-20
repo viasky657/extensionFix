@@ -44,7 +44,7 @@ jobs:
       # 4. Upload the .vsix as an artifact
       - uses: actions/upload-artifact@v4
         with:
-          name: vsix
+          name: extension
           path: '*.vsix'
 
   release:
@@ -65,7 +65,7 @@ jobs:
       # Download the .vsix artifacts
       - uses: actions/download-artifact@v4
         with:
-          pattern: '*-vsix'
+          pattern: '*vsix'
           path: vsix-artifacts
           merge-multiple: true
 
@@ -75,7 +75,6 @@ jobs:
           tag_name: ${{ github.ref_name }}
           files: |
             vsix-artifacts/*.vsix
-          token: ${{ secrets.CI_GITHUB_TOKEN }}
           repository: codestoryai/extension
 
   publish:
@@ -100,15 +99,14 @@ jobs:
       # 1. Download the artifacts
       - uses: actions/download-artifact@v4
         with:
-          pattern: '*-vsix'
+          pattern: '*vsix'
           path: vsix-artifacts
           merge-multiple: true
 
       # 2. Publish the extension to VS Code Marketplace
       - name: Publish to VS Code Marketplace
         run: |
-          cd extensions/vscode
-          npx vsce publish --packagePath ../../vsix-artifacts/*.vsix
+          npx vsce publish --packagePath vsix-artifacts/*.vsix
         env:
           VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
 
@@ -116,5 +114,4 @@ jobs:
       - name: Publish (Open VSX Registry)
         continue-on-error: true
         run: |
-          cd extensions/vscode
-          npx ovsx publish -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../../vsix-artifacts/*.vsix
+          npx ovsx publish -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath vsix-artifacts/*.vsix
