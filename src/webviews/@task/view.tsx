@@ -18,8 +18,25 @@ export function TaskView() {
   const availableContextProviders = useSubmenuContext((state) => state.contextProviderDescriptions);
 
   const [showActions, setShowActions] = React.useState(false);
-  function onToggle() {
-    setShowActions(!showActions);
+
+  const acceptButtonRef = React.useRef<HTMLButtonElement>(null);
+
+  React.useEffect(() => {
+    if (showActions && acceptButtonRef.current) {
+      acceptButtonRef.current.focus();
+    }
+  }, [showActions]);
+
+  function onUserSaysNo() {
+    if (task.data) {
+      task.sendRequest('No', task.data.task.sessionId, []);
+    }
+  }
+
+  function onUserSaysYes() {
+    if (task.data) {
+      task.sendRequest('Yes', task.data.task.sessionId, []);
+    }
   }
 
   if (task.data === undefined) {
@@ -112,19 +129,33 @@ export function TaskView() {
           )}
         </section>
         <div className="sticky bottom-0 p-2">
-          <div aria-live="assertive" className={cn('mb-2 flex gap-2')}>
-            <Button type="button" className="flex flex-grow gap-2">
+          <div
+            aria-live="assertive"
+            aria-hidden={!showActions}
+            className={cn(
+              showActions ? 'translate-y-1/2 opacity-100' : 'translate-y-0 opacity-0',
+              'mb-2 flex gap-2 transition-all duration-150 ease-in-out'
+            )}
+          >
+            <Button
+              onClick={onUserSaysYes}
+              ref={acceptButtonRef}
+              type="button"
+              className="flex flex-grow items-start gap-2"
+            >
               <span aria-hidden className="codicon codicon-thumbsup-filled -ml-1 translate-y-0.5" />
-              Accept
+              Yes
             </Button>
-            <Button type="button" variant="secondary" className="flex flex-grow gap-2">
+            <Button
+              onClick={onUserSaysNo}
+              type="button"
+              variant="secondary"
+              className="flex flex-grow items-start gap-2"
+            >
               <span aria-hidden className="codicon codicon-thumbsdown -ml-1 translate-y-0.5" />
-              Reject
+              No
             </Button>
           </div>
-          <button type="button" onClick={onToggle}>
-            Toggle
-          </button>
           <Tiptap
             availableContextProviders={availableContextProviders ?? []}
             historyKey="chat"
