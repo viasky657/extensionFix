@@ -1,13 +1,38 @@
 {
-  "name": "extension",
-  "displayName": "extension",
+  "name": "sota-swe",
+  "displayName": "CodeStory: SOTA SWE",
+  "publisher": "codestoryai",
   "description": "Codestory's extension for SOTA agentic editing",
   "version": "0.0.1",
   "engines": {
-    "vscode": "^1.75.0"
+    "vscode": "^1.84.0"
   },
+   "repository": {
+    "type": "git",
+    "url": "https://github.com/codestoryai/extension"
+  },
+  "homepage": "https://codestory.ai",
   "categories": [
-    "Other"
+    "AI",
+    "Chat",
+    "Programming Languages",
+    "Education",
+    "Snippets",
+    "Testing"
+  ],
+  "keywords": [
+    "aide",
+    "codestory",
+    "claude",
+    "dev",
+    "openrouter",
+    "coding",
+    "agent",
+    "autonomous",
+    "chatgpt",
+    "sonnet",
+    "ai",
+    "llama"
   ],
   "activationEvents": [],
   "main": "./dist/extension.js",
@@ -94,7 +119,7 @@
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@types/uuid": "^9.0.2",
-    "@types/vscode": "^1.95.0",
+    "@types/vscode": "^1.84.0",
     "@typescript-eslint/eslint-plugin": "^8.10.0",
     "@typescript-eslint/parser": "^8.7.0",
     "@vscode/test-cli": "^0.0.10",
