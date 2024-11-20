@@ -1,17 +1,17 @@
+import { CostIcon } from 'components/cost-icon';
 import { RequestViewItem } from 'components/exchange/request';
 import { ResponseViewItem } from 'components/exchange/response';
+import resolveEditorContent from 'components/input/resolveInput';
 import Tiptap from 'components/input/TipTapEditor';
 import { TaskDD, TaskDL, TaskDT } from 'components/task-definition-list';
+import { UsageList } from 'components/usage-list';
 import * as React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useSubmenuContext } from 'store/submenuContext';
 import { cn } from 'utils/cn';
-import { Exchange, Task, Usage, View } from '../../model';
+import { Exchange, View } from '../../model';
 import ClaudeLogo from '../assets/claude.svg';
-import { ObjectEntry } from '../utils/types';
 import { useTask } from './use-task';
-import { CostIcon } from 'components/cost-icon';
-import { UsageList } from 'components/usage-list';
 
 export function TaskView() {
   const task = useTask();
@@ -103,14 +103,18 @@ export function TaskView() {
           <Tiptap
             availableContextProviders={availableContextProviders ?? []}
             historyKey="chat"
-            onEnter={(editorState) => {
+            onEnter={async (editorState) => {
               const sessionId = task.data?.task.sessionId;
               if (sessionId === undefined) {
                 return;
               }
 
-              const query = editorState.content?.[0]?.content?.[0]?.text || '';
-              task.sendRequest(query, sessionId);
+              const [selectedContextItems, _, content] = await resolveEditorContent(editorState);
+              const inputQuery = Array.isArray(content)
+                ? content.map((c) => c.text).join('\n')
+                : content;
+
+              task.sendRequest(inputQuery, sessionId, selectedContextItems);
 
               // Clear the editor after sending
               editorState.editor.commands.clearContent();

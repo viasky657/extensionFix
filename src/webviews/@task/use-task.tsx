@@ -1,12 +1,12 @@
-import * as React from "react";
-import { Event, Task } from "../../model";
-
+import * as React from 'react';
+import { Event, Task } from '../../model';
+import { ContextItemWithId } from '../..';
 
 export enum Status {
-  Idle = "idle",
-  Loading = "loading",
-  Success = "success",
-  Error = "error",
+  Idle = 'idle',
+  Loading = 'loading',
+  Success = 'success',
+  Error = 'error',
 }
 
 type AsyncState<T> =
@@ -15,32 +15,33 @@ type AsyncState<T> =
   | { status: Status.Success; data: T }
   | { status: Status.Error; data: undefined };
 
-
 function getTask() {
   vscode.postMessage({
-    type: 'init'
+    type: 'init',
   });
 }
 
 export function useTask() {
-  const [state, setState] = React.useState<AsyncState<{ task: Task }>>({ status: Status.Idle, data: undefined });
+  const [state, setState] = React.useState<AsyncState<{ task: Task }>>({
+    status: Status.Idle,
+    data: undefined,
+  });
 
   React.useEffect(() => {
     setState({ data: undefined, status: Status.Loading });
     getTask();
-  }, [])
-
+  }, []);
 
   // Initial message event
   React.useEffect(() => {
     const handleMessage = (event: MessageEvent<Event>) => {
       if (event.data.type === 'init-response') {
-        setState({ status: Status.Success, data: { task: event.data.task } })
+        setState({ status: Status.Success, data: { task: event.data.task } });
       }
     };
-    window.addEventListener("message", handleMessage);
+    window.addEventListener('message', handleMessage);
     return () => {
-      window.removeEventListener("message", handleMessage);
+      window.removeEventListener('message', handleMessage);
     };
   }, []);
 
@@ -61,7 +62,7 @@ export function useTask() {
       // }
 
       if (message.command === 'state-updated') {
-        setState({ data: { task: message.initialAppState.currentTask }, status: Status.Success })
+        setState({ data: { task: message.initialAppState.currentTask }, status: Status.Success });
       }
     };
 
@@ -70,14 +71,14 @@ export function useTask() {
     return () => window.removeEventListener('message', messageHandler);
   }, []);
 
-  function sendRequest(query: string, sessionId: string) {
+  function sendRequest(query: string, sessionId: string, variables: ContextItemWithId[]) {
     vscode.postMessage({
       type: 'task-feedback',
       query,
       sessionId,
+      variables,
     });
   }
-
 
   return Object.assign(state, { sendRequest });
 }

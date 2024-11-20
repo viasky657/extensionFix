@@ -1,15 +1,15 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import * as vscode from "vscode";
-import { PanelProvider } from "./PanelProvider";
-import { RepoRef, RepoRefBackend, SideCarClient } from "./sidecar/client";
-import { startSidecarBinary } from "./utilities/setupSidecarBinary";
-import { ProjectContext } from "./utilities/workspaceContext";
-import { RecentEditsRetriever } from "./server/editedFiles";
-import { AideAgentSessionProvider } from "./completions/providers/aideAgentProvider";
-import { uniqueId } from "lodash";
-import { AideAgentMode } from "./types";
-import { TerminalManager } from "./terminal/TerminalManager";
+import * as vscode from 'vscode';
+import { PanelProvider } from './PanelProvider';
+import { RepoRef, RepoRefBackend, SideCarClient } from './sidecar/client';
+import { startSidecarBinary } from './utilities/setupSidecarBinary';
+import { ProjectContext } from './utilities/workspaceContext';
+import { RecentEditsRetriever } from './server/editedFiles';
+import { AideAgentSessionProvider } from './completions/providers/aideAgentProvider';
+import { uniqueId } from 'lodash';
+import { AideAgentMode } from './types';
+import { TerminalManager } from './terminal/TerminalManager';
 // import { AideAgentSessionProvider } from "./completions/providers/aideAgentProvider";
 // import { ProjectContext } from "./utilities/workspaceContext";
 // import { RecentEditsRetriever } from "./server/editedFiles";
@@ -30,11 +30,10 @@ Example flow:
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
-
   const panelProvider = new PanelProvider(context);
   let rootPath = vscode.workspace.rootPath;
   if (!rootPath) {
-    rootPath = "";
+    rootPath = '';
   }
 
   const currentRepo = new RepoRef(
@@ -50,10 +49,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // add the recent edits retriver to the subscriptions
   // so we can grab the recent edits very quickly
-  const recentEditsRetriever = new RecentEditsRetriever(
-    300 * 1000,
-    vscode.workspace
-  );
+  const recentEditsRetriever = new RecentEditsRetriever(300 * 1000, vscode.workspace);
   context.subscriptions.push(recentEditsRetriever);
 
   // Create a terminal manager instance
@@ -66,30 +62,32 @@ export async function activate(context: vscode.ExtensionContext) {
     recentEditsRetriever,
     context,
     panelProvider,
-    terminalManager,
+    terminalManager
   );
   context.subscriptions.push(agentSessionProvider);
 
   // Show the panel immediately
   context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider("sota-swe-panel", panelProvider)
+    vscode.window.registerWebviewViewProvider('sota-swe-panel', panelProvider)
   );
 
   // sidecar binary download in background
-  startSidecarBinary(context.globalStorageUri.fsPath).then(async (sidecarUrl) => {
-    console.log("sidecarUrl", sidecarUrl);
-    const sidecarClient = new SideCarClient(sidecarUrl);
+  startSidecarBinary(context.globalStorageUri.fsPath)
+    .then(async (sidecarUrl) => {
+      console.log('sidecarUrl', sidecarUrl);
+      const sidecarClient = new SideCarClient(sidecarUrl);
 
-    const healthCheck = await sidecarClient.healthCheck();
-    console.log("Sidecar health check", healthCheck);
+      const healthCheck = await sidecarClient.healthCheck();
+      console.log('Sidecar health check', healthCheck);
 
-    // Tell the PanelProvider that the sidecar is ready
-    panelProvider.setSidecarReady(true);
-    SIDECAR_CLIENT = sidecarClient;
-  }).catch(error => {
-    console.error("Failed to start sidecar:", error);
-    vscode.window.showErrorMessage("Failed to start Sota PR Assistant sidecar");
-  });
+      // Tell the PanelProvider that the sidecar is ready
+      panelProvider.setSidecarReady(true);
+      SIDECAR_CLIENT = sidecarClient;
+    })
+    .catch((error) => {
+      console.error('Failed to start sidecar:', error);
+      vscode.window.showErrorMessage('Failed to start Sota PR Assistant sidecar');
+    });
 
   context.subscriptions.push(
     panelProvider.onMessageFromWebview(async (message) => {
@@ -97,6 +95,26 @@ export async function activate(context: vscode.ExtensionContext) {
         // here we get the message from the user
         const query = message.query;
         const sessionId = message.sessionId;
+        const webviewVariables = message.variables;
+
+        // Convert variables to VSCode format
+        const variables: vscode.ChatPromptReference[] = await Promise.all(
+          webviewVariables
+            .filter((v) => v.id.providerTitle === 'file')
+            .map(async (v) => {
+              const uri = vscode.Uri.parse(v.uri!.value);
+              const document = await vscode.workspace.openTextDocument(uri);
+              const range = new vscode.Range(
+                document.positionAt(0),
+                document.positionAt(document.getText().length)
+              );
+
+              return {
+                id: 'vscode.file',
+                value: { uri, range },
+              };
+            })
+        );
 
         // something will create the exchange id
         const exchangeId = uniqueId();
@@ -109,11 +127,11 @@ export async function activate(context: vscode.ExtensionContext) {
           exchangeId,
           agentSessionProvider.editorUrl!,
           AideAgentMode.Chat,
-          [],
-          currentRepo ?? "",
+          variables,
+          currentRepo ?? '',
           projectContext.labels,
           false,
-          'workos-fake-id',
+          'workos-fake-id'
         );
         // - have a respose somewhere and the chat model would update
         agentSessionProvider.reportAgentEventsToChat(true, stream);
@@ -144,4 +162,4 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 // This method is called when your extension is deactivated
-export function deactivate() { }
+export function deactivate() {}
