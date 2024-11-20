@@ -10,6 +10,7 @@ import { Exchange, Task, Usage, View } from '../../model';
 import ClaudeLogo from '../assets/claude.svg';
 import { ObjectEntry } from '../utils/types';
 import { useTask } from './use-task';
+import resolveEditorContent from 'components/input/resolveInput';
 
 export function TaskView() {
   const task = useTask();
@@ -99,14 +100,18 @@ export function TaskView() {
           <Tiptap
             availableContextProviders={availableContextProviders ?? []}
             historyKey="chat"
-            onEnter={(editorState) => {
+            onEnter={async (editorState) => {
               const sessionId = task.data?.task.sessionId;
               if (sessionId === undefined) {
                 return;
               }
 
-              const query = editorState.content?.[0]?.content?.[0]?.text || '';
-              task.sendRequest(query, sessionId);
+              const [selectedContextItems, _, content] = await resolveEditorContent(editorState);
+              const inputQuery = Array.isArray(content)
+                ? content.map((c) => c.text).join('\n')
+                : content;
+
+              task.sendRequest(inputQuery, sessionId, selectedContextItems);
 
               // Clear the editor after sending
               editorState.editor.commands.clearContent();

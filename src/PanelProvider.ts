@@ -1,10 +1,19 @@
 import { v4 } from 'uuid';
-import * as vscode from "vscode";
+import * as vscode from 'vscode';
 import FileContextProvider from './context/providers/FileContextProvider';
-import { IContextProvider } from "./context/providers/types";
+import { IContextProvider } from './context/providers/types';
 import { VSCodeIDE } from './ide';
-import { ClientRequest, Preset, Task, ToolThinkingToolTypeEnum, View, PresetsLoaded, Response } from "./model";
-import { getNonce } from "./webviews/utils/nonce";
+import {
+  ClientRequest,
+  Preset,
+  Task,
+  ToolThinkingToolTypeEnum,
+  View,
+  PresetsLoaded,
+  Response,
+} from './model';
+import { getNonce } from './webviews/utils/nonce';
+import { ContextItemId, ContextItemWithId } from '.';
 
 export class PanelProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
@@ -38,7 +47,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
     // load presets
     context.subscriptions.push(goToHistory, openNewTask, goToSettings);
-    const presetsArray = this.context.globalState.get('presets') as Preset[] || [];
+    const presetsArray = (this.context.globalState.get('presets') as Preset[]) || [];
     presetsArray.forEach((preset) => {
       this._presets.set(preset.id, preset);
     });
@@ -49,7 +58,6 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
   private _onDidWebviewBecomeVisible = new vscode.EventEmitter<void>();
   onDidWebviewBecomeVisible = this._onDidWebviewBecomeVisible.event;
-
 
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -66,18 +74,15 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     this._onDidWebviewBecomeVisible.fire();
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
-    const providers: IContextProvider[] = [
-      new FileContextProvider({})
-    ];
+    const providers: IContextProvider[] = [new FileContextProvider({})];
 
     // Handle messages from the webview
     webviewView.webview.onDidReceiveMessage(async (data: ClientRequest) => {
       this._onMessageFromWebview.fire(data);
 
       switch (data.type) {
-        case "init": {
+        case 'init': {
           this.context.globalState.update('active-preset-id', undefined);
-
 
           const firstPreset = Array.from(this._presets.values()).at(0);
           let activePreset = firstPreset;
@@ -100,14 +105,22 @@ export class PanelProvider implements vscode.WebviewViewProvider {
             };
           }
 
-          webviewView.webview.postMessage({ type: "init-response", task: this._runningTask, isSidecarReady: this._isSidecarReady });
+          webviewView.webview.postMessage({
+            type: 'init-response',
+            task: this._runningTask,
+            isSidecarReady: this._isSidecarReady,
+          });
           break;
         }
-        case "get-presets": {
+        case 'get-presets': {
           const activePresetId = this.context.globalState.get<string>('active-preset-id');
           const presetTuples = Array.from(this._presets.entries());
           const firstPresetId = presetTuples.at(0)?.[0];
-          const message: PresetsLoaded = { type: "presets-loaded", presets: presetTuples, activePresetId: activePresetId || firstPresetId };
+          const message: PresetsLoaded = {
+            type: 'presets-loaded',
+            presets: presetTuples,
+            activePresetId: activePresetId || firstPresetId,
+          };
           webviewView.webview.postMessage(message);
           break;
         }
@@ -116,7 +129,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
             ...data.preset,
             type: 'preset',
             createdOn: new Date().toISOString(),
-            id: v4()
+            id: v4(),
           } as Preset; // Why do we need casting?
           this._presets.set(newPreset.id, newPreset);
           this.context.globalState.update('presets', Array.from(this._presets.values()));
@@ -141,29 +154,67 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           this.context.globalState.update('active-preset-id', data.presetId);
           break;
         }
-        case "context/fetchProviders": {
+        case 'context/fetchProviders': {
           webviewView.webview.postMessage({
-            type: "context/fetchProviders/response",
-            providers: providers.map(provider => provider.description),
-            id: data.id
+            type: 'context/fetchProviders/response',
+            providers: providers.map((provider) => provider.description),
+            id: data.id,
           });
           break;
         }
-        case "context/loadSubmenuItems": {
-          const items = await providers.find(provider => provider.description.title === data.title)
+        case 'context/loadSubmenuItems': {
+          const items = await providers
+            .find((provider) => provider.description.title === data.title)
             ?.loadSubmenuItems({
               ide: this.ide,
-              fetch: (url, init) => fetch(url, init)
+              fetch: (url, init) => fetch(url, init),
             });
-          webviewView.webview.postMessage({ type: "context/loadSubmenuItems/response", items: items || [], id: data.id });
+          webviewView.webview.postMessage({
+            type: 'context/loadSubmenuItems/response',
+            items: items || [],
+            id: data.id,
+          });
+          break;
+        }
+        case 'context/getContextItems': {
+          const { name, query } = data;
+          const provider = providers?.find((provider) => provider.description.title === name);
+          if (!provider) {
+            throw new Error(`Context provider '${name}' not found`);
+          }
+
+          try {
+            const id: ContextItemId = {
+              providerTitle: provider.description.title,
+              itemId: v4(),
+            };
+
+            const items = await provider.getContextItems(query, { ide: this.ide });
+
+            const response: ContextItemWithId[] = items.map((item) => ({
+              ...item,
+              id,
+            }));
+
+            webviewView.webview.postMessage({
+              type: 'context/getContextItems/response',
+              items: response,
+              id: data.id,
+            });
+          } catch (e) {
+            console.error(e);
+            const response: ContextItemWithId[] = [];
+
+            webviewView.webview.postMessage({
+              type: 'context/getContextItems/response',
+              items: response,
+              id: data.id,
+            });
+          }
           break;
         }
       }
     });
-
-
-
-
 
     if (this._presets.size === 0) {
       // on initialisation we are able to pipe it
@@ -172,11 +223,9 @@ export class PanelProvider implements vscode.WebviewViewProvider {
         initialAppState: {
           extensionReady: false,
           view: View.Preset,
-        }
+        },
       });
     } else {
-
-
       const firstPreset = Array.from(this._presets.values()).at(0);
       let activePreset = firstPreset;
 
@@ -198,32 +247,34 @@ export class PanelProvider implements vscode.WebviewViewProvider {
         };
       }
 
-
       this._view.webview.postMessage({
         command: 'initial-state',
         initialAppState: {
           extensionReady: false,
           activePreset,
           currentTask: this._runningTask,
-        }
+        },
       });
 
       if (activePreset) {
         this._view.webview.postMessage({
-          type: "open-view",
+          type: 'open-view',
           view: View.Task,
         });
       } else {
         this._view.webview.postMessage({
-          type: "open-view",
+          type: 'open-view',
           view: View.Preset,
         });
       }
-
     }
   }
 
-  public addToolTypeFound(sessionId: string, exchangeId: string, toolType: ToolThinkingToolTypeEnum) {
+  public addToolTypeFound(
+    sessionId: string,
+    exchangeId: string,
+    toolType: ToolThinkingToolTypeEnum
+  ) {
     if (this._runningTask && this._runningTask.sessionId === sessionId) {
       const exchangePossible = this._runningTask.exchanges.find((exchange) => {
         return exchange.exchangeId === exchangeId;
@@ -242,20 +293,26 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           extensionReady: false,
           view: View.Task,
           currentTask: this._runningTask,
-          loadedTasks: new Map()
-        }
+          loadedTasks: new Map(),
+        },
       });
     }
   }
 
-  public addToolParameterFound(sessionId: string, exchangeId: string, fieldName: string, fieldContentDelta: string, fieldContentUpUntilNow: string) {
+  public addToolParameterFound(
+    sessionId: string,
+    exchangeId: string,
+    fieldName: string,
+    fieldContentDelta: string,
+    fieldContentUpUntilNow: string
+  ) {
     if (this._runningTask && this._runningTask.sessionId === sessionId) {
       const exchangePossible = this._runningTask.exchanges.find((exchange) => {
         return exchange.exchangeId === exchangeId;
       }) as Response | undefined;
       if (exchangePossible) {
         const index = exchangePossible.parts.findIndex((part) => {
-          return (part.type === 'toolParameter' && part.toolParameters.parameterName === fieldName);
+          return part.type === 'toolParameter' && part.toolParameters.parameterName === fieldName;
         });
         if (index !== -1) {
           if (exchangePossible.parts[index].type === 'toolParameter') {
@@ -268,7 +325,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
               contentDelta: fieldContentDelta,
               contentUpUntilNow: fieldContentUpUntilNow,
               parameterName: fieldName,
-            }
+            },
           });
         }
       }
@@ -280,8 +337,8 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           extensionReady: false,
           view: View.Task,
           currentTask: this._runningTask,
-          loadedTasks: new Map()
-        }
+          loadedTasks: new Map(),
+        },
       });
     }
   }
@@ -294,12 +351,12 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
       if (exchangePossible) {
         const index = exchangePossible.parts.findIndex((part) => {
-          return (part.type === 'toolThinking');
+          return part.type === 'toolThinking';
         });
         if (index !== -1) {
           if (exchangePossible.parts[index].type === 'toolThinking' && thinking) {
             exchangePossible.parts[index].markdown = {
-              type: "markdown",
+              type: 'markdown',
               rawMarkdown: thinking,
             };
           }
@@ -308,9 +365,9 @@ export class PanelProvider implements vscode.WebviewViewProvider {
             exchangePossible.parts.push({
               type: 'toolThinking',
               markdown: {
-                type: "markdown",
+                type: 'markdown',
                 rawMarkdown: thinking,
-              }
+              },
             });
           }
         }
@@ -323,8 +380,8 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           extensionReady: false,
           view: View.Task,
           currentTask: this._runningTask,
-          loadedTasks: new Map()
-        }
+          loadedTasks: new Map(),
+        },
       });
     }
   }
@@ -336,8 +393,8 @@ export class PanelProvider implements vscode.WebviewViewProvider {
       }) as Response | undefined;
       if (exchangePossible && delta) {
         exchangePossible.parts.push({
-          type: "markdown",
-          rawMarkdown: delta
+          type: 'markdown',
+          rawMarkdown: delta,
         });
       }
 
@@ -348,8 +405,8 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           extensionReady: false,
           view: View.Task,
           currentTask: this._runningTask,
-          loadedTasks: new Map()
-        }
+          loadedTasks: new Map(),
+        },
       });
     }
   }
@@ -359,9 +416,11 @@ export class PanelProvider implements vscode.WebviewViewProvider {
    */
   public doesExchangeExist(sessionId: string, exchangeId: string): boolean {
     if (this._runningTask && this._runningTask.sessionId === sessionId) {
-      if (this._runningTask.exchanges.find((exchange) => {
-        return exchange.exchangeId === exchangeId;
-      })) {
+      if (
+        this._runningTask.exchanges.find((exchange) => {
+          return exchange.exchangeId === exchangeId;
+        })
+      ) {
         return true;
       } else {
         return false;
@@ -375,7 +434,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     if (this._runningTask && this._runningTask.sessionId === sessionId) {
       const exchangeId = v4();
       this._runningTask.exchanges.push({
-        type: "response",
+        type: 'response',
         parts: [],
         exchangeId,
         username: 'testing',
@@ -389,8 +448,8 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           extensionReady: false,
           view: View.Task,
           currentTask: this._runningTask,
-          loadedTasks: new Map()
-        }
+          loadedTasks: new Map(),
+        },
       });
       return exchangeId;
     }
@@ -403,7 +462,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
         this._runningTask.query = request;
       }
       this._runningTask.exchanges.push({
-        type: "request",
+        type: 'request',
         message: request,
         exchangeId,
         sessionId,
@@ -417,8 +476,8 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           extensionReady: false,
           view: View.Task,
           currentTask: this._runningTask,
-          loadedTasks: new Map()
-        }
+          loadedTasks: new Map(),
+        },
       });
     }
   }
@@ -430,8 +489,8 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     }
 
     const sidecarReadyState = {
-      type: "sidecar-ready-state",
-      isSidecarReady: this._isSidecarReady
+      type: 'sidecar-ready-state',
+      isSidecarReady: this._isSidecarReady,
     };
 
     // tell the webview that the sidecar is ready
@@ -446,20 +505,20 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
   private _getHtmlForWebview(webview: vscode.Webview) {
     const scriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "dist", "index.js")
+      vscode.Uri.joinPath(this._extensionUri, 'dist', 'index.js')
     );
 
     const styleUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "dist", "style.css")
+      vscode.Uri.joinPath(this._extensionUri, 'dist', 'style.css')
     );
 
     const codiconsUri = webview.asWebviewUri(
       vscode.Uri.joinPath(
         this._extensionUri,
-        "node_modules",
-        "@vscode/codicons",
-        "dist",
-        "codicon.css"
+        'node_modules',
+        '@vscode/codicons',
+        'dist',
+        'codicon.css'
       )
     );
 
