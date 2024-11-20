@@ -16,7 +16,7 @@
     "commands": [
       {
         "command": "sota-swe.go-to-new-task",
-        "title": "Start new task 0",
+        "title": "Start new task",
         "icon": "$(add)"
       },
       {
@@ -35,17 +35,17 @@
         {
           "command": "sota-swe.go-to-settings",
           "when": "view == sota-swe-panel",
-          "group": "navigation"
+          "group": "navigation@2"
         },
         {
           "command": "sota-swe.go-to-history",
           "when": "view == sota-swe-panel",
-          "group": "navigation"
+          "group": "navigation@1"
         },
         {
           "command": "sota-swe.go-to-new-task",
           "when": "view == sota-swe-panel",
-          "group": "navigation"
+          "group": "navigation@0"
         }
       ]
     },
