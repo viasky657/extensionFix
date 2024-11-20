@@ -25,12 +25,12 @@ export function PresetForm(props: PresetFormProps) {
   }
 
   return (
-    <form id={formId} className={cn(className, 'flex flex-col gap-2 text-description')} {...rest}>
+    <form id={formId} className={cn(className, 'flex flex-col gap-4 text-description')} {...rest}>
       {initialData?.id && <input type="hidden" name="id" value={initialData?.id} />}
-      <label htmlFor="provider">
+      <label htmlFor="provider" className="font-medium text-foreground">
         Provider
         <Select
-          className="w-full"
+          className="mt-1 w-full"
           id="provider"
           name="provider"
           value={selectedProvider}
@@ -59,13 +59,13 @@ export function PresetForm(props: PresetFormProps) {
             defaultValue={initialData?.apiKey}
           />
         </label>
-        <label className="flex items-start">
+        <label className="mt-2 flex items-start">
           <Checkbox name="custom-base-URL" />
           <span className="ml-2">Use custom base URL</span>
         </label>
       </fieldset>
 
-      <label>
+      <label className="font-medium text-foreground">
         Model
         <Input
           className="mt-1 w-full"
@@ -77,19 +77,19 @@ export function PresetForm(props: PresetFormProps) {
       </label>
 
       <fieldset>
-        <legend>Permissions</legend>
-        <p>
+        <legend className="font-medium text-foreground">Permissions</legend>
+        <p className="text-description opacity-70">
           SotaSWE is smart, careful, and uses git to save changes - it works best with all
           permissions set to 'always'.
         </p>
-        <ul className="grid grid-cols-[auto,_1fr]">
+        <ul className="mt-2 grid grid-cols-[auto,_min-content] text-description">
           <li className="contents">
             <label htmlFor="permissions.list-files">List files</label>
             <PermissionSelect
               className="w-full border-none"
               id="permissions.list-files"
               name="permissions[listFiles]"
-              defaultValue={initialData?.permissions.listFiles}
+              defaultValue={initialData?.permissions.listFiles || PermissionState.Always}
             />
           </li>
           <li className="contents">
@@ -98,7 +98,7 @@ export function PresetForm(props: PresetFormProps) {
               className="w-full border-none"
               id="write-code"
               name="permissions[codeEditing]"
-              defaultValue={initialData?.permissions.codeEditing}
+              defaultValue={initialData?.permissions.codeEditing || PermissionState.Always}
             />
           </li>
           <li className="contents">
@@ -107,21 +107,21 @@ export function PresetForm(props: PresetFormProps) {
               className="w-full border-none"
               id="permissions.terminal-commands"
               name="permissions[terminalCommands]"
-              defaultValue={initialData?.permissions.terminalCommands}
+              defaultValue={initialData?.permissions.terminalCommands || PermissionState.Always}
             />
           </li>
         </ul>
       </fieldset>
 
-      <label htmlFor="name">
+      <label htmlFor="name" className="font-medium text-foreground">
         Preset name
-        <Input className="w-full" id="name" name="name" defaultValue={initialData?.name} />
+        <Input className="mt-1 w-full" id="name" name="name" defaultValue={initialData?.name} />
       </label>
 
-      <label htmlFor="customInstructions">
+      <label htmlFor="customInstructions" className="font-medium text-foreground">
         Custom instructions
         <Textarea
-          className="w-full"
+          className="mt-1 w-full"
           id="customInstructions"
           name="customInstructions"
           defaultValue={initialData?.customInstructions}
@@ -136,9 +136,24 @@ export function PermissionSelect(props: SelectProps) {
     <Select {...props}>
       {Object.values(PermissionState).map((ps) => (
         <Option key={ps} value={ps}>
-          {ps}
+          <div className="flex items-start gap-2">
+            <span
+              className={`codicon codicon-${getPermissionCodiconId(ps)} translate-y-0.5 text-description opacity-75`}
+              aria-hidden
+            />
+            {ps}
+          </div>
         </Option>
       ))}
     </Select>
   );
+}
+
+function getPermissionCodiconId(permissionState: PermissionState) {
+  switch (permissionState) {
+    case PermissionState.Always:
+      return 'check-all';
+    case PermissionState.Ask:
+      return 'comment';
+  }
 }
