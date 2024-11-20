@@ -65,6 +65,10 @@ async function webview() {
     platform: "browser",
     outdir: "dist",
     jsx: "automatic",
+    define: {
+      'process.env.NODE_ENV': production ? '"production"' : '"development"',
+      'process.env.IS_PRODUCTION': production ? 'true' : 'false'
+    },
     // logLevel: 'silent',
     plugins: [
       stylePlugin({

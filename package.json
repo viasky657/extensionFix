@@ -4,6 +4,10 @@
   "publisher": "codestoryai",
   "description": "Codestory's extension for SOTA agentic editing",
   "version": "0.0.1",
+  "private": true,
+  "browser": {
+    "webview": "./dist/index.js"
+  },
   "engines": {
     "vscode": "^1.84.0"
   },
