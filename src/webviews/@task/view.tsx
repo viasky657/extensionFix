@@ -1,10 +1,8 @@
-import { CostIcon } from 'components/cost-icon';
 import { RequestViewItem } from 'components/exchange/request';
 import { ResponseViewItem } from 'components/exchange/response';
 import resolveEditorContent from 'components/input/resolveInput';
 import Tiptap from 'components/input/TipTapEditor';
 import { TaskDD, TaskDL, TaskDT } from 'components/task-definition-list';
-import { UsageList } from 'components/usage-list';
 import * as React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useSubmenuContext } from 'store/submenuContext';
@@ -12,11 +10,17 @@ import { cn } from 'utils/cn';
 import { Exchange, View } from '../../model';
 import { useTask } from './use-task';
 import { PresetLogo } from 'components/preset';
+import { Button } from 'components/button';
 
 export function TaskView() {
   const task = useTask();
   const [summaryShown, setSummaryShown] = React.useState(false);
   const availableContextProviders = useSubmenuContext((state) => state.contextProviderDescriptions);
+
+  const [showActions, setShowActions] = React.useState(false);
+  function onToggle() {
+    setShowActions(!showActions);
+  }
 
   if (task.data === undefined) {
     return <div>Loading...</div>;
@@ -26,9 +30,9 @@ export function TaskView() {
     return <Navigate to={`/${View.Preset}`} />;
   }
 
-  const { exchanges, preset, cost, usage, query } = task.data.task;
+  const { exchanges, preset, query } = task.data.task;
   const isQueryEmpty = query === '';
-  const showUsage = Object.keys(usage).length > 0;
+  //const showUsage = Object.keys(usage).length > 0;
 
   return (
     <main className="flex h-full flex-col">
@@ -104,6 +108,19 @@ export function TaskView() {
           )}
         </section>
         <div className="sticky bottom-0 p-2">
+          <div aria-live="assertive" className={cn('mb-2 flex gap-2')}>
+            <Button type="button" className="flex flex-grow gap-2">
+              <span aria-hidden className="codicon codicon-thumbsup-filled -ml-1 translate-y-0.5" />
+              Accept
+            </Button>
+            <Button type="button" variant="secondary" className="flex flex-grow gap-2">
+              <span aria-hidden className="codicon codicon-thumbsdown -ml-1 translate-y-0.5" />
+              Reject
+            </Button>
+          </div>
+          <button type="button" onClick={onToggle}>
+            Toggle
+          </button>
           <Tiptap
             availableContextProviders={availableContextProviders ?? []}
             historyKey="chat"

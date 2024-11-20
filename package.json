@@ -70,7 +70,7 @@
         {
           "id": "sota-swe",
           "title": "SotaSWE",
-          "icon": "./src/icon.svg"
+          "icon": "./src/icon.png"
         }
       ]
     },
