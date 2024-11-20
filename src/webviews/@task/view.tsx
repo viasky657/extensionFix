@@ -48,14 +48,14 @@ export function TaskView() {
                 <ClaudeLogo width={12} height={12} className="mr-1" />
                 <span className="whitespace-nowrap">{preset.name}</span>
               </dd>
-              {cost && (
+              {/* {cost && (
                 <React.Fragment>
                   <dt className="sr-only">API cost</dt>
                   <dd>
                     <span>{cost}$</span>
                   </dd>
                 </React.Fragment>
-              )}
+              )} */}
             </dl>
           )}
         </div>
@@ -71,7 +71,7 @@ export function TaskView() {
                 <ClaudeLogo className="h-3 w-3 flex-shrink-0 translate-y-0.5" /> {preset.name}
               </span>
             </TaskDD>
-            <React.Fragment>
+            {/* <React.Fragment>
               <TaskDT>API cost</TaskDT>
               <TaskDD className="flex gap-1">
                 <CostIcon className="translate-y-0.5" />
@@ -85,11 +85,11 @@ export function TaskView() {
                   <UsageList usage={usage} />
                 </TaskDD>
               </React.Fragment>
-            )}
+            )} */}
           </TaskDL>
         )}
       </header>
-      <div className={cn('flex flex-col gap-2', exchanges.length > 0 && 'flex-grow')}>
+      <div className="flex flex-grow flex-col gap-2">
         <section className="flex-grow p-2">
           {exchanges && (
             <ol>
