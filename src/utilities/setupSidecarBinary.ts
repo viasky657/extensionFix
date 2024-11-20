@@ -3,59 +3,51 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { window, ProgressLocation } from "vscode";
-import { promisify } from "util";
-import * as path from "path";
-import * as fs from "fs";
-import * as os from "os";
-import { spawn, spawnSync, exec, execFile } from "child_process";
-import { downloadFromGCPBucket, downloadUsingURL } from "./gcpBucket";
-import { sidecarUseSelfRun } from "./sidecarUrl";
+import { exec, execFile, spawn, spawnSync } from 'child_process';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+import { promisify } from 'util';
+import { ProgressLocation, window } from 'vscode';
+import { downloadFromGCPBucket, downloadUsingURL } from './gcpBucket';
+import { sidecarUseSelfRun } from './sidecarUrl';
 
 // Here I want to ask a question about what value does the extracDir take
 // it should be pretty easy to do that
 function unzipSidecarZipFolder(source: string, extractDir: string) {
-  if (source.endsWith(".zip")) {
-    if (process.platform === "win32") {
-      spawnSync("powershell.exe", [
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-NonInteractive",
-        "-NoLogo",
-        "-Command",
+  if (source.endsWith('.zip')) {
+    if (process.platform === 'win32') {
+      spawnSync('powershell.exe', [
+        '-NoProfile',
+        '-ExecutionPolicy',
+        'Bypass',
+        '-NonInteractive',
+        '-NoLogo',
+        '-Command',
         `Microsoft.PowerShell.Archive\\Expand-Archive -Path "${source}" -DestinationPath "${extractDir}"`,
       ]);
     } else {
-      spawnSync("unzip", ["-o", source, "-d", `${extractDir}`]);
+      spawnSync('unzip', ['-o', source, '-d', `${extractDir}`]);
     }
   } else {
     // tar does not create extractDir by default
     if (!fs.existsSync(extractDir)) {
       fs.mkdirSync(extractDir);
     }
-    spawnSync("tar", [
-      "-xzf",
-      source,
-      "-C",
-      extractDir,
-      "--strip-components",
-      "1",
-    ]);
+    spawnSync('tar', ['-xzf', source, '-C', extractDir, '--strip-components', '1']);
   }
 }
 
 // We are going to use a static port right now and nothing else
 export function getSidecarBinaryURL() {
-  return "http://127.0.0.1:42424";
+  return 'http://127.0.0.1:42424';
 }
 
 // We are hardcoding the version of the sidecar binary here, so we can figure out
 // if the version we are looking at is okay, or we need to download a new binary
 // for now, lets keep it as it is and figure out a way to update the hash on
 // important updates
-export const SIDECAR_VERSION =
-  "ce0cebc1afd9fa590a469a9abb7767edbb0889fea99b378f99808cbd7e88ff6c";
+export const SIDECAR_VERSION = 'ce0cebc1afd9fa590a469a9abb7767edbb0889fea99b378f99808cbd7e88ff6c';
 
 async function checkCorrectVersionRunning(url: string): Promise<boolean> {
   try {
@@ -69,14 +61,12 @@ async function checkCorrectVersionRunning(url: string): Promise<boolean> {
   }
 }
 
-export async function runCommand(
-  cmd: string
-): Promise<[string, string | undefined]> {
-  let stdout = "";
-  let stderr = "";
+export async function runCommand(cmd: string): Promise<[string, string | undefined]> {
+  let stdout = '';
+  let stderr = '';
   try {
     const output = await promisify(exec)(cmd, {
-      shell: process.platform === "win32" ? "powershell.exe" : undefined,
+      shell: process.platform === 'win32' ? 'powershell.exe' : undefined,
     });
     stdout = output.stdout;
     stderr = output.stderr;
@@ -85,7 +75,7 @@ export async function runCommand(
     stdout = e.stdout;
   }
 
-  const stderrOrUndefined = stderr === "" ? undefined : stderr;
+  const stderrOrUndefined = stderr === '' ? undefined : stderr;
   return [stdout, stderrOrUndefined];
 }
 
@@ -107,7 +97,7 @@ async function checkServerRunning(serverUrl: string): Promise<boolean> {
 }
 
 function killProcessOnPort(port: number) {
-  if (os.platform() === "win32") {
+  if (os.platform() === 'win32') {
     // Find the process ID using netstat (this command is for Windows)
     exec(`netstat -ano | findstr :${port}`, (error, stdout) => {
       if (error) {
@@ -132,30 +122,27 @@ function killProcessOnPort(port: number) {
     });
   } else {
     // Find the process ID using lsof (this command is for macOS/Linux)
-    exec(
-      `lsof -i :${port} | grep LISTEN | awk '{print $2}'`,
-      (error, stdout) => {
-        if (error) {
-          console.error(`exec error: ${error}`);
-          return;
-        }
-
-        const pid = stdout.trim();
-
-        if (pid) {
-          // Kill the process
-          execFile("kill", ["-2", `${pid}`], (killError) => {
-            if (killError) {
-              console.error(`Error killing process: ${killError}`);
-              return;
-            }
-            // console.log(`Killed process with PID: ${pid}`);
-          });
-        } else {
-          // console.log(`No process running on port ${port}`);
-        }
+    exec(`lsof -i :${port} | grep LISTEN | awk '{print $2}'`, (error, stdout) => {
+      if (error) {
+        console.error(`exec error: ${error}`);
+        return;
       }
-    );
+
+      const pid = stdout.trim();
+
+      if (pid) {
+        // Kill the process
+        execFile('kill', ['-2', `${pid}`], (killError) => {
+          if (killError) {
+            console.error(`Error killing process: ${killError}`);
+            return;
+          }
+          // console.log(`Killed process with PID: ${pid}`);
+        });
+      } else {
+        // console.log(`No process running on port ${port}`);
+      }
+    });
   }
 }
 
@@ -174,12 +161,7 @@ async function checkOrKillRunningServer(serverUrl: string): Promise<boolean> {
   return false;
 }
 
-export async function startSidecarBinaryWithLocal(
-  installLocation: string
-): Promise<boolean> {
-  // Fixing the variable name here from sserverUrl -> serverUrl
-  // should be automatig, or can we really do it with lsp
-  return true;
+export async function startSidecarBinaryWithLocal(installLocation: string): Promise<boolean> {
   const serverUrl = getSidecarBinaryURL();
   const shouldUseSelfRun = sidecarUseSelfRun();
   if (shouldUseSelfRun) {
@@ -187,10 +169,7 @@ export async function startSidecarBinaryWithLocal(
   }
 
   // this is where the new binaries are stored
-  const sidecarBinPath = path.join(
-    installLocation,
-    "sidecar_bin",
-  );
+  const sidecarBinPath = path.join(installLocation, 'sidecar_bin');
 
   if (fs.existsSync(sidecarBinPath)) {
     try {
@@ -199,7 +178,6 @@ export async function startSidecarBinaryWithLocal(
     } catch (e) {
       return false;
     }
-
   }
 
   return false;
@@ -215,49 +193,48 @@ export async function startSidecarBinary(
   // we have to figure out how to copy them together
   // console.log('starting sidecar binary');
   // console.log('installLocation', installLocation);
-  return "http://127.0.0.1:42424";
-
   const selfStart = await startSidecarBinaryWithLocal(extensionBasePath);
   if (selfStart) {
-    return "http://127.0.0.1:42424";
+    return 'http://127.0.0.1:42424';
   }
+
   // Check vscode settings
   const serverUrl = getSidecarBinaryURL();
   const shouldUseSelfRun = sidecarUseSelfRun();
   if (shouldUseSelfRun) {
     return serverUrl;
   }
-  if (serverUrl !== "http://127.0.0.1:42424") {
+  if (serverUrl !== 'http://127.0.0.1:42424') {
     // console.log('Sidecar server is being run manually, skipping start');
-    return "http://127.0.0.1:42424";
+    return 'http://127.0.0.1:42424';
   }
 
   // Check if we are running the correct version, or else we download a new version
   if (await checkCorrectVersionRunning(serverUrl)) {
-    return "http://127.0.0.1:42424";
+    return 'http://127.0.0.1:42424';
   }
 
   // First let's kill the running version
   await checkOrKillRunningServer(serverUrl);
 
   // Download the server executable
-  const bucket = "sidecar-bin";
+  const bucket = 'sidecar-bin';
   const fileName =
-    os.platform() === "win32"
-      ? "windows/sidecar.zip"
-      : os.platform() === "darwin"
-        ? "mac/sidecar.zip"
-        : "linux/sidecar.zip";
+    os.platform() === 'win32'
+      ? 'windows/sidecar.zip'
+      : os.platform() === 'darwin'
+        ? 'mac/sidecar.zip'
+        : 'linux/sidecar.zip';
 
-  const zipDestination = path.join(extensionBasePath, "sidecar_zip.zip");
-  const sidecarDestination = path.join(extensionBasePath, "sidecar_bin");
+  const zipDestination = path.join(extensionBasePath, 'sidecar_zip.zip');
+  const sidecarDestination = path.join(extensionBasePath, 'sidecar_bin');
 
   // First, check if the server is already downloaded
   await window.withProgress(
     {
       location: ProgressLocation.SourceControl,
       // allow-any-unicode-next-line
-      title: "Downloading the sidecar binary 🦀",
+      title: 'Downloading the sidecar binary 🦀',
       cancellable: false,
     },
     async () => {
@@ -278,34 +255,24 @@ export async function startSidecarBinary(
   fs.unlinkSync(zipDestination);
   // Get name of the corresponding executable for platform
   await runSideCarBinary(sidecarDestination, serverUrl);
-  return "http://127.0.0.1:42424";
+  return 'http://127.0.0.1:42424';
 }
 
 async function runSideCarBinary(sidecarDestination: string, serverUrl: string) {
   let webserverPath = null;
-  if (os.platform() === "win32") {
-    webserverPath = path.join(
-      sidecarDestination,
-      "target",
-      "release",
-      "webserver.exe"
-    );
+  if (os.platform() === 'win32') {
+    webserverPath = path.join(sidecarDestination, 'target', 'release', 'webserver.exe');
   } else {
-    webserverPath = path.join(
-      sidecarDestination,
-      "target",
-      "release",
-      "webserver"
-    );
+    webserverPath = path.join(sidecarDestination, 'target', 'release', 'webserver');
   }
 
-  if (os.platform() === "darwin" || os.platform() === "linux") {
+  if (os.platform() === 'darwin' || os.platform() === 'linux') {
     // Now we want to change the permissions for the following files:
     // target/release/webserver
     fs.chmodSync(webserverPath, 0o7_5_5);
   }
 
-  if (os.platform() === "darwin") {
+  if (os.platform() === 'darwin') {
     // We need to run this command on the darwin platform
     await runCommand(`xattr -dr com.apple.quarantine ${webserverPath}`);
   }
@@ -335,55 +302,44 @@ async function runSideCarBinary(sidecarDestination: string, serverUrl: string) {
         windowsHide: true,
       };
       const macLinuxSettings = {};
-      const settings: any =
-        os.platform() === "win32" ? windowsSettings : macLinuxSettings;
+      const settings: any = os.platform() === 'win32' ? windowsSettings : macLinuxSettings;
 
-      let sidecarBinary = "";
-      if (os.platform() === "win32") {
-        sidecarBinary = path.join(
-          sidecarDestination,
-          "target",
-          "release",
-          "webserver.exe"
-        );
+      let sidecarBinary = '';
+      if (os.platform() === 'win32') {
+        sidecarBinary = path.join(sidecarDestination, 'target', 'release', 'webserver.exe');
       } else {
-        sidecarBinary = path.join(
-          sidecarDestination,
-          "target",
-          "release",
-          "webserver"
-        );
+        sidecarBinary = path.join(sidecarDestination, 'target', 'release', 'webserver');
       }
       // console.log('what are the args');
       // console.log(args, sidecarBinary);
       const child = spawn(sidecarBinary, settings);
 
       // Either unref to avoid zombie process, or listen to events because you can
-      if (os.platform() === "win32") {
-        child.stdout.on("data", (data: any) => {
+      if (os.platform() === 'win32') {
+        child.stdout.on('data', (data: any) => {
           console.log(`stdout: ${data}`);
         });
-        child.stderr.on("data", (data: any) => {
+        child.stderr.on('data', (data: any) => {
           console.log(`stderr: ${data}`);
         });
-        child.on("error", (err: any) => {
+        child.on('error', (err: any) => {
           if (attempts < maxAttempts) {
             retry();
           } else {
-            console.error("Failed to start subprocess.", err);
+            console.error('Failed to start subprocess.', err);
           }
         });
-        child.on("exit", (code: any, signal: any) => {
-          console.log("Subprocess exited with code", code, signal);
+        child.on('exit', (code: any, signal: any) => {
+          console.log('Subprocess exited with code', code, signal);
         });
-        child.on("close", (code: any, signal: any) => {
-          console.log("Subprocess closed with code", code, signal);
+        child.on('close', (code: any, signal: any) => {
+          console.log('Subprocess closed with code', code, signal);
         });
       } else {
         child.unref();
       }
     } catch (e: any) {
-      console.log("Error starting server:", e);
+      console.log('Error starting server:', e);
       retry();
     }
   };

@@ -1,18 +1,13 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
+import { uniqueId } from 'lodash';
 import * as vscode from 'vscode';
+import { AideAgentSessionProvider } from './completions/providers/aideAgentProvider';
 import { PanelProvider } from './PanelProvider';
+import { RecentEditsRetriever } from './server/editedFiles';
 import { RepoRef, RepoRefBackend, SideCarClient } from './sidecar/client';
+import { TerminalManager } from './terminal/TerminalManager';
+import { AideAgentMode } from './types';
 import { startSidecarBinary } from './utilities/setupSidecarBinary';
 import { ProjectContext } from './utilities/workspaceContext';
-import { RecentEditsRetriever } from './server/editedFiles';
-import { AideAgentSessionProvider } from './completions/providers/aideAgentProvider';
-import { uniqueId } from 'lodash';
-import { AideAgentMode } from './types';
-import { TerminalManager } from './terminal/TerminalManager';
-// import { AideAgentSessionProvider } from "./completions/providers/aideAgentProvider";
-// import { ProjectContext } from "./utilities/workspaceContext";
-// import { RecentEditsRetriever } from "./server/editedFiles";
 
 export let SIDECAR_CLIENT: SideCarClient | null = null;
 
@@ -74,11 +69,9 @@ export async function activate(context: vscode.ExtensionContext) {
   // sidecar binary download in background
   startSidecarBinary(context.globalStorageUri.fsPath)
     .then(async (sidecarUrl) => {
-      console.log('sidecarUrl', sidecarUrl);
       const sidecarClient = new SideCarClient(sidecarUrl);
-
-      const healthCheck = await sidecarClient.healthCheck();
-      console.log('Sidecar health check', healthCheck);
+      // Perform a health check
+      await sidecarClient.healthCheck();
 
       // Tell the PanelProvider that the sidecar is ready
       panelProvider.setSidecarReady(true);
@@ -86,7 +79,7 @@ export async function activate(context: vscode.ExtensionContext) {
     })
     .catch((error) => {
       console.error('Failed to start sidecar:', error);
-      vscode.window.showErrorMessage('Failed to start Sota PR Assistant sidecar');
+      vscode.window.showErrorMessage('Failed to start sidecar for SOTA SWE extension');
     });
 
   context.subscriptions.push(
