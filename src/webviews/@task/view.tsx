@@ -1,3 +1,4 @@
+import { Button } from 'components/button';
 import { RequestViewItem } from 'components/exchange/request';
 import { ResponseViewItem } from 'components/exchange/response';
 import resolveEditorContent from 'components/input/resolveInput';
@@ -15,6 +16,11 @@ export function TaskView() {
   const task = useTask();
   const [summaryShown, setSummaryShown] = React.useState(false);
   const availableContextProviders = useSubmenuContext((state) => state.contextProviderDescriptions);
+
+  const [showActions, setShowActions] = React.useState(false);
+  function onToggle() {
+    setShowActions(!showActions);
+  }
 
   if (task.data === undefined) {
     return <div>Loading...</div>;
@@ -106,6 +112,19 @@ export function TaskView() {
           )}
         </section>
         <div className="sticky bottom-0 p-2">
+          <div aria-live="assertive" className={cn('mb-2 flex gap-2')}>
+            <Button type="button" className="flex flex-grow gap-2">
+              <span aria-hidden className="codicon codicon-thumbsup-filled -ml-1 translate-y-0.5" />
+              Accept
+            </Button>
+            <Button type="button" variant="secondary" className="flex flex-grow gap-2">
+              <span aria-hidden className="codicon codicon-thumbsdown -ml-1 translate-y-0.5" />
+              Reject
+            </Button>
+          </div>
+          <button type="button" onClick={onToggle}>
+            Toggle
+          </button>
           <Tiptap
             availableContextProviders={availableContextProviders ?? []}
             historyKey="chat"
