@@ -63,9 +63,10 @@ export function PresetView() {
       <header className="mb-2 flex items-start gap-2 text-description">
         <button
           type="button"
-          className="rounded p-1 hover:bg-button-secondary-hover-background"
+          className="group relative overflow-hidden rounded p-1"
           onClick={onGoBack}
         >
+          <div className="absolute inset-0 -z-10 brightness-125 group-hover:bg-panel-background" />
           <span aria-hidden className="codicon codicon-chevron-left translate-y-0.5" />
           <span className="sr-only">Go back</span>
         </button>
