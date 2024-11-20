@@ -27,11 +27,11 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     this._extensionUri = context.extensionUri;
     this.ide = new VSCodeIDE();
 
-    const goToHistory = vscode.commands.registerCommand('sota-swe.go-to-history', () => {
-      if (this._view) {
-        this._view.webview.postMessage({ type: 'open-view', view: View.History });
-      }
-    });
+    // const goToHistory = vscode.commands.registerCommand('sota-swe.go-to-history', () => {
+    //   if (this._view) {
+    //     this._view.webview.postMessage({ type: 'open-view', view: View.History });
+    //   }
+    // });
 
     const openNewTask = vscode.commands.registerCommand('sota-swe.go-to-new-task', () => {
       if (this._view) {
@@ -46,7 +46,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     });
 
     // load presets
-    context.subscriptions.push(goToHistory, openNewTask, goToSettings);
+    context.subscriptions.push(openNewTask, goToSettings);
     const presetsArray = (this.context.globalState.get('presets') as Preset[]) || [];
     presetsArray.forEach((preset) => {
       this._presets.set(preset.id, preset);

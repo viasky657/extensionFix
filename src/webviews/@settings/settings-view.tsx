@@ -1,21 +1,25 @@
 import * as React from 'react';
 import { Preset, View } from '../../model';
 import { Button } from 'components/button';
-import { usePresets } from './use-preset';
+import { getPresets, PresetsData, usePresets } from './use-preset';
 import { cn } from 'utils/cn';
-import { Link } from 'react-router-dom';
+import { Link, useLoaderData } from 'react-router-dom';
 import { PresetLogo } from 'components/preset';
+import { LoaderData } from 'utils/types';
+
+type ViewData = PresetsData;
+
+export async function loadSettings(): Promise<ViewData> {
+  return await getPresets();
+}
 
 export function SettingsView() {
-  const presets = usePresets();
+  const presetsData = useLoaderData() as LoaderData<typeof loadSettings>;
+  const { setActivePreset, deletePreset } = usePresets(presetsData);
 
-  let presetsArray: Preset[] = [];
-
-  if (presets.status === 'success') {
-    presetsArray = Array.from(presets.data.presets.values()).sort(
-      (a, b) => new Date(b.createdOn).getTime() - new Date(a.createdOn).getTime()
-    );
-  }
+  const presetsArray = Array.from(presetsData.presets.values()).sort(
+    (a, b) => new Date(b.createdOn).getTime() - new Date(a.createdOn).getTime()
+  );
 
   return (
     <main className="flex flex-grow flex-col p-2">
@@ -25,21 +29,20 @@ export function SettingsView() {
           <Link to={`/${View.Preset}`}>Create new</Link>
         </Button>
       </header>
-      {presets.isLoading && <div className="flex items-center justify-center">Loading...</div>}
-      {presets.isSuccess && presetsArray.length > 0 && (
+      {presetsArray.length > 0 && (
         <ol className="isolate flex flex-col gap-1 py-2">
           {presetsArray.map((preset) => (
             <li key={preset.id}>
               <PresetItem
                 preset={preset}
-                setActivePreset={presets.setActivePreset}
-                isActivePreset={presets.data.activePresetId === preset.id}
+                setActivePreset={setActivePreset}
+                isActivePreset={presetsData.activePresetId === preset.id}
               />
             </li>
           ))}
         </ol>
       )}
-      {presets.isSuccess && presetsArray.length === 0 && (
+      {presetsArray.length === 0 && (
         <div>
           <p>No presets yet</p>
           <Button variant="secondary" type="button" asChild>

@@ -16,7 +16,8 @@ const buttonVariants = cva(baseClassNames.join(' '), {
         'bg-button-primary-background text-button-primary-foreground border border-button-primary-border hover:bg-button-primary-hover-background',
       secondary:
         'bg-button-secondary-background border border-button-secondary-background text-button-secondary-foreground hover:text-button-secondary-foreground hover:bg-button-secondary-hover-background',
-      ghost: 'text-foreground hover:text-foreground',
+      ghost:
+        'btext-button-secondary-foreground hover:text-foreground hover:bg-button-secondary-hover-background',
     },
     size: {
       xs: 'px-1 py-0.5',

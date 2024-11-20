@@ -5,7 +5,7 @@ export enum View {
   Preset = 'preset',
   Welcome = 'welcome',
   Settings = 'settings',
-  History = 'history',
+  // History = 'history',
 }
 
 export type ViewType = `${View}`;

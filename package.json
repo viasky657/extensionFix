@@ -7,7 +7,7 @@
   "engines": {
     "vscode": "^1.84.0"
   },
-   "repository": {
+  "repository": {
     "type": "git",
     "url": "https://github.com/codestoryai/extension"
   },
@@ -45,11 +45,6 @@
         "icon": "$(add)"
       },
       {
-        "command": "sota-swe.go-to-history",
-        "title": "Show history",
-        "icon": "$(history)"
-      },
-      {
         "command": "sota-swe.go-to-settings",
         "title": "Show settings",
         "icon": "$(settings-gear)"
@@ -61,11 +56,6 @@
           "command": "sota-swe.go-to-settings",
           "when": "view == sota-swe-panel",
           "group": "navigation@2"
-        },
-        {
-          "command": "sota-swe.go-to-history",
-          "when": "view == sota-swe-panel",
-          "group": "navigation@1"
         },
         {
           "command": "sota-swe.go-to-new-task",
