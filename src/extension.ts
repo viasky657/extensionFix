@@ -10,7 +10,6 @@ import { AideAgentSessionProvider } from './completions/providers/aideAgentProvi
 import { uniqueId } from 'lodash';
 import { AideAgentMode } from './types';
 import { TerminalManager } from './terminal/TerminalManager';
-import { Uri } from 'vscode';
 // import { AideAgentSessionProvider } from "./completions/providers/aideAgentProvider";
 // import { ProjectContext } from "./utilities/workspaceContext";
 // import { RecentEditsRetriever } from "./server/editedFiles";
