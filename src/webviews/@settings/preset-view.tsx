@@ -54,10 +54,22 @@ export function PresetView() {
     }
   }
 
+  function onGoBack() {
+    navigate(-1);
+  }
+
   return (
     <main className="flex flex-grow flex-col gap-2 p-2">
-      <header className="mb-2">
-        <h2 className="text-base text-description">{selectedPreset?.name || 'New preset'}</h2>
+      <header className="mb-2 flex items-start gap-2 text-description">
+        <button
+          type="button"
+          className="rounded p-1 hover:bg-button-secondary-hover-background"
+          onClick={onGoBack}
+        >
+          <span aria-hidden className="codicon codicon-chevron-left translate-y-0.5" />
+          <span className="sr-only">Go back</span>
+        </button>
+        <h2 className="text-base">{selectedPreset?.name || 'New preset'}</h2>
       </header>
       <PresetForm formId={stableId} onSubmit={onSubmit} initialData={selectedPreset} />
       <div className="flex justify-end gap-2">
