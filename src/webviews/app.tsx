@@ -1,12 +1,11 @@
-import LoadingSpinner from "components/loading-spinner";
-import * as React from "react";
-import { Outlet } from "react-router-dom";
-import { useNavigationFromExtension } from "routes";
-import { useSubmenuContext } from "store/submenuContext";
-import { AppState, ClientRequest, Event } from "../model";
+import * as React from 'react';
+import { Outlet, useNavigation } from 'react-router-dom';
+import { useNavigationFromExtension } from 'routes';
+import { useSubmenuContext } from 'store/submenuContext';
+import { AppState, ClientRequest, Event } from '../model';
+import { ProgressIndicator } from 'components/progress-indicator';
 
 function reducer(state: AppState, action: Event) {
-
   const newState = structuredClone(state);
   console.log('State will update', { action, prevState: state });
 
@@ -16,26 +15,25 @@ function reducer(state: AppState, action: Event) {
     return newState;
   }
 
-  if (action.type === "sidecar-ready-state") {
+  if (action.type === 'sidecar-ready-state') {
     newState.isSidecarReady = action.isSidecarReady;
   }
 
-  if (action.type === "init-response") {
+  if (action.type === 'init-response') {
     newState.extensionReady = true;
-    newState.isSidecarReady = action.isSidecarReady
+    newState.isSidecarReady = action.isSidecarReady;
   }
 
   return newState;
 }
 
-
 const App = () => {
-
   useNavigationFromExtension();
+  const navigation = useNavigation();
 
   const [state, dispatch] = React.useReducer(reducer, initialState);
-  const initializeContextProviders = useSubmenuContext(state => state.initializeContextProviders);
-  const initializeSubmenuItems = useSubmenuContext(state => state.initializeSubmenuItems);
+  const initializeContextProviders = useSubmenuContext((state) => state.initializeContextProviders);
+  const initializeSubmenuItems = useSubmenuContext((state) => state.initializeSubmenuItems);
 
   React.useEffect(() => {
     const initalize = async () => {
@@ -55,22 +53,29 @@ const App = () => {
     const handleMessage = (event: MessageEvent<Event>) => {
       dispatch(event.data);
     };
-    window.addEventListener("message", handleMessage);
+    window.addEventListener('message', handleMessage);
     return () => {
-      window.removeEventListener("message", handleMessage);
+      window.removeEventListener('message', handleMessage);
     };
   }, []);
 
   return (
-    <div className="h-full">
-      {state.isSidecarReady ? <Outlet /> : <LoadingSpinner />}
+    <div className="relative flex h-full flex-col">
+      {navigation.state === 'loading' && (
+        <ProgressIndicator className="absolute inset-x-0 top-0 z-20" />
+      )}
+      {state.isSidecarReady ? (
+        <Outlet />
+      ) : (
+        <p className="mx-auto self-center text-center text-sm text-description">
+          Downloading and starting Sota PR Assistant...
+        </p>
+      )}
     </div>
   );
-}
+};
 
 export default App;
-
-
 
 export const initialState: AppState = {
   extensionReady: false,
@@ -81,10 +86,10 @@ declare global {
   interface Window {
     vscode: {
       postMessage(message: ClientRequest): void;
-    }
+    };
   }
 
   const vscode: {
     postMessage(message: ClientRequest): void;
-  }
+  };
 }
