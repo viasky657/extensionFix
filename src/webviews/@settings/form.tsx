@@ -6,29 +6,48 @@ import { Input } from 'components/input';
 import { Textarea } from 'components/textarea';
 import { cn } from 'utils/cn';
 import { PresetLogo } from 'components/preset';
+import { CheckedState } from '@radix-ui/react-checkbox';
+import { capitalize } from 'lodash';
 
 interface PresetFormProps
   extends React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement> {
   formId: string;
   initialData?: Preset;
+  onPresetNameChange?: (name: string) => void;
 }
 
 export function PresetForm(props: PresetFormProps) {
-  const { className, formId, initialData, ...rest } = props;
+  const { className, formId, initialData, onPresetNameChange, ...rest } = props;
 
   const [selectedProvider, setSelectedProvider] = React.useState<ProviderType>(
     initialData?.provider || Provider.Anthropic
   );
+  const [presetName, setPresetName] = React.useState(
+    initialData?.name || capitalize(selectedProvider)
+  );
+  const [didSetPresetName, setDidSetPresetName] = React.useState(!!presetName);
 
   function onProviderChange(value: string) {
     setSelectedProvider(value as ProviderType);
+    if (!didSetPresetName) {
+      setPresetName(value);
+    }
   }
+
+  function _onPresetNameChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setDidSetPresetName(true);
+    const value = event.target.value;
+    setPresetName(value);
+    onPresetNameChange?.(value);
+  }
+
+  const [hasCustomBaseUrl, setHasCustomBaseUrl] = React.useState<CheckedState>(false);
 
   return (
     <form id={formId} className={cn(className, 'flex flex-col gap-4 text-description')} {...rest}>
       {initialData?.id && <input type="hidden" name="id" value={initialData?.id} />}
-      <label htmlFor="provider" className="font-medium text-foreground">
-        Provider
+      <label htmlFor="provider">
+        <p className="font-medium text-foreground">Provider</p>
         <Select
           className="mt-1 w-full"
           id="provider"
@@ -40,17 +59,17 @@ export function PresetForm(props: PresetFormProps) {
             <Option key={provider} value={provider}>
               <div className="flex gap-2">
                 <PresetLogo className="flex-shrink-0 translate-y-1" provider={provider} />
-                {provider}
+                {capitalize(provider)}
               </div>
             </Option>
           ))}
         </Select>
       </label>
 
-      <fieldset>
+      <fieldset className="flex flex-col gap-3">
         <legend className="sr-only">API</legend>
-        <label htmlFor="apiKey" className="font-medium text-foreground">
-          APIKey
+        <label htmlFor="apiKey">
+          <p className="font-medium text-foreground">API Key</p>
           <Input
             className="mt-1 w-full"
             id="apiKey"
@@ -59,14 +78,27 @@ export function PresetForm(props: PresetFormProps) {
             defaultValue={initialData?.apiKey}
           />
         </label>
-        <label className="mt-2 flex items-start">
-          <Checkbox name="custom-base-URL" />
+        <label className="-mt-1 flex items-start">
+          <Checkbox
+            name="custom-base-URL"
+            checked={hasCustomBaseUrl}
+            onCheckedChange={setHasCustomBaseUrl}
+          />
           <span className="ml-2">Use custom base URL</span>
+        </label>
+        <label className={cn(!hasCustomBaseUrl && 'sr-only', 'mt-2')}>
+          <p className="font-medium text-foreground">Custom base URL</p>
+          <Input
+            className="mt-1 w-full"
+            id="customBaseUrl"
+            name="customBaseUrl"
+            defaultValue={initialData?.customBaseUrl}
+          />
         </label>
       </fieldset>
 
-      <label className="font-medium text-foreground">
-        Model
+      <label>
+        <p className="font-medium text-foreground">Model</p>
         <Input
           className="mt-1 w-full"
           id="model"
@@ -113,9 +145,15 @@ export function PresetForm(props: PresetFormProps) {
         </ul>
       </fieldset>
 
-      <label htmlFor="name" className="font-medium text-foreground">
-        Preset name
-        <Input className="mt-1 w-full" id="name" name="name" defaultValue={initialData?.name} />
+      <label htmlFor="name">
+        <p className="font-medium text-foreground">Preset name</p>
+        <Input
+          className="mt-1 w-full"
+          id="name"
+          name="name"
+          value={presetName}
+          onChange={_onPresetNameChange}
+        />
       </label>
 
       <label htmlFor="customInstructions" className="font-medium text-foreground">

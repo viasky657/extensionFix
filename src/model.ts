@@ -234,7 +234,7 @@ export enum Provider {
   Anthropic = 'anthropic',
   OpenAI = 'open-ai',
   OpenRouter = 'open-router',
-  GoogleGemini = 'google-geminbi',
+  GoogleGemini = 'google-gemini',
   AWSBedrock = 'aws-bedrock',
   OpenAICompatible = 'open-ai-compatible',
   Ollama = 'ollama',
