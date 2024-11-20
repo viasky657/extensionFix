@@ -7,7 +7,7 @@ import { Textarea } from 'components/textarea';
 import { cn } from 'utils/cn';
 import { PresetLogo } from 'components/preset';
 import { CheckedState } from '@radix-ui/react-checkbox';
-import { capitalize } from 'lodash';
+import { capitalize } from 'utils/string';
 
 interface PresetFormProps
   extends React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement> {
@@ -25,12 +25,12 @@ export function PresetForm(props: PresetFormProps) {
   const [presetName, setPresetName] = React.useState(
     initialData?.name || capitalize(selectedProvider)
   );
-  const [didSetPresetName, setDidSetPresetName] = React.useState(!!presetName);
+  const [didSetPresetName, setDidSetPresetName] = React.useState(false);
 
   function onProviderChange(value: string) {
     setSelectedProvider(value as ProviderType);
     if (!didSetPresetName) {
-      setPresetName(value);
+      setPresetName(capitalize(value));
     }
   }
 

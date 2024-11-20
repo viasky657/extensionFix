@@ -16,17 +16,39 @@ type AsyncState<TData, TError = Error> =
     | { status: AsyncStatus.Success; data: TData, error: undefined, isLoading: false, isSuccess: true, isError: false, isFetching: boolean, isIdle: false }
     | { status: AsyncStatus.Error; data: undefined, error: TError, isLoading: false, isSuccess: false, isError: true, isFetching: boolean, isIdle: false };
 
-interface UseAsyncOptions<TData> {
-    enabled?: boolean,
-    initialData?: TData;
+
+type UseAsyncOptionsWithInitialData<TData> = {
+    enabled?: boolean;
+    initialData: TData;
     onSuccess?: (data: TData) => void;
     onError?: (error: Error) => void;
 }
+
+type UseAsyncOptionsWithoutInitialData<TData> = {
+    enabled?: boolean;
+    initialData?: undefined;
+    onSuccess?: (data: TData) => void;
+    onError?: (error: Error) => void;
+}
+
+type UseAsyncOptions<TData> = UseAsyncOptionsWithInitialData<TData> | UseAsyncOptionsWithoutInitialData<TData>;
 
 const defaultOptions = {
     enabled: true
 };
 
+type UseAsyncReturn<TData, HasInitialData extends boolean> = HasInitialData extends true
+    ? AsyncState<TData> & { data: TData; execute: () => Promise<void> }
+    : AsyncState<TData> & { execute: () => Promise<void> };
+
+export function useAsync<TData>(
+    asyncFn: () => Promise<TData>,
+    options: UseAsyncOptionsWithInitialData<TData>
+): UseAsyncReturn<TData, true>;
+export function useAsync<TData>(
+    asyncFn: () => Promise<TData>,
+    options?: UseAsyncOptionsWithoutInitialData<TData>
+): UseAsyncReturn<TData, false>;
 export function useAsync<TData>(
     asyncFn: () => Promise<TData>,
     options: UseAsyncOptions<TData> = {}

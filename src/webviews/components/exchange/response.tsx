@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Response, ResponsePart } from '../../../model';
+import { Response, ResponsePart, ToolParameter, ToolParameterType } from '../../../model';
 import MarkdownRenderer from '../markdown-renderer';
 import { ContextSummary } from '../context-summary';
 import { Exchange, ExchangeContent, ExchangeHeader } from './exchange-base';
@@ -34,12 +34,12 @@ function ParameterContent({
   content,
   delta,
 }: {
-  type: string;
+  type: ToolParameterType;
   content: string;
   delta: string;
 }) {
   function handleOpenFile() {
-    if (type === 'fs_file_path') {
+    if (type === ToolParameter.FSFilePath) {
       vscode.postMessage({
         type: 'open-file',
         fs_file_path: content,
@@ -48,7 +48,7 @@ function ParameterContent({
   }
 
   switch (type) {
-    case 'fs_file_path':
+    case ToolParameter.FSFilePath:
       return (
         <button
           onClick={handleOpenFile}
@@ -60,7 +60,7 @@ function ParameterContent({
           </span>
         </button>
       );
-    case 'directory_path':
+    case ToolParameter.DirectoryPath:
       return (
         <button
           onClick={handleOpenFile}
@@ -76,14 +76,14 @@ function ParameterContent({
         </button>
       );
 
-    case 'instruction':
+    case ToolParameter.Instruction:
       return (
         <div className="prose prose-invert prose-sm max-w-none rounded border border-description p-4">
           <MarkdownRenderer rawMarkdown={content} />
         </div>
       );
 
-    case 'command':
+    case ToolParameter.Command:
       return (
         <div className="bg-sideBarSectionHeader-background border-sideBarSectionHeader-border rounded border text-xs">
           <div className="text-editorHint-foreground border-sideBarSectionHeader-border flex gap-2 border-b px-2 py-2">
@@ -105,7 +105,7 @@ function ParameterContent({
         </div>
       );
 
-    case 'question':
+    case ToolParameter.Question:
       return (
         <div className="rounded border border-l-4 border-blue-500 bg-blue-500/10 p-4">
           <div className="mb-2 flex gap-2 text-blue-400">
@@ -119,7 +119,7 @@ function ParameterContent({
         </div>
       );
 
-    case 'result':
+    case ToolParameter.Result:
       return (
         <div className="rounded border border-green-600/30 bg-green-950/30 px-3 py-2">
           <div className="mb-2 flex gap-2 text-green-400">
@@ -130,8 +130,8 @@ function ParameterContent({
         </div>
       );
 
-    case 'regex_pattern':
-    case 'file_pattern':
+    case ToolParameter.RegexPattern:
+    case ToolParameter.FilePattern:
       return (
         <div className="rounded-xs bg-input-background p-3 font-mono text-xs">
           {content.split('\n').map((line, i) => (
@@ -140,13 +140,11 @@ function ParameterContent({
         </div>
       );
 
-    case 'recursive':
+    case ToolParameter.Recursive:
       return (
         <div className="text-sm">
           <span>
-            <span className="text-description" aria-hidden>
-              Recursive:{' '}
-            </span>
+            <span className="text-description">Recursive: </span>
             {content === 'true' ? 'Yes' : 'No'}
           </span>
         </div>

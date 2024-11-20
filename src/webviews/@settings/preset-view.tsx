@@ -24,8 +24,9 @@ export async function loadPresets({ params }: LoaderFunctionArgs): Promise<ViewD
 }
 
 export function PresetView() {
-  const { presetsData, selectedPreset } = useLoaderData() as LoaderData<typeof loadPresets>;
-  const { updatePreset, addPreset, deletePreset } = usePresets(presetsData);
+  const initialData = useLoaderData() as LoaderData<typeof loadPresets>;
+  const { selectedPreset } = initialData;
+  const { updatePreset, addPreset, deletePreset } = usePresets(initialData.presetsData);
 
   const navigate = useNavigate();
 

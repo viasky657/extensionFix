@@ -7,10 +7,11 @@ import {
   ClientRequest,
   Preset,
   Task,
-  ToolThinkingToolTypeEnum,
+  ToolTypeType,
   View,
   PresetsLoaded,
   Response,
+  ToolParameterType,
 } from './model';
 import { getNonce } from './webviews/utils/nonce';
 import { ContextItemId, ContextItemWithId } from '.';
@@ -87,7 +88,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           const firstPreset = Array.from(this._presets.values()).at(0);
           let activePreset = firstPreset;
 
-          if (activePreset) {
+          if (!this._runningTask && activePreset) {
             this._runningTask = {
               query: '',
               sessionId: v4(),
@@ -133,6 +134,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           } as Preset; // Why do we need casting?
           this._presets.set(newPreset.id, newPreset);
           this.context.globalState.update('presets', Array.from(this._presets.values()));
+          this.context.globalState.update('active-preset-id', newPreset.id);
           break;
         }
         case 'update-preset': {
@@ -148,9 +150,14 @@ export class PanelProvider implements vscode.WebviewViewProvider {
             this._presets.delete(data.presetId);
             this.context.globalState.update('presets', Array.from(this._presets.values()));
           }
+          const activePresetId = this.context.globalState.get<string>('active-preset-id');
+          if (activePresetId === data.presetId) {
+            this.context.globalState.update('active-preset-id', undefined);
+          }
           break;
         }
         case 'set-active-preset': {
+          console.log('set-active-preset', data.presetId);
           this.context.globalState.update('active-preset-id', data.presetId);
           break;
         }
@@ -229,7 +236,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
       const firstPreset = Array.from(this._presets.values()).at(0);
       let activePreset = firstPreset;
 
-      if (activePreset) {
+      if (!this._runningTask && activePreset) {
         this._runningTask = {
           query: '',
           sessionId: v4(),
@@ -273,7 +280,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
   public addToolTypeFound(
     sessionId: string,
     exchangeId: string,
-    toolType: ToolThinkingToolTypeEnum
+    toolType: ToolTypeType
   ) {
     if (this._runningTask && this._runningTask.sessionId === sessionId) {
       const exchangePossible = this._runningTask.exchanges.find((exchange) => {
@@ -302,7 +309,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
   public addToolParameterFound(
     sessionId: string,
     exchangeId: string,
-    fieldName: string,
+    fieldName: ToolParameterType,
     fieldContentDelta: string,
     fieldContentUpUntilNow: string
   ) {

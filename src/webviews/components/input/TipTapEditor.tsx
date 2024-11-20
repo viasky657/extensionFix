@@ -11,6 +11,7 @@ import { useSubmenuContext } from 'store/submenuContext';
 import { ContextProviderDescription } from '../../../context/providers/types';
 import { Mention } from './MentionExtension';
 import { getContextProviderDropdownOptions } from './suggestions';
+import { SimpleHTMLElementProps } from 'utils/types';
 
 const InputBoxDiv = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -22,15 +23,16 @@ const InputBoxDiv = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-interface TipTapEditorProps {
+type TipTapEditorProps = SimpleHTMLElementProps<HTMLDivElement> & {
   availableContextProviders: ContextProviderDescription[];
   historyKey: string;
   onEnter: (editorState: JSONContent, editor: Editor) => void;
-}
+};
 
 const Tiptap = (props: TipTapEditorProps) => {
+  const { availableContextProviders, historyKey, onEnter, ...rest } = props;
   const getSubmenuContextItems = useSubmenuContext((state) => state.getSubmenuContextItems);
-  const availableContextProvidersRef = useUpdatingRef(props.availableContextProviders);
+  const availableContextProvidersRef = useUpdatingRef(availableContextProviders);
 
   const inSubmenuRef = useRef<string | undefined>(undefined);
   const inDropdownRef = useRef(false);
@@ -73,7 +75,7 @@ const Tiptap = (props: TipTapEditorProps) => {
     inDropdownRef.current = true;
   };
 
-  const { prevRef, nextRef, addRef } = useInputHistory(props.historyKey);
+  const { prevRef, nextRef, addRef } = useInputHistory(historyKey);
 
   const editor = useEditor({
     extensions: [
@@ -179,14 +181,14 @@ const Tiptap = (props: TipTapEditorProps) => {
       return;
     }
 
-    props.onEnter(json, editor);
+    onEnter(json, editor);
 
     const content = editor.state.toJSON().doc;
     addRef.current(content);
-  }, [props.onEnter, editor]);
+  }, [onEnter, editor]);
 
   return (
-    <div>
+    <div {...rest}>
       <InputBoxDiv>
         <EditorContent className="h-full w-full flex-1" spellCheck={false} editor={editor} />
       </InputBoxDiv>

@@ -133,9 +133,23 @@ interface ToolOutputResponseEvent {
 	answer_up_until_now: string;
 }
 
+export enum ToolParameter {
+	FSFilePath = 'fs_file_path',
+	DirectoryPath = 'directory_path',
+	Instruction = 'instruction',
+	Command = 'command',
+	Question = 'question',
+	Result = 'result',
+	RegexPattern = 'regex_pattern',
+	FilePattern = 'file_pattern',
+	Recursive = 'recursive'
+}
+
+export type ToolParameterType = `${ToolParameter}`;
+
 interface ToolParameterFoundEvent {
 	tool_parameter_input: {
-		field_name: string,
+		field_name: ToolParameterType,
 		field_content_up_until_now: string,
 		field_content_delta: string,
 	}

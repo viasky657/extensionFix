@@ -16,6 +16,7 @@ type AsyncState<T> =
   | { status: Status.Error; data: undefined };
 
 function getTask() {
+  console.log('getting task');
   vscode.postMessage({
     type: 'init',
   });

@@ -14,10 +14,10 @@ export async function loadSettings(): Promise<ViewData> {
 }
 
 export function SettingsView() {
-  const presetsData = useLoaderData() as LoaderData<typeof loadSettings>;
-  const { setActivePreset, deletePreset } = usePresets(presetsData);
+  const initialData = useLoaderData() as LoaderData<typeof loadSettings>;
+  const { data, setActivePreset } = usePresets(initialData);
 
-  const presetsArray = Array.from(presetsData.presets.values()).sort(
+  const presetsArray = Array.from(data.presets.values()).sort(
     (a, b) => new Date(b.createdOn).getTime() - new Date(a.createdOn).getTime()
   );
 
@@ -36,7 +36,7 @@ export function SettingsView() {
               <PresetItem
                 preset={preset}
                 setActivePreset={setActivePreset}
-                isActivePreset={presetsData.activePresetId === preset.id}
+                isActivePreset={data.activePresetId === preset.id}
               />
             </li>
           ))}

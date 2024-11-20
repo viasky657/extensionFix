@@ -141,6 +141,15 @@ export type NewSessionRequest = {
   exchangeId: string;
 };
 
+
+export type ResponsePart =
+  | MarkdownResponsePart
+  | CommandGroupResponsePart
+  | ToolThinkingResponsePart
+  | ToolThinkingToolTypeResponsePart
+  | ToolParameterResponsePart;
+
+
 export type MarkdownResponsePart = {
   type: 'markdown';
   rawMarkdown: string;
@@ -156,6 +165,7 @@ export type CommandGroupResponsePart = {
   commands: Command[];
 };
 
+
 export type ToolThinkingResponsePart = {
   type: 'toolThinking';
   // this is the full tool thinking always
@@ -165,33 +175,44 @@ export type ToolThinkingResponsePart = {
 export type ToolParameterResponsePart = {
   type: 'toolParameter';
   toolParameters: {
-    parameterName: string;
+    parameterName: ToolParameterType;
     contentDelta: string;
     contentUpUntilNow: string;
   };
 };
 
-export type ToolThinkingToolTypeEnum =
-  | 'ListFiles'
-  | 'SearchFileContentWithRegex'
-  | 'OpenFile'
-  | 'CodeEditing'
-  | 'LSPDiagnostics'
-  | 'AskFollowupQuestions'
-  | 'AttemptCompletion'
-  | 'RepoMapGeneration';
+export enum ToolParameter {
+  FSFilePath = 'fs_file_path',
+  DirectoryPath = 'directory_path',
+  Instruction = 'instruction',
+  Command = 'command',
+  Question = 'question',
+  Result = 'result',
+  RegexPattern = 'regex_pattern',
+  FilePattern = 'file_pattern',
+  Recursive = 'recursive'
+}
+
+export type ToolParameterType = `${ToolParameter}`;
 
 export type ToolThinkingToolTypeResponsePart = {
   type: 'toolType';
-  toolType: ToolThinkingToolTypeEnum;
+  toolType: ToolTypeType;
 };
 
-export type ResponsePart =
-  | MarkdownResponsePart
-  | CommandGroupResponsePart
-  | ToolThinkingResponsePart
-  | ToolThinkingToolTypeResponsePart
-  | ToolParameterResponsePart;
+export enum ToolType {
+  ListFiles = 'ListFiles',
+  SearchFileContentWithRegex = 'SearchFileContentWithRegex',
+  OpenFile = 'OpenFile',
+  CodeEditing = 'CodeEditing',
+  LSPDiagnostics = 'LSPDiagnostics',
+  AskFollowupQuestions = 'AskFollowupQuestions',
+  AttemptCompletion = 'AttemptCompletion',
+  RepoMapGeneration = 'RepoMapGeneration'
+}
+
+export type ToolTypeType = `${ToolType}`;
+
 
 interface MessageBase {
   username: string;
