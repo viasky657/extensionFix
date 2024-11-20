@@ -10,8 +10,8 @@ import { Navigate } from 'react-router-dom';
 import { useSubmenuContext } from 'store/submenuContext';
 import { cn } from 'utils/cn';
 import { Exchange, View } from '../../model';
-import ClaudeLogo from '../assets/claude.svg';
 import { useTask } from './use-task';
+import { PresetLogo } from 'components/preset';
 
 export function TaskView() {
   const task = useTask();
@@ -45,7 +45,7 @@ export function TaskView() {
             <dl className="mt-1 flex items-baseline">
               <dt className="sr-only">Preset</dt>
               <dd className="mr-auto flex items-center text-description">
-                <ClaudeLogo width={12} height={12} className="mr-1" />
+                <PresetLogo provider={preset.provider} className="mr-1 h-3 w-3" />
                 <span className="whitespace-nowrap">{preset.name}</span>
               </dd>
               {/* {cost && (
@@ -68,7 +68,11 @@ export function TaskView() {
             <TaskDT>Preset</TaskDT>
             <TaskDD>
               <span className="flex gap-1">
-                <ClaudeLogo className="h-3 w-3 flex-shrink-0 translate-y-0.5" /> {preset.name}
+                <PresetLogo
+                  provider={preset.provider}
+                  className="h-3 w-3 flex-shrink-0 translate-y-0.5"
+                />
+                {preset.name}
               </span>
             </TaskDD>
             {/* <React.Fragment>

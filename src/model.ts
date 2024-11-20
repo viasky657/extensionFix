@@ -265,7 +265,7 @@ type Permissions = {
   terminalCommands: PermissionStateType;
 };
 
-type ProviderType = `${Provider}`;
+export type ProviderType = `${Provider}`;
 
 type BasePreset = {
   provider: ProviderType;
