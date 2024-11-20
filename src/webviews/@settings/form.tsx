@@ -1,10 +1,11 @@
-import { ANTHROPIC_MODELS, PermissionState, Preset, Provider, View } from '../../model';
+import { PermissionState, Preset, Provider, ProviderType } from '../../model';
 import * as React from 'react';
 import { Checkbox } from 'components/checkbox';
 import { Select, Option, SelectProps } from 'components/select';
 import { Input } from 'components/input';
 import { Textarea } from 'components/textarea';
 import { cn } from 'utils/cn';
+import { PresetLogo } from 'components/preset';
 
 interface PresetFormProps
   extends React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement> {
@@ -15,7 +16,13 @@ interface PresetFormProps
 export function PresetForm(props: PresetFormProps) {
   const { className, formId, initialData, ...rest } = props;
 
-  console.log('initialData', initialData);
+  const [selectedProvider, setSelectedProvider] = React.useState<ProviderType>(
+    initialData?.provider || Provider.Anthropic
+  );
+
+  function onProviderChange(value: string) {
+    setSelectedProvider(value as ProviderType);
+  }
 
   return (
     <form id={formId} className={cn(className, 'flex flex-col gap-2 text-description')} {...rest}>
@@ -26,11 +33,15 @@ export function PresetForm(props: PresetFormProps) {
           className="w-full"
           id="provider"
           name="provider"
-          defaultValue={initialData?.provider || Provider.Anthropic}
+          value={selectedProvider}
+          onValueChange={onProviderChange}
         >
           {Object.values(Provider).map((provider) => (
             <Option key={provider} value={provider}>
-              {provider}
+              <div className="flex gap-2">
+                <PresetLogo className="flex-shrink-0 translate-y-1" provider={provider} />
+                {provider}
+              </div>
             </Option>
           ))}
         </Select>
@@ -56,17 +67,13 @@ export function PresetForm(props: PresetFormProps) {
 
       <label>
         Model
-        <Select
-          className="w-full"
+        <Input
+          className="mt-1 w-full"
+          id="model"
           name="model"
-          defaultValue={initialData?.model || ANTHROPIC_MODELS[0]}
-        >
-          {ANTHROPIC_MODELS.map((model) => (
-            <Option key={model} value={model}>
-              {model}
-            </Option>
-          ))}
-        </Select>
+          type="model"
+          defaultValue={initialData?.model}
+        />
       </label>
 
       <fieldset>
