@@ -37,16 +37,11 @@ jobs:
         run: |
           npm ci
 
-      # 2.5. Pre package
-      - name: Prepackage the extension
-        run: |
-          npm run prepackage
-
-      # 5. Package the extension
+      # 3. Package the extension
       - name: Package the extension
         run: npx vsce package --no-dependencies
 
-      # 6. Upload the .vsix as an artifact
+      # 4. Upload the .vsix as an artifact
       - uses: actions/upload-artifact@v4
         with:
           name: vsix
