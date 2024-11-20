@@ -69,7 +69,7 @@ export function PresetView() {
         </Button>
       </div>
       <div className="flex justify-end gap-2">
-        <Button type="button" onClick={onDeletePreset}>
+        <Button type="button" variant="destructive" onClick={onDeletePreset}>
           Delete preset
         </Button>
       </div>

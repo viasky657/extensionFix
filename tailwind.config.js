@@ -15,6 +15,7 @@ export default {
       colors: {
         'focus-border': 'var(--vscode-focusBorder)',
         foreground: 'var(--vscode-foreground)',
+        'error-foreground': 'var(--vscode-errorForeground)',
         current: 'currentColor',
         'disabled-foreground': 'var(--vscode-disabledForeground)',
         widget: {
