@@ -22,6 +22,7 @@ import { SIDECAR_CLIENT } from '../../extension';
 import { PanelProvider } from '../../PanelProvider';
 import { TerminalManager } from '../../terminal/TerminalManager';
 import assert from 'assert';
+import { createFileIfNotExists } from '../../server/createFile';
 
 /**
  * Stores the necessary identifiers required for identifying a response stream
@@ -210,6 +211,10 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 		if (request.plan_step_id) {
 			uniqueEditId = `${uniqueEditId}::${request.plan_step_id}`;
 		}
+		// we first check if the file exists otherwise we create it
+		await createFileIfNotExists(vscode.Uri.file(request.fs_file_path));
+
+		// now we can work on top of the file
 		const textDocument = await vscode.workspace.openTextDocument(vscode.Uri.file(request.fs_file_path));
 		await vscode.window.showTextDocument(textDocument, {
 			preview: true,
