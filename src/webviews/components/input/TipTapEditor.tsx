@@ -6,13 +6,13 @@ import Text from '@tiptap/extension-text';
 import { Editor, EditorContent, JSONContent, useEditor } from '@tiptap/react';
 import { useInputHistory } from 'hooks/useInputHistory';
 import useUpdatingRef from 'hooks/useUpdatingRef';
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useSubmenuContext } from 'store/submenuContext';
+import { SimpleHTMLElementProps } from 'utils/types';
 import { ContextProviderDescription } from '../../../context/providers/types';
+import InputToolbar from './InputToolbar';
 import { Mention } from './MentionExtension';
 import { getContextProviderDropdownOptions } from './suggestions';
-import { SimpleHTMLElementProps } from 'utils/types';
-import InputToolbar from './InputToolbar';
 
 type TipTapEditorProps = SimpleHTMLElementProps<HTMLDivElement> & {
   availableContextProviders: ContextProviderDescription[];
@@ -165,6 +165,12 @@ const Tiptap = (props: TipTapEditorProps) => {
     content: '',
   });
 
+  useEffect(() => {
+    if (editor && document.hasFocus()) {
+      editor.commands.focus('end');
+    }
+  }, [editor]);
+
   const onEnterRef = useUpdatingRef(() => {
     if (!editor) {
       return;
@@ -182,6 +188,10 @@ const Tiptap = (props: TipTapEditorProps) => {
     const content = editor.state.toJSON().doc;
     addRef.current(content);
   }, [onEnter, editor]);
+
+  const onClearRef = useUpdatingRef(() => {
+    props.onClear();
+  });
 
   const insertCharacterWithWhitespace = useCallback(
     (char: string) => {
@@ -201,17 +211,20 @@ const Tiptap = (props: TipTapEditorProps) => {
   );
 
   return (
-    <div {...rest}>
-      <div
-        className={`ring-offset-background focus-visible:ring-ring flex min-h-[80px] w-full flex-col rounded-xs bg-input-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50`}
-      >
-        <EditorContent className="h-full w-full flex-1" spellCheck={false} editor={editor} />
-        <InputToolbar
-          disabled={false}
-          onAddContextItem={() => insertCharacterWithWhitespace('@')}
-          onEnter={onEnterRef.current}
-        />
-      </div>
+    <div
+      onClick={() => {
+        editor && editor.commands.focus();
+      }}
+      className={`ring-offset-background focus-visible:ring-ring flex min-h-[80px] w-full flex-col rounded-xs bg-input-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50`}
+      {...rest}
+    >
+      <EditorContent className="h-full w-full flex-1" spellCheck={false} editor={editor} />
+      <InputToolbar
+        disabled={false}
+        onAddContextItem={() => insertCharacterWithWhitespace('@')}
+        onEnter={onEnterRef.current}
+        onClear={onClearRef.current}
+      />
     </div>
   );
 };
