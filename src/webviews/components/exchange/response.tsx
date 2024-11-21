@@ -78,7 +78,7 @@ function ParameterContent({
 
     case ToolParameter.Instruction:
       return (
-        <div className="prose prose-invert prose-sm max-w-none rounded border border-description p-4">
+        <div className="prose prose-invert prose-sm">
           <MarkdownRenderer rawMarkdown={content} />
         </div>
       );
