@@ -43,7 +43,7 @@
       {
         "command": "sota-swe.go-to-new-task",
         "title": "Start new task",
-        "icon": "$(play)"
+        "icon": "$(add)"
       },
       {
         "command": "sota-swe.go-to-settings",
