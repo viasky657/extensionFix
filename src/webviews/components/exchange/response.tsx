@@ -166,21 +166,15 @@ export function ResponseViewItem(props: Response) {
 
   return (
     <Exchange>
-      <ExchangeHeader>SOTA-SWE</ExchangeHeader>
-      <ExchangeContent className="flex flex-col gap-4">
-        {parts.length === 0 ? (
-          <React.Fragment>
-            <Spinner />
-            <span className="sr-only">Thinking...</span>
-          </React.Fragment>
-        ) : (
+      {/* <ExchangeHeader>SOTA-SWE</ExchangeHeader> */}
+      <ExchangeContent className="flex flex-col">
+        {parts.length > 0 &&
           parts.map((part, index) => (
             <React.Fragment key={`${part.type}-${index}`}>
               {renderPart(part, index, parts)}
               {renderParameter(part)}
             </React.Fragment>
-          ))
-        )}
+          ))}
         {context.length > 0 && <ContextSummary context={context} />}
       </ExchangeContent>
     </Exchange>
@@ -191,7 +185,7 @@ function renderParameter(responsePart: ResponsePart) {
   if (responsePart.type === 'toolParameter') {
     const { parameterName, contentDelta, contentUpUntilNow } = responsePart.toolParameters;
     return (
-      <div className="-mt-2">
+      <div>
         <span className="sr-only">{parameterName}</span>
         <ParameterContent type={parameterName} content={contentUpUntilNow} delta={contentDelta} />
       </div>

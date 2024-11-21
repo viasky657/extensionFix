@@ -93,6 +93,29 @@ export default {
         'progress-bar': {
           background: 'var(--vscode-progressBar-background)',
         },
+        sidebar: {
+          background: 'var(--vscode-sideBar-background)',
+          foreground: 'var(--vscode-sideBar-foreground)',
+          border: 'var(--vscode-sideBar-border)',
+          'drop-background': 'var(--vscode-sideBar-dropBackground)',
+          title: {
+            foreground: 'var(--vscode-sideBarTitle-foreground)',
+            background: 'var(--vscode-sideBarTitle-background)',
+          },
+          'section-header': {
+            background: 'var(--vscode-sideBarSectionHeader-background)',
+            foreground: 'var(--vscode-sideBarSectionHeader-foreground)',
+            border: 'var(--vscode-sideBarSectionHeader-border)',
+          },
+          'activity-bar-top': {
+            border: 'var(--vscode-sideBarActivityBarTop-border)',
+          },
+          'sticky-scroll': {
+            background: 'var(--vscode-sideBarStickyScroll-background)',
+            border: 'var(--vscode-sideBarStickyScroll-border)',
+            shadow: 'var(--vscode-sideBarStickyScroll-shadow)',
+          },
+        },
       },
       animation: {
         'translate-lr': 'translate-lr 3s linear infinite',
