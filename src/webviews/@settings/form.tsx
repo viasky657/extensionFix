@@ -111,45 +111,25 @@ export function PresetForm(props: PresetFormProps) {
         />
       </label>
 
-      <fieldset>
-        <legend className="font-medium text-foreground">Permissions</legend>
-        <p className="text-description opacity-70">
-          SotaSWE is smart, careful, and uses git to save changes - it works best with all
-          permissions set to 'always'.
-        </p>
-        <ul className="mt-2 grid grid-cols-[auto,_min-content] text-description">
-          <li className="contents">
-            <label htmlFor="permissions.list-files">List files</label>
-            <PermissionSelect
-              required
-              className="w-full border-none"
-              id="permissions.list-files"
-              name="permissions[listFiles]"
-              defaultValue={initialData?.permissions.listFiles || PermissionState.Always}
-            />
-          </li>
-          <li className="contents">
-            <label htmlFor="code-editing">Edit files</label>
-            <PermissionSelect
-              required
-              className="w-full border-none"
-              id="write-code"
-              name="permissions[codeEditing]"
-              defaultValue={initialData?.permissions.codeEditing || PermissionState.Always}
-            />
-          </li>
-          <li className="contents">
-            <label htmlFor="permissions.terminal-commands">Run terminal commands</label>
-            <PermissionSelect
-              required
-              className="w-full border-none"
-              id="permissions.terminal-commands"
-              name="permissions[terminalCommands]"
-              defaultValue={initialData?.permissions.terminalCommands || PermissionState.Always}
-            />
-          </li>
-        </ul>
-      </fieldset>
+      {/* Hidden permission inputs with default values */}
+      <input
+        type="hidden"
+        id="permissions.list-files"
+        name="permissions[listFiles]"
+        value={PermissionState.Always}
+      />
+      <input
+        type="hidden"
+        id="code-editing"
+        name="permissions[codeEditing]"
+        value={PermissionState.Always}
+      />
+      <input
+        type="hidden"
+        id="permissions.terminal-commands"
+        name="permissions[terminalCommands]"
+        value={PermissionState.Always}
+      />
 
       <label htmlFor="name">
         <p className="font-medium text-foreground">Preset name</p>
