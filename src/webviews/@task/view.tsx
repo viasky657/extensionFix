@@ -38,9 +38,9 @@ export function TaskView() {
     }
   }
 
-  const [exchanges, setExchanges] = React.useState(task.data?.task.exchanges);
-  const [preset, setPreset] = React.useState(task.data?.task.preset);
-  const [query, setQuery] = React.useState(task.data?.task.query);
+  const [exchanges, setExchanges] = React.useState(task.data?.task?.exchanges);
+  const [preset, setPreset] = React.useState(task.data?.task?.preset);
+  const [query, setQuery] = React.useState(task.data?.task?.query);
   const isQueryEmpty = query === '';
 
   React.useEffect(() => {
