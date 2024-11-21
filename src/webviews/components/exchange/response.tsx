@@ -3,6 +3,7 @@ import { Response, ResponsePart, ToolParameter, ToolParameterType } from '../../
 import MarkdownRenderer from '../markdown-renderer';
 import { ContextSummary } from '../context-summary';
 import { Exchange, ExchangeContent, ExchangeHeader } from './exchange-base';
+import FileIcon from 'components/fileicon';
 
 type ToolType =
   | 'ListFiles'
@@ -52,11 +53,13 @@ function ParameterContent({
       return (
         <button
           onClick={handleOpenFile}
-          className="group flex w-full gap-2 border-description px-2 py-2 text-start text-sm text-description"
+          className="group flex w-full gap-2 border-description text-start text-sm text-description"
         >
-          <span aria-hidden className="codicon codicon-file flex-shrink-0 translate-y-0.5" />
-          <span className="w-0 flex-grow overflow-hidden text-ellipsis whitespace-nowrap group-hover:underline">
-            {content}
+          <div className="flex-shrink-0 -translate-x-1">
+            <FileIcon height="24px" width="24px" filename={content} />
+          </div>
+          <span className="w-0 flex-grow -translate-x-2 overflow-hidden text-ellipsis whitespace-nowrap group-hover:underline">
+            {content.split(/[/\\]/).pop()}
           </span>
         </button>
       );
@@ -64,7 +67,7 @@ function ParameterContent({
       return (
         <button
           onClick={handleOpenFile}
-          className="flex w-full gap-2 border-description px-2 py-2 text-start text-sm text-description"
+          className="flex w-full gap-2 border-description text-start text-sm text-description"
         >
           <span
             aria-hidden
@@ -167,7 +170,7 @@ export function ResponseViewItem(props: Response) {
   return (
     <Exchange>
       {/* <ExchangeHeader>SOTA-SWE</ExchangeHeader> */}
-      <ExchangeContent className="flex flex-col">
+      <ExchangeContent className="flex flex-col gap-2">
         {parts.length > 0 &&
           parts.map((part, index) => (
             <React.Fragment key={`${part.type}-${index}`}>
@@ -217,9 +220,7 @@ function renderPart(part: ResponsePart, index: number, allParts: ResponsePart[])
       );
     case 'toolThinking':
       return (
-        <div
-          className={`flex items-start gap-3 text-sm text-description ${isThinkingFollowedByTool ? 'pb-2' : ''}`}
-        >
+        <div className="flex items-start gap-3 text-sm text-description">
           {!isThinkingFollowedByTool && <Spinner />}
           <div className="flex-1">
             {part.markdown.rawMarkdown ? (
@@ -242,12 +243,12 @@ function renderPart(part: ResponsePart, index: number, allParts: ResponsePart[])
 
       const toolTypeLabels = {
         AskFollowupQuestions: 'Follow up question',
-        CodeEditing: 'Code editing',
+        CodeEditing: 'Editing',
         LSPDiagnostics: 'LSP Diagnostics',
         RepoMapGeneration: 'Repo map generation',
         AttemptCompletion: 'Attempt completion',
         ListFiles: 'List files',
-        OpenFile: 'Open file',
+        OpenFile: 'Reading',
         SearchFileContentWithRegex: 'Search content file with regex',
         TerminalCommand: 'Terminal command',
       };
@@ -255,7 +256,7 @@ function renderPart(part: ResponsePart, index: number, allParts: ResponsePart[])
       label = toolTypeLabels[part.toolType] || 'Unknown tool type';
 
       return (
-        <div className="flex gap-2 rounded-xs px-2 py-2">
+        <div className="flex gap-2">
           {icon}
           <span className="text-sm">{label}</span>
         </div>

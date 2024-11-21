@@ -4,7 +4,7 @@ import { SimpleHTMLElementProps } from '../../utils/types';
 export function Exchange(props: SimpleHTMLElementProps<HTMLDivElement>) {
   const { className, children, ...rest } = props;
   return (
-    <div className={cn(className, 'mb-1 flex flex-col gap-2 text-foreground')} {...rest}>
+    <div className={cn(className, 'mb-2 flex flex-col gap-2 text-foreground')} {...rest}>
       {children}
     </div>
   );
