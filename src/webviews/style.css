@@ -43,3 +43,11 @@ body {
 .tiptap img.ProseMirror-selectednode {
   @apply border border-badge-background;
 }
+
+.markdown-content pre.shiki {
+  @apply overflow-x-auto;
+}
+
+.markdown-content pre.shiki code {
+  @apply inline-block min-w-full rounded-none p-2;
+}

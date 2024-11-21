@@ -277,11 +277,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     }
   }
 
-  public addToolTypeFound(
-    sessionId: string,
-    exchangeId: string,
-    toolType: ToolTypeType
-  ) {
+  public addToolTypeFound(sessionId: string, exchangeId: string, toolType: ToolTypeType) {
     if (this._runningTask && this._runningTask.sessionId === sessionId) {
       const exchangePossible = this._runningTask.exchanges.find((exchange) => {
         return exchange.exchangeId === exchangeId;
@@ -535,7 +531,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           <html lang="en">
           <head>
               <meta charset="UTF-8">
-              <meta http-equiv="Content-Security-Policy" content="default-src 'self' ${webview.cspSource}; style-src 'unsafe-inline' 'self' ${webview.cspSource}; script-src 'nonce-${nonce}';">
+              <meta http-equiv="Content-Security-Policy" content="default-src 'self' ${webview.cspSource}; style-src 'unsafe-inline' 'self' ${webview.cspSource}; script-src 'nonce-${nonce}' 'wasm-unsafe-eval'; wasm-unsafe-eval 'self'">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
               <title>Example View</title>
               <link rel="stylesheet" href="${codiconsUri}">
