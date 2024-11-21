@@ -7,7 +7,6 @@ import { ProgressIndicator } from 'components/progress-indicator';
 
 function reducer(state: AppState, action: Event) {
   const newState = structuredClone(state);
-  console.log('State will update', { action, prevState: state });
 
   if (action.type === 'initial-state') {
     newState.activePreset = action.initialAppState.activePreset;

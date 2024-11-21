@@ -52,7 +52,20 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
     const openNewTask = vscode.commands.registerCommand('sota-swe.go-to-new-task', () => {
       if (this._view) {
-        this._view.webview.postMessage({ type: 'open-view', view: View.Task });
+        this.context.globalState.update('active-preset-id', undefined);
+
+        const firstPreset = Array.from(this._presets.values()).at(0);
+        let activePreset = firstPreset;
+
+        if (activePreset) {
+          this._runningTask = getDefaultTask(activePreset);
+        }
+
+        this._view.webview.postMessage({
+          type: 'init-response',
+          task: this._runningTask,
+          isSidecarReady: this._isSidecarReady,
+        });
       }
     });
 
@@ -105,7 +118,6 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           let activePreset = firstPreset;
 
           if ((data.newSession || !this._runningTask) && activePreset) {
-            console.log('updating running task', data.newSession, this._runningTask);
             this._runningTask = getDefaultTask(activePreset);
           }
 
@@ -160,7 +172,6 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           break;
         }
         case 'set-active-preset': {
-          console.log('set-active-preset', data.presetId);
           this.context.globalState.update('active-preset-id', data.presetId);
           break;
         }

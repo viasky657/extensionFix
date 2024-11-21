@@ -126,8 +126,13 @@ interface OpenView {
   view: ViewType;
 }
 
+interface NewSession {
+  type: 'new-session';
+}
+
 export type Event =
   | OpenView
+  | NewSession
   | PresetsLoaded
   | OpenTaskEvent
   | TaskResponseEvent
