@@ -1,27 +1,19 @@
-import { cn } from "utils/cn";
-import { SimpleHTMLElementProps } from "../../utils/types";
+import { cn } from 'utils/cn';
+import { SimpleHTMLElementProps } from '../../utils/types';
 
 export function Exchange(props: SimpleHTMLElementProps<HTMLDivElement>) {
   const { className, children, ...rest } = props;
   return (
-    <div
-      className={cn(
-        className,
-        "text-foreground flex flex-col gap-2 py-2.5 mb-4"
-      )}
-      {...rest}
-    >
+    <div className={cn(className, 'mb-1 flex flex-col gap-2 text-foreground')} {...rest}>
       {children}
     </div>
   );
 }
 
-export function ExchangeHeader(
-  props: SimpleHTMLElementProps<HTMLParagraphElement>
-) {
+export function ExchangeHeader(props: SimpleHTMLElementProps<HTMLParagraphElement>) {
   const { children, className, ...rest } = props;
   return (
-    <p className={cn(className, "font-medium")} {...rest}>
+    <p className={cn(className, 'font-medium')} {...rest}>
       {children}
     </p>
   );

@@ -60,7 +60,7 @@ const App = () => {
   }, []);
 
   return (
-    <div className="relative flex h-full flex-col">
+    <div className="relative flex h-full flex-col overflow-hidden">
       {navigation.state === 'loading' && (
         <ProgressIndicator className="absolute inset-x-0 top-0 z-20" />
       )}
