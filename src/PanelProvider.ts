@@ -16,6 +16,22 @@ import {
 import { getNonce } from './webviews/utils/nonce';
 import { ContextItemId, ContextItemWithId } from '.';
 
+const getDefaultTask = (activePreset: Preset) => ({
+  query: '',
+  sessionId: v4(),
+  context: [],
+  cost: 0,
+  preset: activePreset,
+  usage: {
+    inputTokens: 0,
+    outputTokens: 0,
+    cacheReads: 0,
+    cacheWrites: 0,
+  },
+  exchanges: [],
+  responseOnGoing: false,
+});
+
 export class PanelProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
   private _runningTask: Task | undefined;
@@ -88,22 +104,9 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           const firstPreset = Array.from(this._presets.values()).at(0);
           let activePreset = firstPreset;
 
-          if (!this._runningTask && activePreset) {
-            this._runningTask = {
-              query: '',
-              sessionId: v4(),
-              context: [],
-              cost: 0,
-              preset: activePreset,
-              usage: {
-                inputTokens: 0,
-                outputTokens: 0,
-                cacheReads: 0,
-                cacheWrites: 0,
-              },
-              exchanges: [],
-              responseOnGoing: false,
-            };
+          if ((data.newSession || !this._runningTask) && activePreset) {
+            console.log('updating running task', data.newSession, this._runningTask);
+            this._runningTask = getDefaultTask(activePreset);
           }
 
           webviewView.webview.postMessage({
@@ -237,21 +240,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
       let activePreset = firstPreset;
 
       if (!this._runningTask && activePreset) {
-        this._runningTask = {
-          query: '',
-          sessionId: v4(),
-          context: [],
-          cost: 0,
-          preset: activePreset,
-          usage: {
-            inputTokens: 0,
-            outputTokens: 0,
-            cacheReads: 0,
-            cacheWrites: 0,
-          },
-          exchanges: [],
-          responseOnGoing: false,
-        };
+        this._runningTask = getDefaultTask(activePreset);
       }
 
       this._view.webview.postMessage({

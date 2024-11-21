@@ -18,7 +18,6 @@ export function TaskView() {
   const availableContextProviders = useSubmenuContext((state) => state.contextProviderDescriptions);
 
   const [showActions, setShowActions] = React.useState(false);
-
   const acceptButtonRef = React.useRef<HTMLButtonElement>(null);
 
   React.useEffect(() => {
@@ -39,6 +38,17 @@ export function TaskView() {
     }
   }
 
+  const [exchanges, setExchanges] = React.useState(task.data?.task.exchanges);
+  const [preset, setPreset] = React.useState(task.data?.task.preset);
+  const [query, setQuery] = React.useState(task.data?.task.query);
+  const isQueryEmpty = query === '';
+
+  React.useEffect(() => {
+    setExchanges(task.data?.task.exchanges);
+    setPreset(task.data?.task.preset);
+    setQuery(task.data?.task.query);
+  }, [task.data?.task]);
+
   if (task.data === undefined) {
     return <div>Loading...</div>;
   }
@@ -46,9 +56,6 @@ export function TaskView() {
   if (!task.data.task || !task.data.task.preset) {
     return <Navigate to={`/${View.Preset}`} />;
   }
-
-  const { exchanges, preset, query } = task.data.task;
-  const isQueryEmpty = query === '';
 
   return (
     <main className="flex h-full flex-col">
@@ -71,8 +78,10 @@ export function TaskView() {
             <dl className="flex items-baseline">
               <dt className="sr-only">Preset</dt>
               <dd className="mr-auto flex items-center text-description">
-                <PresetLogo provider={preset.provider} className="mr-1 h-3 w-3" />
-                <span className="whitespace-nowrap">{preset.name}</span>
+                {preset?.provider && (
+                  <PresetLogo provider={preset.provider} className="mr-1 h-3 w-3" />
+                )}
+                <span className="whitespace-nowrap">{preset?.name}</span>
               </dd>
               {/* {cost && (
                 <React.Fragment>
@@ -92,11 +101,13 @@ export function TaskView() {
               <TaskDT>Preset</TaskDT>
               <TaskDD>
                 <span className="flex gap-1">
-                  <PresetLogo
-                    provider={preset.provider}
-                    className="h-3 w-3 flex-shrink-0 translate-y-0.5"
-                  />
-                  {preset.name}
+                  {preset?.provider && (
+                    <PresetLogo
+                      provider={preset.provider}
+                      className="h-3 w-3 flex-shrink-0 translate-y-0.5"
+                    />
+                  )}
+                  {preset?.name}
                 </span>
               </TaskDD>
               {/* <React.Fragment>
@@ -179,6 +190,12 @@ export function TaskView() {
 
               // Clear the editor after sending
               editor.commands.clearContent();
+            }}
+            onClear={() => {
+              vscode.postMessage({
+                type: 'init',
+                newSession: true,
+              });
             }}
           />
         </div>

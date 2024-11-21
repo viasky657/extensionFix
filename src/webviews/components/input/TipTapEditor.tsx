@@ -18,6 +18,7 @@ type TipTapEditorProps = SimpleHTMLElementProps<HTMLDivElement> & {
   availableContextProviders: ContextProviderDescription[];
   historyKey: string;
   onEnter: (editorState: JSONContent, editor: Editor) => void;
+  onClear: () => void;
 };
 
 const Tiptap = (props: TipTapEditorProps) => {
@@ -127,7 +128,7 @@ const Tiptap = (props: TipTapEditorProps) => {
               return false;
             },
             'Ctrl-l': () => {
-              console.log('Ctrl + L pressed');
+              props.onClear();
               return true;
             },
           };
