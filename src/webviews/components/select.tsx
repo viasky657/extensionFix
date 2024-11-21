@@ -14,7 +14,7 @@ export function Select(props: SelectProps) {
       <RUISelect.Trigger
         className={cn(
           className,
-          'mr-auto flex items-start gap-2 rounded border border-dropdown-border bg-dropdown-background px-2 py-1 text-dropdown-foreground hover:bg-button-primary-hover-background hover:text-foreground'
+          'mr-auto flex items-start gap-2 rounded border border-dropdown-border bg-dropdown-background px-2 py-1 text-dropdown-foreground hover:bg-button-primary-hover-background hover:text-button-primary-foreground'
         )}
       >
         <RUISelect.Value />
