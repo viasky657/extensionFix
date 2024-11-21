@@ -7,7 +7,7 @@ export function RequestViewItem(props: Request) {
   return (
     <div className="mb-4 mt-2">
       <div className="flex">
-        <div className="mr-3 mt-1 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-500 text-xs font-medium text-white">
+        <div className="bg-activity-bar-background text-activity-bar-active-foreground mr-3 mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-medium leading-none">
           Me
         </div>
         <Exchange className="flex-grow rounded bg-panel-background p-2">
