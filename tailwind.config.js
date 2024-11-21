@@ -116,6 +116,15 @@ export default {
             shadow: 'var(--vscode-sideBarStickyScroll-shadow)',
           },
         },
+        'activity-bar': {
+          background: 'var(--vscode-activityBar-background)',
+          foreground: 'var(--vscode-activityBar-foreground)',
+          border: 'var(--vscode-activityBar-border)',
+          'active-background': 'var(--vscode-activityBar-activeBackground)',
+          'active-border': 'var(--vscode-activityBar-activeBorder)',
+          'active-foreground': 'var(--vscode-activityBar-activeForeground)',
+          'inactive-foreground': 'var(--vscode-activityBar-inactiveForeground)',
+        },
       },
       animation: {
         'translate-lr': 'translate-lr 3s linear infinite',
