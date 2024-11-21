@@ -56,9 +56,9 @@ function ParameterContent({
           className="group flex w-full gap-2 border-description text-start text-sm text-description"
         >
           <div className="flex-shrink-0 -translate-x-1">
-            <FileIcon height="24px" width="24px" filename={content} />
+            <FileIcon height="22px" width="22px" filename={content} />
           </div>
-          <span className="w-0 flex-grow -translate-x-2 overflow-hidden text-ellipsis whitespace-nowrap group-hover:underline">
+          <span className="w-0 flex-grow -translate-x-1.5 overflow-hidden text-ellipsis whitespace-nowrap group-hover:underline">
             {content.split(/[/\\]/).pop()}
           </span>
         </button>

@@ -19,6 +19,7 @@ interface TaskFeedback {
 
 interface InitRequest {
   type: 'init';
+  newSession?: boolean;
 }
 
 interface OpenFile {
@@ -141,14 +142,12 @@ export type NewSessionRequest = {
   exchangeId: string;
 };
 
-
 export type ResponsePart =
   | MarkdownResponsePart
   | CommandGroupResponsePart
   | ToolThinkingResponsePart
   | ToolThinkingToolTypeResponsePart
   | ToolParameterResponsePart;
-
 
 export type MarkdownResponsePart = {
   type: 'markdown';
@@ -164,7 +163,6 @@ export type CommandGroupResponsePart = {
   type: 'commandGroup';
   commands: Command[];
 };
-
 
 export type ToolThinkingResponsePart = {
   type: 'toolThinking';
@@ -190,7 +188,7 @@ export enum ToolParameter {
   Result = 'result',
   RegexPattern = 'regex_pattern',
   FilePattern = 'file_pattern',
-  Recursive = 'recursive'
+  Recursive = 'recursive',
 }
 
 export type ToolParameterType = `${ToolParameter}`;
@@ -208,11 +206,10 @@ export enum ToolType {
   LSPDiagnostics = 'LSPDiagnostics',
   AskFollowupQuestions = 'AskFollowupQuestions',
   AttemptCompletion = 'AttemptCompletion',
-  RepoMapGeneration = 'RepoMapGeneration'
+  RepoMapGeneration = 'RepoMapGeneration',
 }
 
 export type ToolTypeType = `${ToolType}`;
-
 
 interface MessageBase {
   username: string;
