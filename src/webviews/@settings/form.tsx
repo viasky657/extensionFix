@@ -45,13 +45,14 @@ export function PresetForm(props: PresetFormProps) {
 
   return (
     <form id={formId} className={cn(className, 'flex flex-col gap-4 text-description')} {...rest}>
-      {initialData?.id && <input type="hidden" name="id" value={initialData?.id} />}
+      {initialData?.id && <input type="hidden" name="id" required value={initialData?.id} />}
       <label htmlFor="provider">
         <p className="font-medium text-foreground">Provider</p>
         <Select
           className="mt-1 w-full"
           id="provider"
           name="provider"
+          required
           value={selectedProvider}
           onValueChange={onProviderChange}
         >
@@ -71,6 +72,7 @@ export function PresetForm(props: PresetFormProps) {
         <label htmlFor="apiKey">
           <p className="font-medium text-foreground">API Key</p>
           <Input
+            required
             className="mt-1 w-full"
             id="apiKey"
             name="apiKey"
@@ -100,6 +102,7 @@ export function PresetForm(props: PresetFormProps) {
       <label>
         <p className="font-medium text-foreground">Model</p>
         <Input
+          required
           className="mt-1 w-full"
           id="model"
           name="model"
@@ -118,6 +121,7 @@ export function PresetForm(props: PresetFormProps) {
           <li className="contents">
             <label htmlFor="permissions.list-files">List files</label>
             <PermissionSelect
+              required
               className="w-full border-none"
               id="permissions.list-files"
               name="permissions[listFiles]"
@@ -127,6 +131,7 @@ export function PresetForm(props: PresetFormProps) {
           <li className="contents">
             <label htmlFor="code-editing">Edit files</label>
             <PermissionSelect
+              required
               className="w-full border-none"
               id="write-code"
               name="permissions[codeEditing]"
@@ -136,6 +141,7 @@ export function PresetForm(props: PresetFormProps) {
           <li className="contents">
             <label htmlFor="permissions.terminal-commands">Run terminal commands</label>
             <PermissionSelect
+              required
               className="w-full border-none"
               id="permissions.terminal-commands"
               name="permissions[terminalCommands]"
@@ -148,6 +154,7 @@ export function PresetForm(props: PresetFormProps) {
       <label htmlFor="name">
         <p className="font-medium text-foreground">Preset name</p>
         <Input
+          required
           className="mt-1 w-full"
           id="name"
           name="name"

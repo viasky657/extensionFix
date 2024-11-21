@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import * as React from 'react';
-import { NewPreset, PermissionState, Preset, Provider, View } from '../../model';
+import { NewPreset, Permissions, Preset, Provider, View } from '../../model';
 import { PresetForm } from './form';
 import { getPresets, PresetsData, usePresets } from './use-preset';
 import { processFormData } from 'utils/form';
@@ -23,6 +23,14 @@ export async function loadPresets({ params }: LoaderFunctionArgs): Promise<ViewD
   };
 }
 
+function printValidationIssues(issues: z.ZodError['issues']) {
+  let tuples: [string, string][] = [];
+  for (const issue of issues) {
+    tuples.push([issue.path.join('.'), issue.message]);
+  }
+  return tuples;
+}
+
 export function PresetView() {
   const initialData = useLoaderData() as LoaderData<typeof loadPresets>;
   const { selectedPreset } = initialData;
@@ -32,8 +40,11 @@ export function PresetView() {
 
   const stableId = React.useId();
 
+  const [formErrors, setFormErrors] = React.useState<[string, string][]>();
+
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setFormErrors(undefined);
     const form = event.currentTarget;
     try {
       const result = parsePresetFormData(new FormData(form));
@@ -44,7 +55,9 @@ export function PresetView() {
       }
       navigate(`/${View.Settings}`);
     } catch (err) {
-      console.error(err);
+      if (err instanceof z.ZodError) {
+        setFormErrors(printValidationIssues(err.issues));
+      }
     }
   }
 
@@ -74,6 +87,20 @@ export function PresetView() {
         <h2 className="text-base">{selectedPreset?.name || 'New preset'}</h2>
       </header>
       <PresetForm formId={stableId} onSubmit={onSubmit} initialData={selectedPreset} />
+      {formErrors && (
+        <aside className="relative isolate my-2">
+          <div className="absolute inset-0 -z-10 rounded-sm bg-error-foreground opacity-25" />
+          <div className="absolute inset-0 -z-10 rounded-sm border border-error-foreground opacity-50" />
+          <dl className="p-2">
+            {formErrors.map(([id, message]) => (
+              <React.Fragment key={id}>
+                <dt className="mt-4 font-medium text-foreground first:mt-0">{id}</dt>
+                <dd className="mt-1 text-foreground">{message}</dd>
+              </React.Fragment>
+            ))}
+          </dl>
+        </aside>
+      )}
       <div className="flex justify-end gap-2">
         <Button variant="secondary" asChild>
           <Link to={`/${View.Settings}`}>Cancel</Link>
@@ -91,53 +118,29 @@ export function PresetView() {
   );
 }
 
-const ProviderSchema = z.enum([
-  Provider.Anthropic,
-  Provider.OpenAI,
-  Provider.OpenRouter,
-  Provider.GoogleGemini,
-  Provider.AWSBedrock,
-  Provider.OpenAICompatible,
-  Provider.Ollama,
-]);
-
-const ModelSchema = z.string();
-
-const PermissionStateSchema = z.enum([PermissionState.Always, PermissionState.Ask]);
-
-// Permissions schema
-const PermissionsSchema = z.record(z.string(), PermissionStateSchema);
-
-// Base preset schema with common fields
-const BasePresetSchema = z.object({
-  provider: ProviderSchema,
-  model: ModelSchema,
+const NewPresetSchema = z.object({
+  provider: z.nativeEnum(Provider),
+  model: z.string(),
   apiKey: z.string(),
   customBaseUrl: z.string().optional(),
-  permissions: PermissionsSchema,
+  permissions: z.custom<Permissions>(),
   customInstructions: z.string(),
   name: z.string(),
 });
 
-// NewPreset schema (without id and createdOn)
-export const NewPresetSchema = BasePresetSchema;
-
 // Full Preset schema (with id and createdOn)
-export const PresetSchema = BasePresetSchema.extend({
+const PresetSchema = NewPresetSchema.extend({
   id: z.string(),
-  //createdOn: z.string(),
+  createdOn: z.string(),
 });
 
-function parsePresetFormData(formData: FormData) {
-  // Check if we have an ID field to determine if it's a new preset or existing preset
-  const hasId = formData.has('id');
+function parsePresetFormData(formData: FormData): Preset | NewPreset {
   const processed = processFormData(formData);
   console.log({ processed });
 
-  // TODO (@g-danna) make sure we don't need to cast
-  if (hasId) {
-    return { type: 'preset', ...PresetSchema.parse(processed) } as Preset;
+  if (formData.has('id')) {
+    return { type: 'preset', ...PresetSchema.parse(processed) };
   } else {
-    return { type: 'new-preset', ...NewPresetSchema.parse(processed) } as NewPreset;
+    return { type: 'new-preset', ...NewPresetSchema.parse(processed) };
   }
 }

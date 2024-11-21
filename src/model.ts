@@ -269,7 +269,7 @@ export enum PermissionState {
 
 type PermissionStateType = `${PermissionState}`;
 
-type Permissions = {
+export type Permissions = {
   codeEditing: PermissionStateType;
   listFiles: PermissionStateType;
   terminalCommands: PermissionStateType;
