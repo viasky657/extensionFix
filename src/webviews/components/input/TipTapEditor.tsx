@@ -192,6 +192,7 @@ const Tiptap = (props: TipTapEditorProps) => {
           } else {
             editor.commands.insertContent(char);
           }
+          editor.commands.focus('end');
         }
       }
     },

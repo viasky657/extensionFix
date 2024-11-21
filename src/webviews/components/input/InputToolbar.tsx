@@ -11,11 +11,11 @@ function InputToolbar(props: InputToolbarProps) {
         <div className="items-center gap-1 text-gray-400 transition-colors duration-200">
           <div
             onClick={props.onAddContextItem}
-            className="flex cursor-pointer items-center rounded p-0.5 text-foreground hover:bg-panel-background"
+            className="flex cursor-pointer items-center rounded text-foreground hover:bg-panel-background"
             role="button"
             tabIndex={0}
           >
-            <span className="codicon codicon-plus" />
+            <span className="p-0.5 text-sm">@</span>
           </div>
         </div>
       </div>
