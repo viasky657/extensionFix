@@ -2,6 +2,7 @@ interface InputToolbarProps {
   disabled?: boolean;
   onAddContextItem?: () => void;
   onEnter?: () => void;
+  onClear?: () => void;
 }
 
 function InputToolbar(props: InputToolbarProps) {
@@ -23,7 +24,7 @@ function InputToolbar(props: InputToolbarProps) {
         <div
           className="flex cursor-pointer items-center justify-center rounded px-1.5 py-0.5 text-foreground hover:bg-panel-background disabled:cursor-wait"
           onClick={(e) => {
-            props.onEnter?.();
+            props.onClear?.();
           }}
           role="button"
           tabIndex={0}
