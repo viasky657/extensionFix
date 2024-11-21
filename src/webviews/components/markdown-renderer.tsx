@@ -1,5 +1,7 @@
 import * as React from 'react';
-import { marked } from 'marked';
+// @ts-ignore
+import markdownit from 'markdown-it';
+import Shiki from '@shikijs/markdown-it';
 
 interface MarkdownRendererProps {
   rawMarkdown: string;
@@ -11,6 +13,36 @@ interface MarkdownContentProps {
   };
 }
 
+// Initialize markdown-it instance with async setup for Shiki
+const initializeMarkdownIt = async () => {
+  const md = new markdownit();
+
+  md.use(
+    await Shiki({
+      themes: {
+        light: 'solarized-light',
+        dark: 'solarized-dark',
+      },
+    })
+  );
+
+  return md;
+};
+
+let mdInstance: ReturnType<typeof markdownit> | null = null;
+let initPromise: Promise<ReturnType<typeof markdownit>> | null = null;
+
+const getMarkdownIt = async () => {
+  if (mdInstance) return mdInstance;
+  if (!initPromise) {
+    initPromise = initializeMarkdownIt().then((md) => {
+      mdInstance = md;
+      return md;
+    });
+  }
+  return initPromise;
+};
+
 // Helper function to create a suspended promise
 const createSuspendedPromise = (markdown: string) => {
   let status: 'pending' | 'success' | 'error' = 'pending';
@@ -18,7 +50,8 @@ const createSuspendedPromise = (markdown: string) => {
 
   const promise = (async () => {
     try {
-      result = await marked.parse(markdown);
+      const md = await getMarkdownIt();
+      result = md.render(markdown);
       status = 'success';
     } catch (error) {
       status = 'error';
@@ -77,7 +110,8 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ rawMarkdown }) => {
       if (rawMarkdown) {
         try {
           // Update previous HTML
-          const parsed = await marked.parse(rawMarkdown);
+          const md = await getMarkdownIt();
+          const parsed = md.render(rawMarkdown);
           setPreviousHtml(parsed);
 
           // Set up new promise for next render
