@@ -45,7 +45,7 @@ body {
 }
 
 .markdown-content pre.shiki {
-  @apply overflow-x-auto;
+  @apply mt-2 overflow-x-auto;
 }
 
 .markdown-content pre.shiki code {

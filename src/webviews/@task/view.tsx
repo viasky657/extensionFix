@@ -119,7 +119,7 @@ export function TaskView() {
         </div>
       </header>
       <div className="flex flex-grow flex-col gap-2 overflow-x-hidden overflow-y-scroll">
-        <section className="flex-grow p-2">
+        <section className="flex-grow px-3 py-2">
           {exchanges && (
             <ol>
               {exchanges.map((exchange) => (
