@@ -22,15 +22,17 @@ export function SettingsView() {
   );
 
   return (
-    <main className="flex flex-grow flex-col p-2">
+    <main className="flex flex-grow flex-col px-3 py-2">
       <header className="flex items-baseline gap-2">
         <h2 className="mr-auto text-base text-description">Your presets</h2>
-        <Button variant="ghost" asChild>
-          <Link to={`/${View.Preset}`}>Create new</Link>
+        <Button variant="secondary" asChild>
+          <Link to={`/${View.Preset}`} className="hover:text-button-secondary-foreground">
+            Create new
+          </Link>
         </Button>
       </header>
       {presetsArray.length > 0 && (
-        <ol className="isolate flex flex-col gap-1 py-2">
+        <ol className="isolate mt-4 flex flex-col gap-1">
           {presetsArray.map((preset) => (
             <li key={preset.id}>
               <PresetItem
