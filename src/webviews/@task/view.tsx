@@ -128,7 +128,7 @@ export function TaskView() {
             </ol>
           )}
         </section>
-        <div className="bg-sidebar-background sticky bottom-0 p-2">
+        <div className="sticky bottom-0 bg-sidebar-background p-2">
           {showActions && (
             <div
               aria-live="assertive"
@@ -164,7 +164,7 @@ export function TaskView() {
           <Tiptap
             availableContextProviders={availableContextProviders ?? []}
             historyKey="chat"
-            onEnter={async (editorState) => {
+            onEnter={async (editorState, editor) => {
               const sessionId = task.data?.task.sessionId;
               if (sessionId === undefined) {
                 return;
@@ -178,7 +178,7 @@ export function TaskView() {
               task.sendRequest(inputQuery, sessionId, selectedContextItems);
 
               // Clear the editor after sending
-              editorState.editor.commands.clearContent();
+              editor.commands.clearContent();
             }}
           />
         </div>

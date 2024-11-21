@@ -126,6 +126,10 @@ const Tiptap = (props: TipTapEditorProps) => {
 
               return false;
             },
+            'Ctrl-l': () => {
+              console.log('Ctrl + L pressed');
+              return true;
+            },
           };
         },
       }).configure({

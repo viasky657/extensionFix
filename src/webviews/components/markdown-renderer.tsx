@@ -1,7 +1,7 @@
-import * as React from 'react';
+import Shiki from '@shikijs/markdown-it';
 // @ts-ignore
 import markdownit from 'markdown-it';
-import Shiki from '@shikijs/markdown-it';
+import * as React from 'react';
 
 interface MarkdownRendererProps {
   rawMarkdown: string;
@@ -19,6 +19,8 @@ const initializeMarkdownIt = async () => {
 
   md.use(
     await Shiki({
+      defaultLanguage: 'markdown',
+      fallbackLanguage: 'markdown',
       themes: {
         light: 'solarized-light',
         dark: 'solarized-dark',
