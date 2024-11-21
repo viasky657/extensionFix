@@ -3,6 +3,7 @@ import { Response, ResponsePart, ToolParameter, ToolParameterType } from '../../
 import MarkdownRenderer from '../markdown-renderer';
 import { ContextSummary } from '../context-summary';
 import { Exchange, ExchangeContent, ExchangeHeader } from './exchange-base';
+import FileIcon from 'components/fileicon';
 
 type ToolType =
   | 'ListFiles'
@@ -54,8 +55,10 @@ function ParameterContent({
           onClick={handleOpenFile}
           className="group flex w-full gap-2 border-description text-start text-sm text-description"
         >
-          <span aria-hidden className="codicon codicon-file flex-shrink-0 translate-y-0.5" />
-          <span className="w-0 flex-grow overflow-hidden text-ellipsis whitespace-nowrap group-hover:underline">
+          <div className="flex-shrink-0 -translate-x-1">
+            <FileIcon height="24px" width="24px" filename={content} />
+          </div>
+          <span className="w-0 flex-grow -translate-x-2 overflow-hidden text-ellipsis whitespace-nowrap group-hover:underline">
             {content.split(/[/\\]/).pop()}
           </span>
         </button>
