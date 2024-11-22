@@ -51,3 +51,16 @@ body {
 .markdown-content pre.shiki code {
   @apply inline-block min-w-full rounded-none p-2;
 }
+
+.markdown-content {
+  @apply space-y-2;
+}
+
+.markdown-content :is(ol, ul) {
+  @apply pl-4;
+}
+
+.markdown-content li::before {
+  content: '•';
+  @apply -ml-1 mr-2 opacity-75;
+}

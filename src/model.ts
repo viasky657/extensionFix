@@ -212,6 +212,7 @@ export enum ToolType {
   AskFollowupQuestions = 'AskFollowupQuestions',
   AttemptCompletion = 'AttemptCompletion',
   RepoMapGeneration = 'RepoMapGeneration',
+  TerminalCommand = 'TerminalCommand',
 }
 
 export type ToolTypeType = `${ToolType}`;

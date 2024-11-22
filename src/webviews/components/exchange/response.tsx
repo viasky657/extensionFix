@@ -1,29 +1,23 @@
 import * as React from 'react';
-import { Response, ResponsePart, ToolParameter, ToolParameterType } from '../../../model';
+import { Response, ResponsePart, ToolParameter, ToolParameterType, ToolType } from '../../../model';
 import MarkdownRenderer from '../markdown-renderer';
 import { ContextSummary } from '../context-summary';
 import { Exchange, ExchangeContent, ExchangeHeader } from './exchange-base';
 import FileIcon from 'components/fileicon';
 
-type ToolType =
-  | 'ListFiles'
-  | 'SearchFileContentWithRegex'
-  | 'OpenFile'
-  | 'CodeEditing'
-  | 'LSPDiagnostics'
-  | 'AskFollowupQuestions'
-  | 'AttemptCompletion'
-  | 'RepoMapGeneration';
-
-const toolIcons: Record<ToolType, string> = {
-  ListFiles: 'codicon-search',
-  SearchFileContentWithRegex: 'codicon-regex',
-  OpenFile: 'codicon-folder-opened',
-  CodeEditing: 'codicon-code',
-  LSPDiagnostics: 'codicon-checklist',
-  AskFollowupQuestions: 'codicon-comment-discussion',
-  AttemptCompletion: 'codicon-wand',
-  RepoMapGeneration: 'codicon-folder-library',
+const toolTypesInfo: Record<ToolType, { label: string; codiconId: string }> = {
+  [ToolType.AskFollowupQuestions]: { label: 'Follow up question', codiconId: 'comment-discussion' },
+  [ToolType.ListFiles]: { label: 'List files', codiconId: 'search' },
+  [ToolType.OpenFile]: { label: 'Reading', codiconId: 'folder-opened' },
+  [ToolType.SearchFileContentWithRegex]: {
+    label: 'Search content file with regex',
+    codiconId: 'regex',
+  },
+  [ToolType.TerminalCommand]: { label: 'Terminal command', codiconId: 'terminal' },
+  [ToolType.CodeEditing]: { label: 'Editing', codiconId: 'code' },
+  [ToolType.LSPDiagnostics]: { label: 'LSP Diagnostics', codiconId: 'checklist' },
+  [ToolType.AttemptCompletion]: { label: 'Attempt completion', codiconId: 'wand' },
+  [ToolType.RepoMapGeneration]: { label: 'Repo map generation', codiconId: 'folder-library' },
 };
 
 const Spinner = () => (
@@ -88,47 +82,32 @@ function ParameterContent({
 
     case ToolParameter.Command:
       return (
-        <div className="bg-sideBarSectionHeader-background border-sideBarSectionHeader-border rounded border text-xs">
-          <div className="text-editorHint-foreground border-sideBarSectionHeader-border flex gap-2 border-b px-2 py-2">
-            <span aria-hidden className="codicon codicon-terminal flex-shrink-0 translate-y-0.5" />
-            <span>Terminal commands</span>
-          </div>
-          <div className="space-y-1 px-2 py-2 font-mono">
+        <div className="flex-flex-col relative isolate bg-terminal-background p-2 text-xs text-terminal-foreground">
+          <div className="absolute inset-0 -z-10 rounded-xs border border-terminal-border opacity-50" />
+          <pre className="-mt-0.5 flex flex-col space-y-1">
             {content.split('\n').map((line, i) => (
-              <div
-                key={i}
-                className={
-                  line === delta ? 'text-editor-selectionForeground' : 'text-editor-foreground'
-                }
-              >
-                <span className="text-editor-foreground">$</span> {line}
-              </div>
+              <p key={i} className="overflow-auto">
+                <span className="opacity-80">$</span> {line}
+              </p>
             ))}
-          </div>
+          </pre>
         </div>
       );
 
     case ToolParameter.Question:
       return (
-        <div className="rounded border border-l-4 border-blue-500 bg-blue-500/10 p-4">
-          <div className="mb-2 flex gap-2 text-blue-400">
-            <span
-              aria-hidden
-              className="codicon codicon-comment-discussion flex-shrink-0 translate-y-0.5"
-            />
-            <span className="font-medium">Question</span>
-          </div>
-          <div className="text-zinc-300">{content}</div>
+        <div className="relative isolate p-2">
+          <div className="bg-accent absolute inset-0 -z-10 opacity-10" />
+          <div className="border-accent absolute inset-0 -z-10 border-l-2 opacity-50" />
+          <div className="text-foreground">{content}</div>
         </div>
       );
 
     case ToolParameter.Result:
       return (
-        <div className="rounded border border-green-600/30 bg-green-950/30 px-3 py-2">
-          <div className="mb-2 flex gap-2 text-green-400">
-            <span aria-hidden className="codicon codicon-check flex-shrink translate-y-0.5" />
-            <span className="font-medium">Result</span>
-          </div>
+        <div className="relative isolate p-3 text-foreground">
+          <div className="bg-success absolute inset-0 -z-10 opacity-10" />
+          <div className="border-success absolute inset-0 -z-10 border-l-2 opacity-50" />
           <MarkdownRenderer rawMarkdown={content} />
         </div>
       );
@@ -136,28 +115,28 @@ function ParameterContent({
     case ToolParameter.RegexPattern:
     case ToolParameter.FilePattern:
       return (
-        <div className="rounded-xs bg-input-background p-3 font-mono text-xs">
+        <pre className="relative isolate rounded-xs bg-input-background p-2 text-xs">
+          <div className="absolute inset-0 -z-10 rounded-xs border border-input-border opacity-50" />
           {content.split('\n').map((line, i) => (
-            <div key={i}>{line}</div>
+            <p key={i}>{line}</p>
           ))}
-        </div>
+        </pre>
       );
 
     case ToolParameter.Recursive:
       return (
-        <div className="text-sm">
-          <span>
-            <span className="text-description">Recursive: </span>
-            {content === 'true' ? 'Yes' : 'No'}
-          </span>
+        <div className="relative isolate rounded-xs p-2 text-xs">
+          <div className="absolute inset-0 -z-10 rounded-xs bg-terminal-background opacity-50" />
+          <span className="text-description">Recursive: </span>
+          {content === 'true' ? 'Yes' : 'No'}
         </div>
       );
 
     default:
       return (
-        <div className="p-3 font-mono text-sm">
+        <div className="p-2 text-sm">
           {content.split('\n').map((line, i) => (
-            <div key={i}>{line}</div>
+            <p key={i}>{line}</p>
           ))}
         </div>
       );
@@ -209,12 +188,12 @@ function renderPart(part: ResponsePart, index: number, allParts: ResponsePart[])
       return (
         <div className="flex flex-wrap gap-2">
           {part.commands.map((command) => (
-            <button
+            <pre // Why was this a button?
               key={command.command}
-              className="flex gap-2 rounded px-2 py-1.5 text-start text-xs text-link-foreground transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-focus-border"
+              className="flex gap-2 rounded-xs border border-terminal-border bg-terminal-background px-2 py-1.5"
             >
               {command.title}
-            </button>
+            </pre>
           ))}
         </div>
       );
@@ -231,36 +210,19 @@ function renderPart(part: ResponsePart, index: number, allParts: ResponsePart[])
           </div>
         </div>
       );
-    case 'toolType':
-      const icon = (
-        <span
-          aria-hidden
-          className={`codicon flex-shrink-0 translate-y-0.5 ${toolIcons[part.toolType as ToolType] || 'codicon-question'}`}
-        />
-      );
-
-      let label = part.toolType as string;
-
-      const toolTypeLabels = {
-        AskFollowupQuestions: 'Follow up question',
-        CodeEditing: 'Editing',
-        LSPDiagnostics: 'LSP Diagnostics',
-        RepoMapGeneration: 'Repo map generation',
-        AttemptCompletion: 'Attempt completion',
-        ListFiles: 'List files',
-        OpenFile: 'Reading',
-        SearchFileContentWithRegex: 'Search content file with regex',
-        TerminalCommand: 'Terminal command',
-      };
-
-      label = toolTypeLabels[part.toolType] || 'Unknown tool type';
+    case 'toolType': {
+      const { label, codiconId } = toolTypesInfo[part.toolType];
 
       return (
-        <div className="flex gap-2">
-          {icon}
-          <span className="text-sm">{label}</span>
+        <div className="mt-4 flex gap-1 pr-2 text-description">
+          <span
+            aria-hidden
+            className={`codicon flex-shrink-0 translate-y-0.5 opacity-60 codicon-${codiconId}`}
+          />
+          <span className="text-sm opacity-75">{label}</span>
         </div>
       );
+    }
     default:
       return null;
   }

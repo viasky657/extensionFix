@@ -18,6 +18,8 @@ export default {
         'error-foreground': 'var(--vscode-errorForeground)',
         current: 'currentColor',
         'disabled-foreground': 'var(--vscode-disabledForeground)',
+        success: 'var(--vscode-terminal-ansiBrightGreen)',
+        accent: 'var(--vscode-terminal-ansiBrightBlue)',
         widget: {
           border: 'var(--vscode-widget-border)',
         },
