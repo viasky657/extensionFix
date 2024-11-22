@@ -71,7 +71,10 @@ Resources:
 */
 
 export class TerminalManager {
-	private terminalIds: Set<number> = new Set();
+	private _terminalIds: Set<number> = new Set();
+	get terminalIds(): Set<number> {
+		return this._terminalIds;
+	}
 	private processes: Map<number, TerminalProcess> = new Map();
 	private disposables: vscode.Disposable[] = [];
 
@@ -167,7 +170,7 @@ export class TerminalManager {
 			console.log(`no_shell_integration received for terminal ${terminalInfo.id}`);
 			// Remove the terminal so we can't reuse it (in case it's running a long-running process)
 			TerminalRegistry.removeTerminal(terminalInfo.id);
-			this.terminalIds.delete(terminalInfo.id);
+			this._terminalIds.delete(terminalInfo.id);
 			this.processes.delete(terminalInfo.id);
 		});
 
@@ -212,7 +215,7 @@ export class TerminalManager {
 			return arePathsEqual(vscode.Uri.file(cwd).fsPath, terminalCwd.fsPath);
 		});
 		if (availableTerminal) {
-			this.terminalIds.add(availableTerminal.id);
+			this._terminalIds.add(availableTerminal.id);
 			return availableTerminal;
 		}
 
@@ -220,19 +223,19 @@ export class TerminalManager {
 
 		const newTerminalInfo = TerminalRegistry.createTerminal(cwd);
 		console.log('newTerminalInfo', newTerminalInfo);
-		this.terminalIds.add(newTerminalInfo.id);
+		this._terminalIds.add(newTerminalInfo.id);
 		return newTerminalInfo;
 	}
 
 	getTerminals(busy: boolean): { id: number; lastCommand: string }[] {
-		return Array.from(this.terminalIds)
+		return Array.from(this._terminalIds)
 			.map((id) => TerminalRegistry.getTerminal(id))
 			.filter((t): t is TerminalInfo => t !== undefined && t.busy === busy)
 			.map((t) => ({ id: t.id, lastCommand: t.lastCommand }));
 	}
 
 	getUnretrievedOutput(terminalId: number): string {
-		if (!this.terminalIds.has(terminalId)) {
+		if (!this._terminalIds.has(terminalId)) {
 			return '';
 		}
 		const process = this.processes.get(terminalId);
@@ -248,7 +251,7 @@ export class TerminalManager {
 		// for (const info of this.terminals) {
 		// 	//info.terminal.dispose() // dont want to dispose terminals when task is aborted
 		// }
-		this.terminalIds.clear();
+		this._terminalIds.clear();
 		this.processes.clear();
 		this.disposables.forEach((disposable) => disposable.dispose());
 		this.disposables = [];

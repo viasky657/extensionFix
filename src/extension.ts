@@ -25,7 +25,11 @@ Example flow:
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
-  const panelProvider = new PanelProvider(context);
+
+  // Create a terminal manager instance
+  const terminalManager = new TerminalManager();
+
+  const panelProvider = new PanelProvider(context, terminalManager);
   let rootPath = vscode.workspace.rootPath;
   if (!rootPath) {
     rootPath = '';
@@ -46,9 +50,6 @@ export async function activate(context: vscode.ExtensionContext) {
   // so we can grab the recent edits very quickly
   const recentEditsRetriever = new RecentEditsRetriever(300 * 1000, vscode.workspace);
   context.subscriptions.push(recentEditsRetriever);
-
-  // Create a terminal manager instance
-  const terminalManager = new TerminalManager();
 
   // Register the agent session provider
   const agentSessionProvider = new AideAgentSessionProvider(
@@ -155,4 +156,4 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 // This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }

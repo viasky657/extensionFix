@@ -71,7 +71,13 @@ interface GetContextItems {
   selectedCode: RangeInFile[];
 }
 
+interface OpenTerminal {
+  type: 'open-terminal',
+  id: number
+}
+
 export type ClientRequest =
+  OpenTerminal
   | TaskFeedback
   | SetActivePreset
   | DeletePreset
@@ -130,7 +136,13 @@ interface NewSession {
   type: 'new-session';
 }
 
+interface TaskTerminals {
+  type: 'task-terminals',
+  terminals: TerminalInformation[]
+}
+
 export type Event =
+  TaskTerminals
   | OpenView
   | NewSession
   | PresetsLoaded
@@ -216,6 +228,14 @@ export enum ToolType {
 }
 
 export type ToolTypeType = `${ToolType}`;
+
+
+export type TerminalInformation = {
+  id: number;
+  name: string;
+  lastCommand: string;
+  busy: boolean;
+}
 
 interface MessageBase {
   username: string;

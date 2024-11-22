@@ -15,6 +15,7 @@ import {
 } from './model';
 import { getNonce } from './webviews/utils/nonce';
 import { ContextItemId, ContextItemWithId } from '.';
+import { TerminalManager } from './terminal/TerminalManager';
 
 const getDefaultTask = (activePreset: Preset) => ({
   query: '',
@@ -32,15 +33,24 @@ const getDefaultTask = (activePreset: Preset) => ({
   responseOnGoing: false,
 });
 
+
+export type Terminal = vscode.Terminal & {
+  busy: boolean;
+  lastCommand: string;
+  id: number;
+}
+
 export class PanelProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
   private _runningTask: Task | undefined;
+  private _taskTerminals: Terminal[] = [];
+  // private _terminalsTimer: NodeJS.Timeout | undefined;
   private _presets: Map<string, Preset> = new Map();
   private _isSidecarReady: boolean = false;
   private readonly _extensionUri: vscode.Uri;
   private ide: VSCodeIDE;
 
-  constructor(private readonly context: vscode.ExtensionContext) {
+  constructor(private readonly context: vscode.ExtensionContext, private readonly terminalManager: TerminalManager) {
     this._extensionUri = context.extensionUri;
     this.ide = new VSCodeIDE();
 
@@ -81,7 +91,37 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     presetsArray.forEach((preset) => {
       this._presets.set(preset.id, preset);
     });
+
+    // Simple set interval for now
+    setInterval(() => {
+      if (this._view && this._runningTask) {
+
+        const busyTerminalsMap = new Map(this.terminalManager.getTerminals(true).map(t => ([t.id, t])));
+        const inactiveTerminals = new Map(this.terminalManager.getTerminals(false).map(t => ([t.id, t])));
+
+        let terminals: Terminal[] = [];
+        for (const [id, terminal] of vscode.window.terminals.entries()) {
+          const busyTerminal = busyTerminalsMap.get(id);
+          if (busyTerminal) {
+            terminals.push({ ...terminal, ...busyTerminal, busy: true });
+            continue;
+          }
+          const inactiveTerminal = inactiveTerminals.get(id);
+          if (inactiveTerminal) {
+            terminals.push({ ...terminal, ...inactiveTerminal, busy: false });
+            continue;
+          }
+        }
+
+        this._view.webview.postMessage({
+          type: 'task-terminals',
+          terminals
+        });
+
+      }
+    }, 1000);
   }
+
 
   private _onMessageFromWebview = new vscode.EventEmitter<ClientRequest>();
   onMessageFromWebview = this._onMessageFromWebview.event;
@@ -169,6 +209,12 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           if (activePresetId === data.presetId) {
             this.context.globalState.update('active-preset-id', undefined);
           }
+          break;
+        }
+        case 'open-terminal': {
+          const terminalId = data.id;
+          console.log(terminalId);
+          this._taskTerminals.find(t => t.id === terminalId)?.show();
           break;
         }
         case 'set-active-preset': {

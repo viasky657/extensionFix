@@ -9,8 +9,9 @@ import * as React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useSubmenuContext } from 'store/submenuContext';
 import { cn } from 'utils/cn';
-import { Exchange, View } from '../../model';
+import { Event, Exchange, TerminalInformation, View } from '../../model';
 import { useTask } from './use-task';
+import { TerminalPreview } from 'components/terminal-preview';
 
 export function TaskView() {
   const task = useTask();
@@ -43,11 +44,33 @@ export function TaskView() {
   const [query, setQuery] = React.useState(task.data?.task?.query);
   const isQueryEmpty = query === '';
 
+  const [terminals, setTerminals] = React.useState<TerminalInformation[]>([]);
+
+  React.useEffect(() => {
+    const handleTerminalUpdates = (event: MessageEvent<Event>) => {
+      if (event.data.type === 'task-terminals') {
+        setTerminals(event.data.terminals);
+      }
+    };
+
+    window.addEventListener('message', handleTerminalUpdates);
+    return () => {
+      window.removeEventListener('message', handleTerminalUpdates);
+    };
+  });
+
   React.useEffect(() => {
     setExchanges(task.data?.task.exchanges);
     setPreset(task.data?.task.preset);
     setQuery(task.data?.task.query);
   }, [task.data?.task]);
+
+  function openTerminal(terminalId: number) {
+    vscode.postMessage({
+      type: 'open-terminal',
+      id: terminalId,
+    });
+  }
 
   if (task.data === undefined) {
     return <div>Loading...</div>;
@@ -128,6 +151,25 @@ export function TaskView() {
             </TaskDL>
           )}
         </div>
+        {terminals.length > 0 && (
+          <div className="mt-4 flex flex-col gap-2">
+            <p className="sr-only">Task terminals</p>
+            <ul>
+              {terminals.map((terminal) => (
+                <li key={terminal.id}>
+                  <button className="w-full" onClick={() => openTerminal(terminal.id)}>
+                    <TerminalPreview
+                      className={cn(!terminal.busy && 'opacity-50')}
+                      name={terminal.name}
+                      busy={terminal.busy}
+                      lines={[terminal.lastCommand || '...']}
+                    />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </header>
       <div className="flex flex-grow flex-col gap-2 overflow-x-hidden overflow-y-scroll">
         <section className="flex-grow px-3 py-2">

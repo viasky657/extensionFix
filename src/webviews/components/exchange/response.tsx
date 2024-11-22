@@ -4,6 +4,8 @@ import MarkdownRenderer from '../markdown-renderer';
 import { ContextSummary } from '../context-summary';
 import { Exchange, ExchangeContent, ExchangeHeader } from './exchange-base';
 import FileIcon from 'components/fileicon';
+import { TerminalPreview } from 'components/terminal-preview';
+import { Spinner } from 'components/spinner';
 
 const toolTypesInfo: Record<ToolType, { label: string; codiconId: string }> = {
   [ToolType.AskFollowupQuestions]: { label: 'Follow up question', codiconId: 'comment-discussion' },
@@ -19,10 +21,6 @@ const toolTypesInfo: Record<ToolType, { label: string; codiconId: string }> = {
   [ToolType.AttemptCompletion]: { label: 'Attempt completion', codiconId: 'wand' },
   [ToolType.RepoMapGeneration]: { label: 'Repo map generation', codiconId: 'folder-library' },
 };
-
-const Spinner = () => (
-  <div className="h-4 w-4 animate-spin rounded-full border-2 border-transparent border-b-progress-bar-background" />
-);
 
 function ParameterContent({
   type,
@@ -81,18 +79,7 @@ function ParameterContent({
       );
 
     case ToolParameter.Command:
-      return (
-        <div className="flex-flex-col relative isolate bg-terminal-background p-2 text-xs text-terminal-foreground">
-          <div className="absolute inset-0 -z-10 rounded-xs border border-terminal-border opacity-50" />
-          <pre className="-mt-0.5 flex flex-col space-y-1">
-            {content.split('\n').map((line, i) => (
-              <p key={i} className="overflow-auto">
-                <span className="opacity-80">$</span> {line}
-              </p>
-            ))}
-          </pre>
-        </div>
-      );
+      return <TerminalPreview lines={content.split('\n')} busy={false} />;
 
     case ToolParameter.Question:
       return (
