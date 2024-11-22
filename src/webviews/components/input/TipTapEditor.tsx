@@ -22,7 +22,7 @@ type TipTapEditorProps = SimpleHTMLElementProps<HTMLDivElement> & {
 };
 
 const Tiptap = (props: TipTapEditorProps) => {
-  const { availableContextProviders, historyKey, onEnter, ...rest } = props;
+  const { availableContextProviders, historyKey, onEnter, onClear, ...rest } = props;
   const getSubmenuContextItems = useSubmenuContext((state) => state.getSubmenuContextItems);
   const availableContextProvidersRef = useUpdatingRef(availableContextProviders);
 
@@ -128,7 +128,7 @@ const Tiptap = (props: TipTapEditorProps) => {
               return false;
             },
             'Ctrl-l': () => {
-              props.onClear();
+              onClear();
               return true;
             },
           };
@@ -190,7 +190,7 @@ const Tiptap = (props: TipTapEditorProps) => {
   }, [onEnter, editor]);
 
   const onClearRef = useUpdatingRef(() => {
-    props.onClear();
+    onClear();
   });
 
   const insertCharacterWithWhitespace = useCallback(
