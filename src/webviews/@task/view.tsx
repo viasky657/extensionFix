@@ -62,7 +62,7 @@ export function TaskView() {
   React.useEffect(() => {
     setExchanges(task.data?.task.exchanges);
     setPreset(task.data?.task.preset);
-    setQuery(task.data?.task.query);
+    //setQuery(task.data?.task.query);
   }, [task.data?.task]);
 
   function openTerminal(terminalId: number) {
@@ -82,17 +82,17 @@ export function TaskView() {
 
   return (
     <main className="flex h-full flex-col">
-      <header className="sticky top-0 z-10 bg-panel-background py-2 pl-[18px] pr-[12px]">
+      <header className="sticky top-0 z-10 bg-panel-background p-2">
         <div className="group">
-          <div
-            className="mb-2 flex cursor-pointer select-none items-center justify-between"
-            onClick={() => setSummaryShown(!summaryShown)}
-          >
-            <h2 className="text-base text-description">{isQueryEmpty ? 'New request' : query}</h2>
+          <div className="mb-2 flex cursor-pointer select-none items-center justify-between">
+            <h2 className="text-base text-description">
+              Task
+              {/* {isQueryEmpty ? 'New request' : query} */}
+            </h2>
             <span
               className={cn(
-                'codicon',
-                summaryShown ? 'codicon-chevron-up' : 'codicon-chevron-down',
+                // 'codicon',
+                //summaryShown ? 'codicon-chevron-up' : 'codicon-chevron-down',
                 'ml-2 flex-shrink-0'
               )}
             />
@@ -162,7 +162,7 @@ export function TaskView() {
                       className={cn(!terminal.busy && 'opacity-50')}
                       name={terminal.name}
                       busy={terminal.busy}
-                      lines={[terminal.lastCommand || '...']}
+                      lines={[terminal.lastCommand]}
                     />
                   </button>
                 </li>
