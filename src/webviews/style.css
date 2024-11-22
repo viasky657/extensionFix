@@ -16,6 +16,10 @@ body {
   height: 100vh;
 }
 
+details summary::-webkit-details-marker {
+  display: none;
+}
+
 .mention {
   @apply rounded bg-badge-background px-[0.15em] py-[0.05em] text-[0.9em] text-badge-foreground transition-colors duration-200;
 }

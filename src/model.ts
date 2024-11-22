@@ -164,7 +164,8 @@ export type ResponsePart =
   | CommandGroupResponsePart
   | ToolThinkingResponsePart
   | ToolThinkingToolTypeResponsePart
-  | ToolParameterResponsePart;
+  | ToolParameterResponsePart
+  | ToolOutputResponsePart
 
 export type MarkdownResponsePart = {
   type: 'markdown';
@@ -194,6 +195,21 @@ export type ToolParameterResponsePart = {
     contentDelta: string;
     contentUpUntilNow: string;
   };
+};
+
+
+export type ToolOutputResponsePart = {
+  type: 'toolOutput';
+  toolOutput: {
+    toolType: ToolTypeType;
+    contentDelta?: string;
+    contentUpUntilNow?: string;
+  };
+};
+
+export type ToolTypeForOutput = {
+  type: 'toolOutputType';
+  toolType: ToolTypeType;
 };
 
 export enum ToolParameter {

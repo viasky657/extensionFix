@@ -496,13 +496,19 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 				}
 				// TODO(willis): Make sure that the tool output gets rendered properly
 				if (event.event.FrameworkEvent.ToolOutput) {
+					console.log('ToolOutput', event.event.FrameworkEvent.ToolOutput);
+					if (event.event.FrameworkEvent.ToolOutput.ToolTypeForOutput) {
+						// This contains the tool type for which we are generating the output over here
+						const toolTypeForOutput = event.event.FrameworkEvent.ToolOutput.ToolTypeForOutput.tool_type;
+						this.panelProvider.addToolTypeForOutputFound(sessionId, exchangeId, toolTypeForOutput);
+					}
 					if (event.event.FrameworkEvent.ToolOutput.ToolOutputResponse) {
 						// This contains the tool output response, which shows you that we have the delta over here and the answer up until now
 						// we can just send the answer up until now completely and have it displayed on the extension layer
+						const toolOutput = event.event.FrameworkEvent.ToolOutput.ToolOutputResponse;
+						this.panelProvider.addToolOutputFound(sessionId, exchangeId, toolOutput.delta, toolOutput.answer_up_until_now);
 					}
-					if (event.event.FrameworkEvent.ToolOutput.ToolTypeForOutput) {
-						// This contains the tool type for which we are generating the output over here
-					}
+
 				}
 			}
 		}

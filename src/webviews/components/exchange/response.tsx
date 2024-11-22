@@ -1,5 +1,12 @@
 import * as React from 'react';
-import { Response, ResponsePart, ToolParameter, ToolParameterType, ToolType } from '../../../model';
+import {
+  Response,
+  ResponsePart,
+  ToolParameter,
+  ToolParameterType,
+  ToolType,
+  ToolTypeType,
+} from '../../../model';
 import MarkdownRenderer from '../markdown-renderer';
 import { ContextSummary } from '../context-summary';
 import { Exchange, ExchangeContent, ExchangeHeader } from './exchange-base';
@@ -130,18 +137,47 @@ function ParameterContent({
   }
 }
 
+function OutputContent({ type, content }: { type: ToolTypeType; content: string }) {
+  const { label, codiconId } = toolTypesInfo[type];
+
+  const [isOpen, setIsOpen] = React.useState(false);
+
+  switch (type) {
+    default:
+      return (
+        <div className="group relative isolate -mt-0.5">
+          <div className="absolute -inset-x-2 inset-y-0 -z-10 rounded-xs border border-transparent bg-terminal-background opacity-25 brightness-75 transition-all group-hover:border-terminal-border group-hover:brightness-100" />
+          <details className="group relative isolate -m-2 flex flex-col whitespace-nowrap p-2 pt-2.5 text-xs text-description">
+            <summary className="flex cursor-pointer items-center gap-1">
+              {/* <span
+                aria-hidden
+                className={`codicon flex-shrink-0 opacity-60 codicon-${codiconId}`}
+              /> */}
+              View {label} ouput
+              <span className="aria-hidden codicon codicon-chevron-down" />
+            </summary>
+            <div className="absolute inset-0 -z-10 rounded-xs border border-terminal-border bg-terminal-background opacity-25 brightness-100 transition-all" />
+            <pre className="mt-2 flex w-full flex-col gap-2 overflow-auto text-terminal-foreground">
+              {content}
+            </pre>
+          </details>
+        </div>
+      );
+  }
+}
+
 export function ResponseViewItem(props: Response) {
   const { parts, context } = props;
 
   return (
-    <Exchange>
-      {/* <ExchangeHeader>SOTA-SWE</ExchangeHeader> */}
+    <Exchange className="mt-4">
       <ExchangeContent className="flex flex-col gap-2">
         {parts.length > 0 &&
           parts.map((part, index) => (
             <React.Fragment key={`${part.type}-${index}`}>
               {renderPart(part, index, parts)}
               {renderParameter(part)}
+              {renderToolOutput(part)}
             </React.Fragment>
           ))}
         {context.length > 0 && <ContextSummary context={context} />}
@@ -157,6 +193,19 @@ function renderParameter(responsePart: ResponsePart) {
       <div>
         <span className="sr-only">{parameterName}</span>
         <ParameterContent type={parameterName} content={contentUpUntilNow} delta={contentDelta} />
+      </div>
+    );
+  }
+  return null;
+}
+
+function renderToolOutput(responsePart: ResponsePart) {
+  if (responsePart.type === 'toolOutput' && responsePart.toolOutput.contentUpUntilNow) {
+    const { toolType, contentDelta, contentUpUntilNow } = responsePart.toolOutput;
+    return (
+      <div>
+        <span className="sr-only">{toolType}</span>
+        <OutputContent type={toolType} content={contentUpUntilNow} />
       </div>
     );
   }
@@ -199,7 +248,6 @@ function renderPart(part: ResponsePart, index: number, allParts: ResponsePart[])
       );
     case 'toolType': {
       const { label, codiconId } = toolTypesInfo[part.toolType];
-
       return (
         <div className="mt-4 flex gap-1 pr-2 text-description">
           <span

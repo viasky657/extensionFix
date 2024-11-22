@@ -113,9 +113,11 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           }
         }
 
+        this._taskTerminals = terminals;
+
         this._view.webview.postMessage({
           type: 'task-terminals',
-          terminals
+          terminals: this._taskTerminals
         });
 
       }
@@ -213,7 +215,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
         }
         case 'open-terminal': {
           const terminalId = data.id;
-          console.log(terminalId);
+          console.log(this._taskTerminals, terminalId);
           this._taskTerminals.find(t => t.id === terminalId)?.show();
           break;
         }
@@ -377,6 +379,78 @@ export class PanelProvider implements vscode.WebviewViewProvider {
             },
           });
         }
+      }
+
+      // we update our webview with the latest state
+      this._view?.webview.postMessage({
+        command: 'state-updated',
+        initialAppState: {
+          extensionReady: false,
+          view: View.Task,
+          currentTask: this._runningTask,
+          loadedTasks: new Map(),
+        },
+      });
+    }
+  }
+
+  public addToolTypeForOutputFound(sessionId: string, exchangeId: string, toolType: ToolTypeType) {
+    if (this._runningTask && this._runningTask.sessionId === sessionId) {
+      const exchangePossible = this._runningTask.exchanges.find((exchange) => {
+        return exchange.exchangeId === exchangeId;
+      }) as Response | undefined;
+      if (exchangePossible) {
+        exchangePossible.parts.push({
+          type: 'toolOutput',
+          toolOutput: { toolType },
+        });
+      }
+
+      // we update our webview with the latest state
+      this._view?.webview.postMessage({
+        command: 'state-updated',
+        initialAppState: {
+          extensionReady: false,
+          view: View.Task,
+          currentTask: this._runningTask,
+          loadedTasks: new Map(),
+        },
+      });
+    }
+  }
+
+
+  public addToolOutputFound(
+    sessionId: string,
+    exchangeId: string,
+    // toolType: ToolTypeType, // we don't have this for now
+    _delta: string,
+    answerUpUntilNow: string
+  ) {
+    if (this._runningTask && this._runningTask.sessionId === sessionId) {
+      const exchangePossible = this._runningTask.exchanges.find((exchange) => {
+        return exchange.exchangeId === exchangeId;
+      }) as Response | undefined;
+      if (exchangePossible) {
+        // Hacky way to see if we have a toolOutput pending
+        const index = exchangePossible.parts.findIndex((part) => {
+          return part.type === 'toolOutput' && !part.toolOutput.contentUpUntilNow;
+        });
+        if (index !== -1) {
+          if (exchangePossible.parts[index].type === 'toolOutput') {
+            exchangePossible.parts[index].toolOutput.contentUpUntilNow = answerUpUntilNow;
+          }
+        }
+        //else {
+        //  exchangePossible.parts.push({
+        //    type: 'toolOutput',
+        //    toolOutput: {
+        //      contentDelta: delta,
+        //      contentUpUntilNow: answerUpUntilNow,
+        //      toolType,
+        //    },
+        //  });
+        //}
       }
 
       // we update our webview with the latest state

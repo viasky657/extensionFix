@@ -5,7 +5,7 @@ import { Exchange, ExchangeHeader, ExchangeContent } from './exchange-base';
 export function RequestViewItem(props: Request) {
   const { username, message, context } = props;
   return (
-    <Exchange>
+    <Exchange className="my-8 first:mt-0">
       <ExchangeHeader>{username}</ExchangeHeader>
       <ExchangeContent>
         <p>{message}</p>
