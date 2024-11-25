@@ -96,54 +96,63 @@ async function checkServerRunning(serverUrl: string): Promise<boolean> {
   }
 }
 
-function killProcessOnPort(port: number) {
-  if (os.platform() === 'win32') {
-    // Find the process ID using netstat (this command is for Windows)
-    exec(`netstat -ano | findstr :${port}`, (error, stdout) => {
-      if (error) {
-        console.error(`exec error: ${error}`);
-        return;
-      }
+async function killProcessOnPort(port: number): Promise<boolean> {
+  return new Promise((reject, resolve) => {
+    if (os.platform() === 'win32') {
+      // Find the process ID using netstat (this command is for Windows)
+      exec(`netstat -ano | findstr :${port}`, (error, stdout) => {
+        if (error) {
+          console.error(`exec error: ${error}`);
+          reject(false);
+        }
 
-      const pid = stdout.split(/\s+/).slice(-2, -1)[0];
+        const pid = stdout.split(/\s+/).slice(-2, -1)[0];
 
-      if (pid) {
-        // Kill the process
-        exec(`taskkill /PID ${pid} /F`, (killError) => {
-          if (killError) {
-            console.error(`Error killing process: ${killError}`);
-            return;
-          }
-          // console.log(`Killed process with PID: ${pid}`);
-        });
-      } else {
-        // console.log(`No process running on port ${port}`);
-      }
-    });
-  } else {
-    // Find the process ID using lsof (this command is for macOS/Linux)
-    exec(`lsof -i :${port} | grep LISTEN | awk '{print $2}'`, (error, stdout) => {
-      if (error) {
-        console.error(`exec error: ${error}`);
-        return;
-      }
+        if (pid) {
+          // Kill the process
+          exec(`taskkill /PID ${pid} /F`, (killError) => {
+            if (killError) {
+              console.error(`Error killing process: ${killError}`);
+              reject(false);
+            } else {
+              resolve(true);
+              console.log(`Killed process with PID: ${pid}`);
+            }
+            console.log(`Killed process with PID: ${pid}`);
+          });
+        } else {
+          console.log(`No process running on port ${port}`);
+          resolve(false);
+        }
+      });
+    } else {
+      // Find the process ID using lsof (this command is for macOS/Linux)
+      exec(`lsof -i :${port} | grep LISTEN | awk '{print $2}'`, (error, stdout) => {
+        if (error) {
+          console.error(`exec error: ${error}`);
+          reject(false);
+        }
+        const pid = stdout.trim();
 
-      const pid = stdout.trim();
+        if (pid) {
+          // Kill the process
+          execFile('kill', ['-2', `${pid}`], (killError) => {
 
-      if (pid) {
-        // Kill the process
-        execFile('kill', ['-2', `${pid}`], (killError) => {
-          if (killError) {
-            console.error(`Error killing process: ${killError}`);
-            return;
-          }
-          // console.log(`Killed process with PID: ${pid}`);
-        });
-      } else {
-        // console.log(`No process running on port ${port}`);
-      }
-    });
-  }
+            if (killError) {
+              console.error(`Error killing process: ${killError}`);
+              reject(false);
+            } else {
+              resolve(true);
+              console.log(`Killed process with PID: ${pid}`);
+            }
+          });
+        } else {
+          console.log(`No process running on port ${port}`);
+          resolve(false);
+        }
+      });
+    }
+  });
 }
 
 export async function checkOrKillRunningServer(serverUrl: string): Promise<boolean> {
@@ -151,7 +160,7 @@ export async function checkOrKillRunningServer(serverUrl: string): Promise<boole
   if (serverRunning) {
     console.log('Sidecar-binary:Killing previous sidecar server');
     try {
-      killProcessOnPort(42424);
+      await killProcessOnPort(42424);
     } catch (e: any) {
       if (!e.message.includes("Process doesn't exist")) {
         console.log('Sidecar-binary:Failed to kill old server:', e);
@@ -233,6 +242,8 @@ export async function startSidecarBinary(
 
   const zipDestination = path.join(extensionBasePath, 'sidecar_zip.zip');
   const sidecarDestination = path.join(extensionBasePath, 'sidecar_bin');
+
+  console.log('will download sidecar binary');
 
   // First, check if the server is already downloaded
   await window.withProgress(
