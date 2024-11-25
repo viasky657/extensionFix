@@ -51,10 +51,10 @@ export const SIDECAR_VERSION = 'ce0cebc1afd9fa590a469a9abb7767edbb0889fea99b378f
 
 async function checkCorrectVersionRunning(url: string): Promise<boolean> {
   try {
-    // console.log('Version check starting');
+    console.log('Sidecar-binary:Version check starting');
     const response = await fetch(`${url}/api/version`);
-    // console.log('Version check done' + response);
     const version = await response.json();
+    console.log('Sidecar-binary:Version check starting' + version);
     return version.version_hash === SIDECAR_VERSION;
   } catch (e) {
     return false;
@@ -81,14 +81,14 @@ export async function runCommand(cmd: string): Promise<[string, string | undefin
 
 async function checkServerRunning(serverUrl: string): Promise<boolean> {
   try {
-    // console.log('Health check starting');
+    console.log('Health check starting');
     const response = await fetch(`${serverUrl}/api/health`);
     if (response.status === 200) {
-      // console.log('Sidecar server already running');
-      // console.log('Health check done');
+      console.log('Sidecar server already running');
+      console.log('Health check done');
       return true;
     } else {
-      // console.log('Health check done');
+      console.log('Health check done');
       return false;
     }
   } catch (e) {
@@ -146,15 +146,15 @@ function killProcessOnPort(port: number) {
   }
 }
 
-async function checkOrKillRunningServer(serverUrl: string): Promise<boolean> {
+export async function checkOrKillRunningServer(serverUrl: string): Promise<boolean> {
   const serverRunning = await checkServerRunning(serverUrl);
   if (serverRunning) {
-    // console.log('Killing previous sidecar server');
+    console.log('Sidecar-binary:Killing previous sidecar server');
     try {
       killProcessOnPort(42424);
     } catch (e: any) {
       if (!e.message.includes("Process doesn't exist")) {
-        // console.log('Failed to kill old server:', e);
+        console.log('Sidecar-binary:Failed to kill old server:', e);
       }
     }
   }
@@ -164,6 +164,7 @@ async function checkOrKillRunningServer(serverUrl: string): Promise<boolean> {
 export async function startSidecarBinaryWithLocal(installLocation: string): Promise<boolean> {
   const serverUrl = getSidecarBinaryURL();
   const shouldUseSelfRun = sidecarUseSelfRun();
+  console.log('sidecar-binary:shouldSelfRun', shouldUseSelfRun);
   if (shouldUseSelfRun) {
     return true;
   }
@@ -173,6 +174,8 @@ export async function startSidecarBinaryWithLocal(installLocation: string): Prom
 
   if (fs.existsSync(sidecarBinPath)) {
     try {
+      console.log('sidecar-binary:selfRun:binPath', sidecarBinPath);
+      console.log('sidecar-binary:selfRun:serverUrl', serverUrl);
       const sidecarValue = await runSideCarBinary(sidecarBinPath, serverUrl);
       return sidecarValue;
     } catch (e) {
@@ -193,6 +196,7 @@ export async function startSidecarBinary(
   // we have to figure out how to copy them together
   // console.log('starting sidecar binary');
   // console.log('installLocation', installLocation);
+  console.log('sidecar-binary:starting sidecar binary');
   const selfStart = await startSidecarBinaryWithLocal(extensionBasePath);
   if (selfStart) {
     return 'http://127.0.0.1:42424';
@@ -201,6 +205,7 @@ export async function startSidecarBinary(
   // Check vscode settings
   const serverUrl = getSidecarBinaryURL();
   const shouldUseSelfRun = sidecarUseSelfRun();
+
   if (shouldUseSelfRun) {
     return serverUrl;
   }

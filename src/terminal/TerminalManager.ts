@@ -259,7 +259,7 @@ export class TerminalManager {
 }
 
 export async function getTerminalOutputPending(terminalManager: TerminalManager, request: SidecarTerminalFreshOutputRequest): Promise<string | undefined> {
-	console.log('terminalOutput::request', request);
+	// console.log('terminalOutput::request', request);
 	return await terminalManager.getTerminalDetails();
 }
 

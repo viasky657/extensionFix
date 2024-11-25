@@ -91,8 +91,8 @@ function ParameterContent({
     case ToolParameter.Question:
       return (
         <div className="relative isolate p-2">
-          <div className="bg-accent absolute inset-0 -z-10 opacity-10" />
-          <div className="border-accent absolute inset-0 -z-10 border-l-2 opacity-50" />
+          <div className="absolute inset-0 -z-10 bg-accent opacity-10" />
+          <div className="absolute inset-0 -z-10 border-l-2 border-accent opacity-50" />
           <div className="text-foreground">{content}</div>
         </div>
       );
@@ -100,8 +100,8 @@ function ParameterContent({
     case ToolParameter.Result:
       return (
         <div className="relative isolate p-3 text-foreground">
-          <div className="bg-success absolute inset-0 -z-10 opacity-10" />
-          <div className="border-success absolute inset-0 -z-10 border-l-2 opacity-50" />
+          <div className="absolute inset-0 -z-10 bg-success opacity-10" />
+          <div className="absolute inset-0 -z-10 border-l-2 border-success opacity-50" />
           <MarkdownRenderer rawMarkdown={content} />
         </div>
       );
@@ -170,7 +170,7 @@ export function ResponseViewItem(props: Response) {
   const { parts, context } = props;
 
   return (
-    <Exchange className="mt-4">
+    <Exchange>
       <ExchangeContent className="flex flex-col gap-2">
         {parts.length > 0 &&
           parts.map((part, index) => (

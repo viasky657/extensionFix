@@ -175,8 +175,13 @@ export function TaskView() {
         <section className="flex-grow px-3 py-2">
           {exchanges && (
             <ol>
-              {exchanges.map((exchange) => (
-                <li key={exchange.exchangeId}>{renderExchange(exchange)}</li>
+              {exchanges.map((exchange, index) => (
+                <li
+                  className={cn(index !== 0 && (exchange.type === 'request' ? 'mt-8' : 'mt-4'))}
+                  key={exchange.exchangeId}
+                >
+                  {renderExchange(exchange)}
+                </li>
               ))}
             </ol>
           )}

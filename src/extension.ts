@@ -6,7 +6,7 @@ import { RecentEditsRetriever } from './server/editedFiles';
 import { RepoRef, RepoRefBackend, SideCarClient } from './sidecar/client';
 import { TerminalManager } from './terminal/TerminalManager';
 import { AideAgentMode } from './types';
-import { startSidecarBinary } from './utilities/setupSidecarBinary';
+import { checkOrKillRunningServer, getSidecarBinaryURL, startSidecarBinary } from './utilities/setupSidecarBinary';
 import { ProjectContext } from './utilities/workspaceContext';
 
 export let SIDECAR_CLIENT: SideCarClient | null = null;
@@ -67,6 +67,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.window.registerWebviewViewProvider('sota-swe-panel', panelProvider)
   );
 
+  console.log('extension:will start sidecar binary');
   // sidecar binary download in background
   startSidecarBinary(context.globalStorageUri.fsPath)
     .then(async (sidecarUrl) => {
@@ -156,4 +157,7 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 // This method is called when your extension is deactivated
-export function deactivate() { }
+export async function deactivate() {
+  const serverUrl = getSidecarBinaryURL();
+  await checkOrKillRunningServer(serverUrl);
+}
