@@ -135,6 +135,10 @@ export async function activate(context: vscode.ExtensionContext) {
         // - on did change chat model gets back over here
       }
 
+      if (message.type === 'cancel-request') {
+        agentSessionProvider.cancelAllExchangesForSession(message.sessionId);
+      }
+
       if (message.type === 'open-file') {
         try {
           const uri = vscode.Uri.parse(message.fs_file_path);

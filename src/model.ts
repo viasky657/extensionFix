@@ -76,8 +76,14 @@ interface OpenTerminal {
   id: number
 }
 
+interface CancelRequest {
+  type: 'cancel-request',
+  sessionId: string
+}
+
 export type ClientRequest =
-  OpenTerminal
+  | CancelRequest
+  | OpenTerminal
   | TaskFeedback
   | SetActivePreset
   | DeletePreset

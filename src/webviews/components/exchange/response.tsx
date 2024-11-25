@@ -171,7 +171,7 @@ export function ResponseViewItem(props: Response) {
 
   return (
     <Exchange>
-      <ExchangeContent className="flex flex-col gap-2">
+      <ExchangeContent className="mt flex flex-col gap-2">
         {parts.length > 0 &&
           parts.map((part, index) => (
             <React.Fragment key={`${part.type}-${index}`}>

@@ -1,8 +1,9 @@
 interface InputToolbarProps {
   disabled?: boolean;
   onAddContextItem?: () => void;
-  onEnter?: () => void;
-  onClear?: () => void;
+  onEnter: () => void;
+  onClear: () => void;
+  onCancel: () => void;
 }
 
 function InputToolbar(props: InputToolbarProps) {
@@ -24,7 +25,7 @@ function InputToolbar(props: InputToolbarProps) {
         <div
           className="flex cursor-pointer items-center justify-center rounded px-1.5 py-0.5 text-foreground hover:bg-panel-background disabled:cursor-wait"
           onClick={(e) => {
-            props.onClear?.();
+            props.onClear();
           }}
           role="button"
           tabIndex={0}
@@ -35,13 +36,24 @@ function InputToolbar(props: InputToolbarProps) {
         <div
           className="flex cursor-pointer items-center rounded px-1.5 py-0.5 text-foreground hover:bg-panel-background disabled:cursor-wait"
           onClick={(e) => {
-            props.onEnter?.();
+            props.onEnter();
           }}
           role="button"
           tabIndex={0}
         >
           <span className="codicon codicon-newline mr-[2px]" />
           <span className="text-disabled-foreground">Send</span>
+        </div>
+
+        <div
+          className="flex cursor-pointer items-center rounded px-1.5 py-0.5 text-foreground hover:bg-panel-background disabled:cursor-wait"
+          onClick={(e) => {
+            props.onCancel();
+          }}
+          role="button"
+          tabIndex={0}
+        >
+          <span className="text-disabled-foreground">Cancel</span>
         </div>
       </div>
     </div>

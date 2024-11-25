@@ -71,6 +71,9 @@ export async function applyEdits(
 	response: AideAgentResponseStream,
 	iterationEdits: vscode.WorkspaceEdit,
 ): Promise<SidecarApplyEditsResponse> {
+
+	console.log('applying edits through here');
+
 	// const limiter = new Limiter(1);
 	const filePath = request.fs_file_path;
 	const startPosition = request.selected_range.startPosition;

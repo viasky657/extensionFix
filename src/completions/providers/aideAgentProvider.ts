@@ -17,12 +17,13 @@ import { RepoRef } from '../../sidecar/client';
 import { getUniqueId } from '../../utilities/uniqueId';
 import { ProjectContext } from '../../utilities/workspaceContext';
 import postHogClient from '../../posthog/client';
-import { AideAgentEventSenderResponse, AideAgentMode, AideAgentPromptReference, AideAgentRequest, AideAgentResponseStream, AideAgentScope, AideSessionExchangeUserAction, AideSessionParticipant } from '../../types';
+import { AideAgentMode, AideAgentPromptReference, AideAgentRequest, AideAgentResponseStream, AideAgentScope, AideSessionExchangeUserAction, AideSessionParticipant } from '../../types';
 import { SIDECAR_CLIENT } from '../../extension';
 import { PanelProvider } from '../../PanelProvider';
 import { TerminalManager } from '../../terminal/TerminalManager';
 import assert from 'assert';
 import { createFileIfNotExists } from '../../server/createFile';
+import { CancellationTokenSource } from 'vscode';
 
 /**
  * Stores the necessary identifiers required for identifying a response stream
@@ -32,6 +33,7 @@ interface ResponseStreamIdentifier {
 	exchangeId: string;
 }
 
+/*
 class AideResponseStreamCollection {
 	private responseStreamCollection: Map<string, AideAgentEventSenderResponse> = new Map();
 
@@ -64,6 +66,40 @@ class AideResponseStreamCollection {
 	removeResponseStream(responseStreamIdentifer: ResponseStreamIdentifier) {
 		this.responseStreamCollection.delete(this.getKey(responseStreamIdentifer));
 	}
+}*/
+
+class RequestsCanellationTokenSourceCollection {
+	private ctsCollection: Map<string, CancellationTokenSource> = new Map();
+
+	constructor(private extensionContext: vscode.ExtensionContext, private aideAgentSessionProvider: AideAgentSessionProvider) {
+		this.extensionContext = extensionContext;
+	}
+
+	getKey(responseStreamIdentifier: ResponseStreamIdentifier): string {
+		return `${responseStreamIdentifier.sessionId}-${responseStreamIdentifier.exchangeId}`;
+	}
+
+	addCancellationToken(responseStreamIdentifier: ResponseStreamIdentifier, cts: CancellationTokenSource) {
+		this.extensionContext.subscriptions.push(cts.token.onCancellationRequested(() => {
+			console.log('responseStream::token_cancelled', responseStreamIdentifier);
+			// over here we get the stream of events from the cancellation
+			// we need to send it over on the stream as usual so we can work on it
+			// we can send empty access token here since we are not making llm calls
+			// on the sidecar... pretty sure I will forget and scream at myself later on
+			// for having herd knowledged like this
+			const responseStreamAnswer = SIDECAR_CLIENT!.cancelRunningEvent(responseStreamIdentifier.sessionId, responseStreamIdentifier.exchangeId, this.aideAgentSessionProvider.editorUrl!, '');
+			this.aideAgentSessionProvider.reportAgentEventsToChat(true, responseStreamAnswer);
+		}));
+		this.ctsCollection.set(this.getKey(responseStreamIdentifier), cts);
+	}
+
+	getToken(responseStreamIdentifier: ResponseStreamIdentifier) {
+		return this.ctsCollection.get(this.getKey(responseStreamIdentifier));
+	}
+
+	removeToken(responseStreamIdentifer: ResponseStreamIdentifier) {
+		this.ctsCollection.delete(this.getKey(responseStreamIdentifer));
+	}
 }
 
 
@@ -76,7 +112,9 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 	private eventQueue: AideAgentRequest[] = [];
 	private openResponseStream: AideAgentResponseStream | undefined;
 	private processingEvents: Map<string, boolean> = new Map();
-	private responseStreamCollection: AideResponseStreamCollection;
+	// private responseStreamCollection: AideResponseStreamCollection;
+	private requestCancellationTokensCollection: RequestsCanellationTokenSourceCollection;
+	private _pendingExchanges: Map<string, string[]> = new Map();
 	private panelProvider: PanelProvider;
 	// private sessionId: string | undefined;
 	// this is a hack to test the theory that we can keep snapshots and make
@@ -124,6 +162,8 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 		panelProvider: PanelProvider,
 		terminalManager: TerminalManager,
 	) {
+
+		this.requestCancellationTokensCollection = new RequestsCanellationTokenSourceCollection(extensionContext, this);
 		this.panelProvider = panelProvider;
 		this.requestHandler = http.createServer(
 			handleRequest(
@@ -149,19 +189,17 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 
 		// our collection of active response streams for exchanges which are still running
 		// apparantaly this also works??? crazy the world of js
-		this.responseStreamCollection = new AideResponseStreamCollection(extensionContext, this);
+		// this.responseStreamCollection = new AideResponseStreamCollection(extensionContext, this);
 	}
 
 	async undoToCheckpoint(request: SidecarUndoPlanStep): Promise<{
 		success: boolean;
 	}> {
 		const exchangeId = request.exchange_id;
-		const sessionId = request.session_id;
 		const planStep = request.index;
-		const responseStream = this.responseStreamCollection.getResponseStream({
-			sessionId,
-			exchangeId,
-		});
+		// const sessionId = request.session_id;
+		// Check this @theskcd I think this is always undefined
+		const responseStream = undefined; //this.responseStreamCollection.getResponseStream({sessionId, exchangeId });
 		if (responseStream === undefined) {
 			return {
 				success: false,
@@ -179,7 +217,7 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 			label,
 			needsConfirmation: false,
 		});
-		responseStream.stream.codeEdit(edit);
+		// responseStream.stream.codeEdit(edit);
 		return {
 			success: true,
 		};
@@ -189,7 +227,41 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 		exchange_id: string | undefined;
 	}> {
 		const exchangeId = this.panelProvider.createNewExchangeResponse(sessionId);
+		if (exchangeId) {
+			const pendingExchanges = this._pendingExchanges.get(sessionId) || [];
+			const newExchanges = [...pendingExchanges, exchangeId];
+			console.log('newExchanges', newExchanges);
+			this._pendingExchanges.set(sessionId, newExchanges);
+			const cts = new CancellationTokenSource();
+			this.requestCancellationTokensCollection.addCancellationToken({
+				sessionId,
+				exchangeId,
+			}, cts);
+		}
 		return { exchange_id: exchangeId };
+	}
+
+	cancelAllExchangesForSession(sessionId: string): void {
+		const pendingExchanges = this._pendingExchanges.get(sessionId);
+		if (pendingExchanges) {
+			for (const exchangeId of pendingExchanges) {
+				const cts = this.requestCancellationTokensCollection.getToken({
+					sessionId,
+					exchangeId,
+				});
+				if (cts) {
+					cts.cancel();
+				} else {
+					const key = this.requestCancellationTokensCollection.getKey({
+						sessionId,
+						exchangeId,
+					});
+					console.warn(`No cts found for exchangeId ${key}`);
+				}
+			}
+		}
+
+		this._pendingExchanges.delete(sessionId);
 	}
 
 	async provideEditStreamed(request: EditedCodeStreamingRequest): Promise<{
@@ -209,7 +281,7 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 		// sure that we can roll-back if required on the undo-stack
 		let uniqueEditId = request.exchange_id;
 		if (request.plan_step_id) {
-			uniqueEditId = `${uniqueEditId}::${request.plan_step_id}`;
+			uniqueEditId = `${uniqueEditId}:: ${request.plan_step_id}`;
 		}
 		// we first check if the file exists otherwise we create it
 		await createFileIfNotExists(vscode.Uri.file(request.fs_file_path));
@@ -367,7 +439,7 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 
 	handleEvent(event: AideAgentRequest): void {
 		this.eventQueue.push(event);
-		const uniqueId = `${event.sessionId}-${event.exchangeId}`;
+		const uniqueId = `${event.sessionId} - ${event.exchangeId}`;
 		if (!this.processingEvents.has(uniqueId)) {
 			this.processingEvents.set(uniqueId, true);
 			this.processEvent(event);

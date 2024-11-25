@@ -19,10 +19,11 @@ type TipTapEditorProps = SimpleHTMLElementProps<HTMLDivElement> & {
   historyKey: string;
   onEnter: (editorState: JSONContent, editor: Editor) => void;
   onClear: () => void;
+  onCancel: () => void;
 };
 
 const Tiptap = (props: TipTapEditorProps) => {
-  const { availableContextProviders, historyKey, onEnter, onClear, ...rest } = props;
+  const { availableContextProviders, historyKey, onEnter, onClear, onCancel, ...rest } = props;
   const getSubmenuContextItems = useSubmenuContext((state) => state.getSubmenuContextItems);
   const availableContextProvidersRef = useUpdatingRef(availableContextProviders);
 
@@ -193,6 +194,10 @@ const Tiptap = (props: TipTapEditorProps) => {
     onClear();
   });
 
+  const onCancelRef = useUpdatingRef(() => {
+    onCancel();
+  });
+
   const insertCharacterWithWhitespace = useCallback(
     (char: string) => {
       if (editor) {
@@ -224,6 +229,7 @@ const Tiptap = (props: TipTapEditorProps) => {
         onAddContextItem={() => insertCharacterWithWhitespace('@')}
         onEnter={onEnterRef.current}
         onClear={onClearRef.current}
+        onCancel={onCancelRef.current}
       />
     </div>
   );

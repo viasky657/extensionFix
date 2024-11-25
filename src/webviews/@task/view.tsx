@@ -247,6 +247,12 @@ export function TaskView() {
                 newSession: true,
               });
             }}
+            onCancel={() => {
+              vscode.postMessage({
+                type: 'cancel-request',
+                sessionId: task.data.task.sessionId,
+              });
+            }}
           />
         </div>
       </div>
