@@ -100,6 +100,16 @@ class RequestsCanellationTokenSourceCollection {
 	removeToken(responseStreamIdentifer: ResponseStreamIdentifier) {
 		this.ctsCollection.delete(this.getKey(responseStreamIdentifer));
 	}
+
+	removeAllTokenForSession(sessionId: string) {
+		for (const [key, value] of this.ctsCollection.entries()) {
+			if (key.startsWith(`${sessionId}-`)) {
+				// Optionally dispose of the CancellationTokenSource if needed
+				value.dispose(); // Assuming CancellationTokenSource has a dispose method
+				this.ctsCollection.delete(key);
+			}
+		}
+	}
 }
 
 
@@ -228,11 +238,14 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 	}> {
 		const exchangeId = this.panelProvider.createNewExchangeResponse(sessionId);
 		if (exchangeId) {
-			const pendingExchanges = this._pendingExchanges.get(sessionId) || [];
-			const newExchanges = [...pendingExchanges, exchangeId];
+			const newExchanges = [exchangeId];
 			console.log('newExchanges', newExchanges);
 			this._pendingExchanges.set(sessionId, newExchanges);
 			const cts = new CancellationTokenSource();
+			// here we should also unset all the previous exchanges which are going on
+			// since that would lead to lot of cancellation events
+			this.requestCancellationTokensCollection.removeAllTokenForSession(sessionId);
+			// only track the current one
 			this.requestCancellationTokensCollection.addCancellationToken({
 				sessionId,
 				exchangeId,
@@ -430,6 +443,7 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 			// TODO(skcd): Not sure if an async stream like this works, but considering
 			// js/ts this should be okay from what I remember, pending futures do not
 			// get cleaned up via GC
+			console.log('are we hitting this somehow');
 			const session = await vscode.csAuthentication.getSession();
 			const accessToken = session?.accessToken ?? '';
 			const responseStream = SIDECAR_CLIENT!.userFeedbackOnExchange(sessionId, exchangeId, stepIndex, editorUrl, isAccepted, accessToken);

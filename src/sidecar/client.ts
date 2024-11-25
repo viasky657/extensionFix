@@ -1114,6 +1114,7 @@ export class SideCarClient {
       return textDocument.document.uri.fsPath;
     });
     const currentShell = detectDefaultShell();
+    console.log('we are hitting the plan step again and again');
     baseUrl.pathname = '/api/agentic/agent_tool_use';
     const url = baseUrl.toString();
     const body = {
