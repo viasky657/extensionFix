@@ -177,7 +177,10 @@ export function TaskView() {
             <ol>
               {exchanges.map((exchange, index) => (
                 <li
-                  className={cn(index !== 0 && (exchange.type === 'request' ? 'mt-8' : 'mt-4'))}
+                  className={cn(
+                    exchange.type === 'request' ? 'my-6' : 'my-2',
+                    index === 0 && 'mt-0'
+                  )}
                   key={exchange.exchangeId}
                 >
                   {renderExchange(exchange)}

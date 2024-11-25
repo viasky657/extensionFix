@@ -1133,7 +1133,7 @@ export class SideCarClient {
       open_files: openFiles,
       shell: currentShell,
     };
-
+    console.log('sidecar.request', url);
     const asyncIterableResponse = callServerEventStreamingBufferedPOST(url, body);
     for await (const line of asyncIterableResponse) {
       const lineParts = line.split('data:{');
@@ -2086,13 +2086,13 @@ async function newConvertVSCodeVariableToSidecar(
 
 function getCurrentActiveWindow():
   | {
-      file_path: string;
-      file_content: string;
-      visible_range_content: string;
-      start_line: number;
-      end_line: number;
-      language: string;
-    }
+    file_path: string;
+    file_content: string;
+    visible_range_content: string;
+    start_line: number;
+    end_line: number;
+    language: string;
+  }
   | undefined {
   const activeWindow = vscode.window.activeTextEditor;
   if (activeWindow === undefined) {

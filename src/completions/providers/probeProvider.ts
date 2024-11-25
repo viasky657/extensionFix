@@ -81,7 +81,7 @@ export class AideProbeProvider implements vscode.Disposable {
 
 			// can still grab it by listenting to port 0
 			this._requestHandler?.listen(port);
-			const editorUrl = `http://localhost:${port}`;
+			const editorUrl = `http://127.0.0.1:${port}`;
 			console.log('editorUrl', editorUrl);
 			this._editorUrl = editorUrl;
 			// console.log(this._editorUrl);

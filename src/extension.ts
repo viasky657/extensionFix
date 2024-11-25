@@ -159,5 +159,5 @@ export async function activate(context: vscode.ExtensionContext) {
 // This method is called when your extension is deactivated
 export async function deactivate() {
   const serverUrl = getSidecarBinaryURL();
-  await checkOrKillRunningServer(serverUrl);
+  return await checkOrKillRunningServer(serverUrl);
 }

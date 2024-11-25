@@ -21,7 +21,7 @@ export function getAideServerUrl() {
 
 	return (
 		workspace.getConfiguration('aide').get<string>('pythonServerUrl') ||
-		'http://localhost:42424'
+		'http://127.0.0.1:42424'
 	);
 }
 
@@ -139,15 +139,15 @@ export async function startAidePythonBackend(
 ): Promise<string> {
 	// Check vscode settings
 	const serverUrl = getAideServerUrl();
-	if (serverUrl !== 'http://localhost:42424') {
+	if (serverUrl !== 'http://127.0.0.1:42424') {
 		console.log('CodeStory server is being run manually, skipping start');
-		return 'http://localhost:42424';
+		return 'http://127.0.0.1:42424';
 	}
 
 	// Check if server is already running
 	if (await checkOrKillRunningServer(serverUrl)) {
 		console.log('CodeStory server already running');
-		return 'http://localhost:42424';
+		return 'http://127.0.0.1:42424';
 	}
 
 	console.log('Starting Aide server right now');
@@ -290,7 +290,7 @@ export async function startAidePythonBackend(
 
 	// Write the current version of vscode extension to a file called server_version.txt
 	fs.writeFileSync(serverVersionPath(extensionBasePath), getExtensionVersion());
-	return 'http://localhost:42424';
+	return 'http://127.0.0.1:42424';
 }
 
 

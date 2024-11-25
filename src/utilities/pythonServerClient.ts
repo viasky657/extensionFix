@@ -69,7 +69,7 @@ export class PythonServer extends CodeSymbolsIndexer {
 
 
 // void (async () => {
-// 	const server = new PythonServer(`http://localhost:${PORT}`);
+// 	const server = new PythonServer(`http://127.0.0.1:${PORT}`);
 // 	const result = await server.parseFile('/Users/skcd/scratch/anton/anton/server/start_server.py');
 // 	console.log(result);
 // })();

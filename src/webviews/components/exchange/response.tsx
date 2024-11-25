@@ -90,7 +90,7 @@ function ParameterContent({
 
     case ToolParameter.Question:
       return (
-        <div className="relative isolate p-2">
+        <div className="relative isolate px-3 py-2">
           <div className="absolute inset-0 -z-10 bg-accent opacity-10" />
           <div className="absolute inset-0 -z-10 border-l-2 border-accent opacity-50" />
           <div className="text-foreground">{content}</div>
