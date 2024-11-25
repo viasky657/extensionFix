@@ -8,6 +8,7 @@ import { TerminalManager } from './terminal/TerminalManager';
 import { AideAgentMode } from './types';
 import { checkOrKillRunningServer, getSidecarBinaryURL, startSidecarBinary } from './utilities/setupSidecarBinary';
 import { ProjectContext } from './utilities/workspaceContext';
+import { sidecarUseSelfRun } from './utilities/sidecarUrl';
 
 export let SIDECAR_CLIENT: SideCarClient | null = null;
 
@@ -162,6 +163,13 @@ export async function activate(context: vscode.ExtensionContext) {
 
 // This method is called when your extension is deactivated
 export async function deactivate() {
-  const serverUrl = getSidecarBinaryURL();
-  return await checkOrKillRunningServer(serverUrl);
+  const shouldUseSelfRun = sidecarUseSelfRun();
+  if (!shouldUseSelfRun) {
+    // This will crash when self-running
+    const serverUrl = getSidecarBinaryURL();
+    return await checkOrKillRunningServer(serverUrl);
+  }
+  return new Promise((resolve) => {
+    resolve(true);
+  });
 }
