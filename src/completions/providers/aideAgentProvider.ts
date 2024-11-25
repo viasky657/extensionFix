@@ -87,8 +87,8 @@ class RequestsCanellationTokenSourceCollection {
 			// we can send empty access token here since we are not making llm calls
 			// on the sidecar... pretty sure I will forget and scream at myself later on
 			// for having herd knowledged like this
-			const responseStreamAnswer = SIDECAR_CLIENT!.cancelRunningEvent(responseStreamIdentifier.sessionId, responseStreamIdentifier.exchangeId, this.aideAgentSessionProvider.editorUrl!, '');
-			this.aideAgentSessionProvider.reportAgentEventsToChat(true, responseStreamAnswer);
+			SIDECAR_CLIENT!.cancelRunningEvent(responseStreamIdentifier.sessionId, responseStreamIdentifier.exchangeId, this.aideAgentSessionProvider.editorUrl!, '');
+			//this.aideAgentSessionProvider.reportAgentEventsToChat(true, responseStreamAnswer);
 		}));
 		this.ctsCollection.set(this.getKey(responseStreamIdentifier), cts);
 	}
