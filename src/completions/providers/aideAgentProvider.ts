@@ -576,13 +576,15 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 					const toolType = event.event.FrameworkEvent.ToolTypeFound.tool_type;
 					this.panelProvider.addToolTypeFound(sessionId, exchangeId, toolType);
 				}
+				if (event.event.FrameworkEvent.ToolNotFound) {
+					//const output = 
+				}
 				if (event.event.FrameworkEvent.ToolParameterFound) {
 					const toolParameter = event.event.FrameworkEvent.ToolParameterFound.tool_parameter_input;
 					this.panelProvider.addToolParameterFound(sessionId, exchangeId, toolParameter.field_name, toolParameter.field_content_delta, toolParameter.field_content_up_until_now);
 				}
-				// TODO(willis): Make sure that the tool output gets rendered properly
 				if (event.event.FrameworkEvent.ToolOutput) {
-					console.log('ToolOutput', event.event.FrameworkEvent.ToolOutput);
+					//console.log('ToolOutput', event.event.FrameworkEvent.ToolOutput);
 					if (event.event.FrameworkEvent.ToolOutput.ToolTypeForOutput) {
 						// This contains the tool type for which we are generating the output over here
 						const toolTypeForOutput = event.event.FrameworkEvent.ToolOutput.ToolTypeForOutput.tool_type;

@@ -46,6 +46,9 @@ export function PresetForm(props: PresetFormProps) {
   return (
     <form id={formId} className={cn(className, 'flex flex-col gap-4 text-description')} {...rest}>
       {initialData?.id && <input type="hidden" name="id" required value={initialData?.id} />}
+      {initialData?.id && (
+        <input type="hidden" name="createdOn" required value={initialData?.createdOn} />
+      )}
       <label htmlFor="provider">
         <p className="font-medium text-foreground">Provider</p>
         <Select
