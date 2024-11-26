@@ -62,14 +62,23 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
     const openNewTask = vscode.commands.registerCommand('sota-swe.go-to-new-task', () => {
       if (this._view) {
-        this.context.globalState.update('active-preset-id', undefined);
 
         const firstPreset = Array.from(this._presets.values()).at(0);
-        let activePreset = firstPreset;
+        let activePreset = undefined;
+        const activePresetId = this.context.globalState.get<string>('active-preset-id');
+        if (activePresetId) {
+          activePreset = this._presets.get(activePresetId);
+          if (!activePreset) {
+            this.context.globalState.update('active-preset-id', undefined);
+            activePreset = firstPreset;
+          }
+        }
 
         if (activePreset) {
           this._runningTask = getDefaultTask(activePreset);
         }
+
+        this._view.webview.postMessage({ type: 'open-view', view: View.Task });
 
         this._view.webview.postMessage({
           type: 'init-response',
