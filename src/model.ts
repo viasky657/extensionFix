@@ -320,6 +320,12 @@ export enum Provider {
   //Ollama = 'ollama',
 }
 
+export enum AnthropicModels {
+  ClaudeSonnet = 'ClaudeSonnet',
+  ClaudeHaiku = 'ClaudeHaiku',
+  ClaudeOpus = 'ClaudeOpus'
+}
+
 export enum PermissionState {
   Always = 'always',
   Ask = 'ask',

@@ -1,4 +1,4 @@
-import { PermissionState, Preset, Provider, ProviderType } from '../../model';
+import { AnthropicModels, PermissionState, Preset, Provider, ProviderType } from '../../model';
 import * as React from 'react';
 import { Checkbox } from 'components/checkbox';
 import { Select, Option, SelectProps } from 'components/select';
@@ -104,14 +104,19 @@ export function PresetForm(props: PresetFormProps) {
 
       <label>
         <p className="font-medium text-foreground">Model</p>
-        <Input
-          required
+        <Select
           className="mt-1 w-full"
           id="model"
           name="model"
-          type="model"
-          defaultValue={initialData?.model}
-        />
+          required
+          defaultValue={initialData?.model || AnthropicModels.ClaudeSonnet}
+        >
+          {Object.values(AnthropicModels).map((model) => (
+            <Option key={model} value={model}>
+              <div className="flex gap-2">{capitalize(model)}</div>
+            </Option>
+          ))}
+        </Select>
       </label>
 
       {/* Hidden permission inputs with default values */}
