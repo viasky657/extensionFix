@@ -577,7 +577,8 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 					this.panelProvider.addToolTypeFound(sessionId, exchangeId, toolType);
 				}
 				if (event.event.FrameworkEvent.ToolNotFound) {
-					//const output = 
+					const output = event.event.FrameworkEvent.ToolNotFound.full_output;
+					this.panelProvider.addToolNotFound(sessionId, exchangeId, output);
 				}
 				if (event.event.FrameworkEvent.ToolParameterFound) {
 					const toolParameter = event.event.FrameworkEvent.ToolParameterFound.tool_parameter_input;

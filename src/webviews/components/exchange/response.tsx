@@ -258,6 +258,13 @@ function renderPart(part: ResponsePart, index: number, allParts: ResponsePart[])
         </div>
       );
     }
+    case 'tool-not-found': {
+      <div className="relative isolate p-3 text-foreground">
+        <div className="absolute inset-0 -z-10 bg-error opacity-10" />
+        <div className="absolute inset-0 -z-10 border-l-2 border-error opacity-50" />
+        <MarkdownRenderer rawMarkdown={part.output} />
+      </div>;
+    }
     default:
       return null;
   }

@@ -349,6 +349,32 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     }
   }
 
+  public addToolNotFound(sessionId: string, exchangeId: string, output: string) {
+
+    if (this._runningTask && this._runningTask.sessionId === sessionId) {
+      const exchangePossible = this._runningTask.exchanges.find((exchange) => {
+        return exchange.exchangeId === exchangeId;
+      }) as Response | undefined;
+      if (exchangePossible) {
+        exchangePossible.parts.push({
+          type: 'tool-not-found',
+          output,
+        });
+      }
+
+      // we update our webview with the latest state
+      this._view?.webview.postMessage({
+        command: 'state-updated',
+        initialAppState: {
+          extensionReady: false,
+          view: View.Task,
+          currentTask: this._runningTask,
+          loadedTasks: new Map(),
+        },
+      });
+    }
+  }
+
   public addToolTypeFound(sessionId: string, exchangeId: string, toolType: ToolTypeType) {
     if (this._runningTask && this._runningTask.sessionId === sessionId) {
       const exchangePossible = this._runningTask.exchanges.find((exchange) => {

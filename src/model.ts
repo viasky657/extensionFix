@@ -180,6 +180,7 @@ export type ResponsePart =
   | ToolThinkingToolTypeResponsePart
   | ToolParameterResponsePart
   | ToolOutputResponsePart
+  | ToolNotFoundPart
 
 export type MarkdownResponsePart = {
   type: 'markdown';
@@ -220,6 +221,11 @@ export type ToolOutputResponsePart = {
     contentUpUntilNow?: string;
   };
 };
+
+export type ToolNotFoundPart = {
+  type: 'tool-not-found',
+  output: string;
+}
 
 export type ToolTypeForOutput = {
   type: 'toolOutputType';
