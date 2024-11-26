@@ -62,15 +62,18 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
     const openNewTask = vscode.commands.registerCommand('sota-swe.go-to-new-task', () => {
       if (this._view) {
-
-        const firstPreset = Array.from(this._presets.values()).at(0);
         let activePreset = undefined;
         const activePresetId = this.context.globalState.get<string>('active-preset-id');
+
         if (activePresetId) {
           activePreset = this._presets.get(activePresetId);
           if (!activePreset) {
             this.context.globalState.update('active-preset-id', undefined);
-            activePreset = firstPreset;
+            const firstPreset = Array.from(this._presets.values()).at(0);
+            if (firstPreset) {
+              activePreset = firstPreset;
+              this.context.globalState.update('active-preset-id', firstPreset.id);
+            }
           }
         }
 
@@ -163,10 +166,22 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
       switch (data.type) {
         case 'init': {
-          this.context.globalState.update('active-preset-id', undefined);
 
-          const firstPreset = Array.from(this._presets.values()).at(0);
-          let activePreset = firstPreset;
+          const activePresetId = this.context.globalState.get<string>('active-preset-id');
+          let activePreset = undefined;
+          if (activePresetId) {
+            activePreset = this._presets.get(activePresetId);
+            if (activePreset) {
+              this._runningTask = getDefaultTask(activePreset);
+            } else {
+              this.context.globalState.update('active-preset-id', undefined);
+              const firstPreset = Array.from(this._presets.values()).at(0);
+              if (firstPreset) {
+                activePreset = firstPreset;
+                this.context.globalState.update('active-preset-id', firstPreset.id);
+              }
+            }
+          }
 
           if ((data.newSession || !this._runningTask) && activePreset) {
             this._runningTask = getDefaultTask(activePreset);

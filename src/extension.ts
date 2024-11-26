@@ -117,8 +117,6 @@ export async function activate(context: vscode.ExtensionContext) {
         const exchangeId = uniqueId();
         panelProvider.addExchangeRequest(sessionId, exchangeId, query);
 
-        console.log(message.modelSelection);
-
         const { model, provider } = message.modelSelection;
         const modelSelection: vscode.ModelSelection = {
           slowModel: model,

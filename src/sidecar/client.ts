@@ -1111,12 +1111,11 @@ export class SideCarClient {
       _modelSelection = await MockModelSelection.getConfiguration();
     }
 
-    console.log({ modelSelection });
-
     const sideCarModelConfiguration = await getSideCarModelConfiguration(
       _modelSelection,
       workosAccessToken
     );
+
     const allFiles = vscode.workspace.textDocuments.map((textDocument) => {
       return textDocument.uri.fsPath;
     });

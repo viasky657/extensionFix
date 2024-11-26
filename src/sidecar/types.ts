@@ -611,6 +611,10 @@ export async function getSideCarModelConfiguration(modelSelection: ModelSelectio
 }
 
 // The various types are present in aiModels.ts
+
+
+
+
 function getProviderConfiguration(type: string, value: ModelProviderConfiguration, workosAccessToken: string | undefined) {
 	if (type === 'openai-default') {
 		return {

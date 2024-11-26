@@ -6,12 +6,13 @@ import Tiptap from 'components/input/TipTapEditor';
 import { PresetLogo } from 'components/preset';
 import { TaskDD, TaskDL, TaskDT } from 'components/task-definition-list';
 import * as React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useSubmenuContext } from 'store/submenuContext';
 import { cn } from 'utils/cn';
-import { Event, Exchange, TerminalInformation, View } from '../../model';
+import { Event, Exchange, TerminalInformation, View, ViewType } from '../../model';
 import { useTask } from './use-task';
 import { TerminalPreview } from 'components/terminal-preview';
+import * as AlertDialog from '@radix-ui/react-alert-dialog';
 
 export function TaskView() {
   const task = useTask();
@@ -20,6 +21,48 @@ export function TaskView() {
 
   const [showActions, setShowActions] = React.useState(false);
   const acceptButtonRef = React.useRef<HTMLButtonElement>(null);
+
+  const navigate = useNavigate();
+
+  const [confirmNavigationTo, setShowConfirmNavigationTo] = React.useState<ViewType | undefined>();
+
+  const continueNavigation = () => {
+    navigate(`/${confirmNavigationTo}`);
+  };
+
+  React.useEffect(() => {
+    setShowConfirmNavigationTo(undefined);
+  }, [task.data?.task.sessionId]);
+
+  const hasExchangesRef = React.useRef(false);
+  React.useEffect(() => {
+    if (task.data && task.data.task.exchanges.length > 0) {
+      hasExchangesRef.current = true;
+    }
+  }, [task.data?.task.exchanges]);
+
+  React.useEffect(() => {
+    const handleMessage = (event: MessageEvent<Event>) => {
+      if (event.data.type === 'open-view') {
+        if (hasExchangesRef.current && event.data.view !== View.Task) {
+          setShowConfirmNavigationTo(event.data.view);
+        } else {
+          navigate(`/${event.data.view}`);
+        }
+      } else {
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, []);
+
+  function onOpenChange(open: boolean) {
+    if (!open) {
+      setShowConfirmNavigationTo(undefined);
+    }
+  }
 
   React.useEffect(() => {
     if (showActions && acceptButtonRef.current) {
@@ -72,6 +115,16 @@ export function TaskView() {
     });
   }
 
+  function onCancelTask() {
+    continueNavigation();
+    if (task.data?.task) {
+      vscode.postMessage({
+        type: 'cancel-request',
+        sessionId: task.data.task.sessionId,
+      });
+    }
+  }
+
   if (task.data === undefined) {
     return <div>Loading...</div>;
   }
@@ -81,32 +134,33 @@ export function TaskView() {
   }
 
   return (
-    <main className="flex h-full flex-col">
-      <header className="sticky top-0 z-10 bg-panel-background p-2">
-        <div className="group">
-          <div className="mb-2 flex cursor-pointer select-none items-center justify-between">
-            <h2 className="text-base text-description">
-              Task
-              {/* {isQueryEmpty ? 'New request' : query} */}
-            </h2>
-            <span
-              className={cn(
-                // 'codicon',
-                //summaryShown ? 'codicon-chevron-up' : 'codicon-chevron-down',
-                'ml-2 flex-shrink-0'
-              )}
-            />
-          </div>
-          {!summaryShown ? (
-            <dl className="flex items-baseline">
-              <dt className="sr-only">Preset</dt>
-              <dd className="mr-auto flex items-center text-description">
-                {preset?.provider && (
-                  <PresetLogo provider={preset.provider} className="mr-1 h-3 w-3" />
+    <React.Fragment>
+      <main className="flex h-full flex-col">
+        <header className="sticky top-0 z-10 bg-panel-background p-2">
+          <div className="group">
+            <div className="mb-2 flex cursor-pointer select-none items-center justify-between">
+              <h2 className="text-base text-description">
+                Task
+                {/* {isQueryEmpty ? 'New request' : query} */}
+              </h2>
+              <span
+                className={cn(
+                  // 'codicon',
+                  //summaryShown ? 'codicon-chevron-up' : 'codicon-chevron-down',
+                  'ml-2 flex-shrink-0'
                 )}
-                <span className="whitespace-nowrap">{preset?.name}</span>
-              </dd>
-              {/* {cost && (
+              />
+            </div>
+            {!summaryShown ? (
+              <dl className="flex items-baseline">
+                <dt className="sr-only">Preset</dt>
+                <dd className="mr-auto flex items-center text-description">
+                  {preset?.provider && (
+                    <PresetLogo provider={preset.provider} className="mr-1 h-3 w-3" />
+                  )}
+                  <span className="whitespace-nowrap">{preset?.name}</span>
+                </dd>
+                {/* {cost && (
                 <React.Fragment>
                   <dt className="sr-only">API cost</dt>
                   <dd>
@@ -114,26 +168,26 @@ export function TaskView() {
                   </dd>
                 </React.Fragment>
               )} */}
-            </dl>
-          ) : (
-            <TaskDL>
-              <TaskDT>Query</TaskDT>
-              <TaskDD className={cn(isQueryEmpty && 'No')}>
-                {isQueryEmpty ? 'No query made yet' : query}
-              </TaskDD>
-              <TaskDT>Preset</TaskDT>
-              <TaskDD>
-                <span className="flex gap-1">
-                  {preset?.provider && (
-                    <PresetLogo
-                      provider={preset.provider}
-                      className="h-3 w-3 flex-shrink-0 translate-y-0.5"
-                    />
-                  )}
-                  {preset?.name}
-                </span>
-              </TaskDD>
-              {/* <React.Fragment>
+              </dl>
+            ) : (
+              <TaskDL>
+                <TaskDT>Query</TaskDT>
+                <TaskDD className={cn(isQueryEmpty && 'No')}>
+                  {isQueryEmpty ? 'No query made yet' : query}
+                </TaskDD>
+                <TaskDT>Preset</TaskDT>
+                <TaskDD>
+                  <span className="flex gap-1">
+                    {preset?.provider && (
+                      <PresetLogo
+                        provider={preset.provider}
+                        className="h-3 w-3 flex-shrink-0 translate-y-0.5"
+                      />
+                    )}
+                    {preset?.name}
+                  </span>
+                </TaskDD>
+                {/* <React.Fragment>
               <TaskDT>API cost</TaskDT>
               <TaskDD className="flex gap-1">
                 <CostIcon className="translate-y-0.5" />
@@ -148,115 +202,140 @@ export function TaskView() {
                 </TaskDD>
               </React.Fragment>
             )} */}
-            </TaskDL>
-          )}
-        </div>
-        {terminals.length > 0 && (
-          <div className="mt-4 flex flex-col gap-2">
-            <p className="sr-only">Task terminals</p>
-            <ul>
-              {terminals.map((terminal) => (
-                <li key={terminal.id}>
-                  <button className="w-full" onClick={() => openTerminal(terminal.id)}>
-                    <TerminalPreview
-                      className={cn(!terminal.busy && 'opacity-50')}
-                      name={terminal.name}
-                      busy={terminal.busy}
-                      lines={[terminal.lastCommand]}
-                    />
-                  </button>
-                </li>
-              ))}
-            </ul>
+              </TaskDL>
+            )}
           </div>
-        )}
-      </header>
-      <div className="flex flex-grow flex-col gap-2 overflow-x-hidden overflow-y-scroll">
-        <section className="flex-grow px-3 py-2">
-          {exchanges && (
-            <ol>
-              {exchanges.map((exchange, index) => (
-                <li
-                  className={cn(
-                    exchange.type === 'request' ? 'my-6' : 'my-2',
-                    index === 0 && 'mt-0'
-                  )}
-                  key={exchange.exchangeId}
-                >
-                  {renderExchange(exchange)}
-                </li>
-              ))}
-            </ol>
-          )}
-        </section>
-        <div className="sticky bottom-0 bg-sidebar-background p-2">
-          {showActions && (
-            <div
-              aria-live="assertive"
-              aria-hidden={!showActions}
-              className={cn(
-                showActions ? 'translate-y-1/2 opacity-100' : 'translate-y-0 opacity-0',
-                'mb-2 flex gap-2 transition-all duration-150 ease-in-out'
-              )}
-            >
-              <Button
-                onClick={onUserSaysYes}
-                ref={acceptButtonRef}
-                type="button"
-                className="flex flex-grow items-start gap-2"
-              >
-                <span
-                  aria-hidden
-                  className="codicon codicon-thumbsup-filled -ml-1 translate-y-0.5"
-                />
-                Yes
-              </Button>
-              <Button
-                onClick={onUserSaysNo}
-                type="button"
-                variant="secondary"
-                className="flex flex-grow items-start gap-2"
-              >
-                <span aria-hidden className="codicon codicon-thumbsdown -ml-1 translate-y-0.5" />
-                No
-              </Button>
+          {terminals.length > 0 && (
+            <div className="mt-4 flex flex-col gap-2">
+              <p className="sr-only">Task terminals</p>
+              <ul>
+                {terminals.map((terminal) => (
+                  <li key={terminal.id}>
+                    <button className="w-full" onClick={() => openTerminal(terminal.id)}>
+                      <TerminalPreview
+                        className={cn(!terminal.busy && 'opacity-50')}
+                        name={terminal.name}
+                        busy={terminal.busy}
+                        lines={[terminal.lastCommand]}
+                      />
+                    </button>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
-          <Tiptap
-            availableContextProviders={availableContextProviders ?? []}
-            historyKey="chat"
-            onEnter={async (editorState, editor) => {
-              const sessionId = task.data?.task.sessionId;
-              if (sessionId === undefined) {
-                return;
-              }
+        </header>
+        <div className="flex flex-grow flex-col gap-2 overflow-x-hidden overflow-y-scroll">
+          <section className="flex-grow px-3 py-2">
+            {exchanges && (
+              <ol>
+                {exchanges.map((exchange, index) => (
+                  <li
+                    className={cn(
+                      exchange.type === 'request' ? 'my-6' : 'my-2',
+                      index === 0 && 'mt-0'
+                    )}
+                    key={exchange.exchangeId}
+                  >
+                    {renderExchange(exchange)}
+                  </li>
+                ))}
+              </ol>
+            )}
+          </section>
+          <div className="sticky bottom-0 bg-sidebar-background p-2">
+            {showActions && (
+              <div
+                aria-live="assertive"
+                aria-hidden={!showActions}
+                className={cn(
+                  showActions ? 'translate-y-1/2 opacity-100' : 'translate-y-0 opacity-0',
+                  'mb-2 flex gap-2 transition-all duration-150 ease-in-out'
+                )}
+              >
+                <Button
+                  onClick={onUserSaysYes}
+                  ref={acceptButtonRef}
+                  type="button"
+                  className="flex flex-grow items-start gap-2"
+                >
+                  <span
+                    aria-hidden
+                    className="codicon codicon-thumbsup-filled -ml-1 translate-y-0.5"
+                  />
+                  Yes
+                </Button>
+                <Button
+                  onClick={onUserSaysNo}
+                  type="button"
+                  variant="secondary"
+                  className="flex flex-grow items-start gap-2"
+                >
+                  <span aria-hidden className="codicon codicon-thumbsdown -ml-1 translate-y-0.5" />
+                  No
+                </Button>
+              </div>
+            )}
+            <Tiptap
+              availableContextProviders={availableContextProviders ?? []}
+              historyKey="chat"
+              onEnter={async (editorState, editor) => {
+                const sessionId = task.data?.task.sessionId;
+                if (sessionId === undefined) {
+                  return;
+                }
 
-              const [selectedContextItems, _, content] = await resolveEditorContent(editorState);
-              const inputQuery = Array.isArray(content)
-                ? content.map((c) => c.text).join('\n')
-                : content;
+                const [selectedContextItems, _, content] = await resolveEditorContent(editorState);
+                const inputQuery = Array.isArray(content)
+                  ? content.map((c) => c.text).join('\n')
+                  : content;
 
-              task.sendRequest(inputQuery, sessionId, selectedContextItems);
+                task.sendRequest(inputQuery, sessionId, selectedContextItems);
 
-              // Clear the editor after sending
-              editor.commands.clearContent();
-            }}
-            onClear={() => {
-              vscode.postMessage({
-                type: 'init',
-                newSession: true,
-              });
-            }}
-            onCancel={() => {
-              vscode.postMessage({
-                type: 'cancel-request',
-                sessionId: task.data.task.sessionId,
-              });
-            }}
-          />
+                // Clear the editor after sending
+                editor.commands.clearContent();
+              }}
+              onClear={() => {
+                vscode.postMessage({
+                  type: 'init',
+                  newSession: true,
+                });
+              }}
+              onCancel={() => {
+                vscode.postMessage({
+                  type: 'cancel-request',
+                  sessionId: task.data.task.sessionId,
+                });
+              }}
+            />
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
+      <AlertDialog.Root open={!!confirmNavigationTo} onOpenChange={onOpenChange}>
+        <AlertDialog.Portal>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <AlertDialog.Overlay className="bg-panel-background opacity-40 backdrop-blur-sm" />
+            <AlertDialog.Content className="relative isolate m-3 flex flex-col gap-2 bg-panel-background p-3 text-description lg:w-fit">
+              <div className="absolute inset-0 rounded border border-panel-border opacity-50" />
+              <AlertDialog.Title className="font-semibold text-foreground">
+                Are you sure you want to interrupt this task?
+              </AlertDialog.Title>
+              <AlertDialog.Description>You will lose all progress.</AlertDialog.Description>
+              <div className="mt-4 flex justify-end gap-2">
+                <AlertDialog.Cancel asChild>
+                  <Button type="button">Cancel</Button>
+                </AlertDialog.Cancel>
+                <AlertDialog.Action asChild>
+                  <Button type="button" variant="secondary" onClick={onCancelTask}>
+                    Yes, drop task
+                  </Button>
+                </AlertDialog.Action>
+              </div>
+            </AlertDialog.Content>
+          </div>
+        </AlertDialog.Portal>
+      </AlertDialog.Root>
+    </React.Fragment>
   );
 }
 
