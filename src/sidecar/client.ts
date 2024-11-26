@@ -1100,11 +1100,21 @@ export class SideCarClient {
     repoRef: RepoRef,
     projectLabels: string[],
     codebaseSearch: boolean,
-    workosAccessToken: string
+    workosAccessToken: string,
+    modelSelection?: vscode.ModelSelection,
   ): AsyncIterableIterator<SideCarAgentEvent> {
     const baseUrl = new URL(this._url);
+
+    let _modelSelection = modelSelection;
+    if (_modelSelection === undefined) {
+      console.warn('Falling back to hardcoded keys');
+      _modelSelection = await MockModelSelection.getConfiguration();
+    }
+
+    console.log({ modelSelection });
+
     const sideCarModelConfiguration = await getSideCarModelConfiguration(
-      await MockModelSelection.getConfiguration(),
+      _modelSelection,
       workosAccessToken
     );
     const allFiles = vscode.workspace.textDocuments.map((textDocument) => {

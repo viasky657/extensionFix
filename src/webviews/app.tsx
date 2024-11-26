@@ -67,7 +67,7 @@ const App = () => {
         <Outlet />
       ) : (
         <p className="mx-auto self-center text-center text-sm text-description">
-          Downloading and starting Sota PR Assistant...
+          Starting Sota PR Assistant...
         </p>
       )}
     </div>

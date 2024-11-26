@@ -15,6 +15,14 @@ interface TaskFeedback {
   query: string;
   sessionId: string;
   variables: ContextItemWithId[];
+  modelSelection: {
+    model: string,
+    provider: {
+      name: string,
+      apiBase?: string;
+      apiKey: string
+    }
+  }
 }
 
 interface InitRequest {

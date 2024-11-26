@@ -225,6 +225,7 @@ export async function startSidecarBinary(
 
   // Check if we are running the correct version, or else we download a new version
   if (await checkCorrectVersionRunning(serverUrl)) {
+    console.log('sidecar-version-check::correct');
     return 'http://127.0.0.1:42424';
   }
 

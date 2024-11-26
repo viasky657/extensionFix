@@ -9,6 +9,7 @@ import { AideAgentMode } from './types';
 import { checkOrKillRunningServer, getSidecarBinaryURL, startSidecarBinary } from './utilities/setupSidecarBinary';
 import { ProjectContext } from './utilities/workspaceContext';
 import { sidecarUseSelfRun } from './utilities/sidecarUrl';
+import { MockModelSelection } from './utilities/modelSelection';
 
 export let SIDECAR_CLIENT: SideCarClient | null = null;
 
@@ -116,6 +117,22 @@ export async function activate(context: vscode.ExtensionContext) {
         const exchangeId = uniqueId();
         panelProvider.addExchangeRequest(sessionId, exchangeId, query);
 
+        console.log(message.modelSelection);
+
+        const { model, provider } = message.modelSelection;
+        const modelSelection: vscode.ModelSelection = {
+          slowModel: model,
+          fastModel: model,
+          models: MockModelSelection.models,
+          providers: {
+            [provider.name]: {
+              name: provider.name,
+              apiBase: provider.apiBase,
+              apiKey: provider.apiKey
+            }
+          }
+        };
+
         // - ping the sidecar over here. currentRepo can be undefined, which will 422 sidecar
         const stream = SIDECAR_CLIENT!.agentSessionPlanStep(
           query,
@@ -127,7 +144,8 @@ export async function activate(context: vscode.ExtensionContext) {
           currentRepo ?? '',
           projectContext.labels,
           false,
-          'workos-fake-id'
+          'workos-fake-id',
+          modelSelection,
         );
         // - have a respose somewhere and the chat model would update
         agentSessionProvider.reportAgentEventsToChat(true, stream);

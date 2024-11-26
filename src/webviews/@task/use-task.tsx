@@ -72,12 +72,24 @@ export function useTask() {
   }, []);
 
   function sendRequest(query: string, sessionId: string, variables: ContextItemWithId[]) {
-    vscode.postMessage({
-      type: 'task-feedback',
-      query,
-      sessionId,
-      variables,
-    });
+    if (state.data) {
+      const { preset } = state.data.task;
+
+      vscode.postMessage({
+        type: 'task-feedback',
+        query,
+        sessionId,
+        variables,
+        modelSelection: {
+          model: preset.model,
+          provider: {
+            name: preset.provider,
+            apiBase: preset.customBaseUrl,
+            apiKey: preset.apiKey,
+          },
+        },
+      });
+    }
   }
 
   return Object.assign(state, { sendRequest });
