@@ -1116,6 +1116,8 @@ export class SideCarClient {
       workosAccessToken
     );
 
+    console.log('sideCarModelConfiguration', sideCarModelConfiguration);
+
     const allFiles = vscode.workspace.textDocuments.map((textDocument) => {
       return textDocument.uri.fsPath;
     });
@@ -1123,7 +1125,7 @@ export class SideCarClient {
       return textDocument.document.uri.fsPath;
     });
     const currentShell = detectDefaultShell();
-    console.log('we are hitting the plan step again and again');
+    // console.log('we are hitting the plan step again and again');
     baseUrl.pathname = '/api/agentic/agent_tool_use';
     const url = baseUrl.toString();
     const body = {
@@ -1143,7 +1145,7 @@ export class SideCarClient {
       open_files: openFiles,
       shell: currentShell,
     };
-    console.log('sidecar.request', url);
+    // console.log('sidecar.request', url);
     const asyncIterableResponse = callServerEventStreamingBufferedPOST(url, body);
     for await (const line of asyncIterableResponse) {
       const lineParts = line.split('data:{');

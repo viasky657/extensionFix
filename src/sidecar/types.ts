@@ -5,6 +5,7 @@
 
 import { ModelProviderConfiguration, ModelSelection, ProviderSpecificConfiguration } from 'vscode';
 import { SidecarResponsePosition, UserContext } from '../server/types';
+import { Provider } from '../model';
 
 
 export type OptionString =
@@ -595,13 +596,15 @@ export async function getSideCarModelConfiguration(modelSelection: ModelSelectio
 		modelRecord[key] = modelConfiguration;
 	}
 	const providers = modelSelection.providers;
+
 	const finalProviders = [];
 	for (const [key, value] of Object.entries(providers)) {
-		const providerConfigSideCar = getProviderConfiguration(key, value, workosAccessToken);
+		const providerConfigSideCar = getProviderConfiguration(key as Provider, value, workosAccessToken);
 		if (providerConfigSideCar !== null) {
 			finalProviders.push(providerConfigSideCar);
 		}
 	}
+
 	return {
 		'slow_model': slowModel,
 		'fast_model': fastModel,
@@ -610,59 +613,57 @@ export async function getSideCarModelConfiguration(modelSelection: ModelSelectio
 	};
 }
 
-// The various types are present in aiModels.ts
 
 
 
-
-function getProviderConfiguration(type: string, value: ModelProviderConfiguration, workosAccessToken: string | undefined) {
-	if (type === 'openai-default') {
-		return {
-			'OpenAI': {
-				'api_key': value.apiKey,
-			}
-		};
-	}
-	if (type === 'azure-openai') {
-		return {
-			'OpenAIAzureConfig': {
-				'deployment_id': '',
-				'api_base': value.apiBase,
-				'api_key': value.apiKey,
-				// TODO(skcd): Fix the hardcoding of api version here, this will
-				// probably come from the api version in azure config
-				'api_version': '2023-08-01-preview',
-			}
-		};
-	}
-	if (type === 'togetherai') {
-		return {
-			'TogetherAI': {
-				'api_key': value.apiKey,
-			}
-		};
-	}
-	if (type === 'ollama') {
-		return {
-			'Ollama': {}
-		};
-	}
-	if (type === 'openai-compatible') {
-		return {
-			'OpenAICompatible': {
-				'api_key': value.apiKey,
-				'api_base': value.apiBase,
-			}
-		};
-	}
-	if (type === 'codestory') {
-		// if its codestory then we also want to provider the access token over here
-		return {
-			'CodeStory': {
-				access_token: workosAccessToken
-			}
-		};
-	}
+function getProviderConfiguration(type: Provider, value: ModelProviderConfiguration, _workosAccessToken: string | undefined) {
+	//if (type === 'openai-default') {
+	//	return {
+	//		'OpenAI': {
+	//			'api_key': value.apiKey,
+	//		}
+	//	};
+	//}
+	//if (type === 'azure-openai') {
+	//	return {
+	//		'OpenAIAzureConfig': {
+	//			'deployment_id': '',
+	//			'api_base': value.apiBase,
+	//			'api_key': value.apiKey,
+	//			// TODO(skcd): Fix the hardcoding of api version here, this will
+	//			// probably come from the api version in azure config
+	//			'api_version': '2023-08-01-preview',
+	//		}
+	//	};
+	//}
+	//if (type === 'togetherai') {
+	//	return {
+	//		'TogetherAI': {
+	//			'api_key': value.apiKey,
+	//		}
+	//	};
+	//}
+	//if (type === 'ollama') {
+	//	return {
+	//		'Ollama': {}
+	//	};
+	//}
+	//if (type === 'openai-compatible') {
+	//	return {
+	//		'OpenAICompatible': {
+	//			'api_key': value.apiKey,
+	//			'api_base': value.apiBase,
+	//		}
+	//	};
+	//}
+	//if (type === 'codestory') {
+	//	// if its codestory then we also want to provider the access token over here
+	//	return {
+	//		'CodeStory': {
+	//			access_token: workosAccessToken
+	//		}
+	//	};
+	//}
 	if (type === 'anthropic') {
 		return {
 			'Anthropic': {
@@ -670,21 +671,21 @@ function getProviderConfiguration(type: string, value: ModelProviderConfiguratio
 			}
 		};
 	}
-	if (type === 'fireworkai') {
-		return {
-			'FireworksAI': {
-				'api_key': value.apiKey,
-			}
-		};
-	}
-	if (type === 'geminipro') {
-		return {
-			'GeminiPro': {
-				'api_key': value.apiKey,
-				'api_base': value.apiBase,
-			}
-		};
-	}
+	//f (type === 'fireworkai') {
+	//	return {
+	//		'FireworksAI': {
+	//			'api_key': value.apiKey,
+	//		}
+	//	};
+	//
+	//f (type === 'geminipro') {
+	//	return {
+	//		'GeminiPro': {
+	//			'api_key': value.apiKey,
+	//			'api_base': value.apiBase,
+	//		}
+	//	};
+	//
 	if (type === 'open-router') {
 		return {
 			'OpenRouter': {

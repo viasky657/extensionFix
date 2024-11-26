@@ -239,7 +239,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
         }
         case 'open-terminal': {
           const terminalId = data.id;
-          console.log(this._taskTerminals, terminalId);
+          // console.log(this._taskTerminals, terminalId);
           this._taskTerminals.find(t => t.id === terminalId)?.show();
           break;
         }
@@ -685,9 +685,6 @@ export class PanelProvider implements vscode.WebviewViewProvider {
             <div id="root"></div>
             <script nonce="${nonce}">
                 const vscode = acquireVsCodeApi();
-                window.onload = function() {
-                  console.log('HTML started up.');
-                };
             </script>
             <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
           </body>

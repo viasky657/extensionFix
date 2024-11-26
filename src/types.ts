@@ -1,4 +1,5 @@
 import { ChatPromptReference, Uri, ChatRequest, WorkspaceEdit, MarkdownString, Command, ChatResponseStream, CancellationToken, ProviderResult, ChatResult, ChatParticipant, Range } from "vscode";
+import { Provider } from "./model";
 
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
@@ -410,7 +411,8 @@ declare module 'vscode' {
 	}
 
 	export type LanguageModels = Record<string, LanguageModelConfiguration>;
-	export type ModelProviders = Record<string, ModelProviderConfiguration>;
+	export type ModelProviders = Partial<Record<Provider, ModelProviderConfiguration>>;
+
 
 	export namespace modelSelection {
 		export function getConfiguration(): Thenable<ModelSelection>;

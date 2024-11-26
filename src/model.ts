@@ -16,9 +16,9 @@ interface TaskFeedback {
   sessionId: string;
   variables: ContextItemWithId[];
   modelSelection: {
-    model: string,
+    model: Provider,
     provider: {
-      name: string,
+      name: Provider,
       apiBase?: string;
       apiKey: string
     }
@@ -306,12 +306,12 @@ export type Exchange = Request | Response;
 
 export enum Provider {
   Anthropic = 'anthropic',
-  OpenAI = 'open-ai',
+  //OpenAI = 'open-ai',
   OpenRouter = 'open-router',
-  GoogleGemini = 'google-gemini',
-  AWSBedrock = 'aws-bedrock',
-  OpenAICompatible = 'open-ai-compatible',
-  Ollama = 'ollama',
+  //GoogleGemini = 'google-gemini',
+  //AWSBedrock = 'aws-bedrock',
+  //OpenAICompatible = 'open-ai-compatible',
+  //Ollama = 'ollama',
 }
 
 export enum PermissionState {

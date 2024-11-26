@@ -41,11 +41,17 @@ export namespace MockModelSelection {
     };
 
     export const providers: ModelProviders = {
-        "codestory": {
-            name: "CodeStory"
+        //"codestory": {
+        //    name: "CodeStory"
+        //},
+        //"ollama": {
+        //    name: "Ollama"
+        //}
+        "anthropic": {
+            name: "Anthropic"
         },
-        "ollama": {
-            name: "Ollama"
+        "open-router": {
+            name: "Open Router"
         }
     };
 

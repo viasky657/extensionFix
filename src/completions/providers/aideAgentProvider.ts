@@ -239,7 +239,7 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 		const exchangeId = this.panelProvider.createNewExchangeResponse(sessionId);
 		if (exchangeId) {
 			const newExchanges = [exchangeId];
-			console.log('newExchanges', newExchanges);
+			// console.log('newExchanges', newExchanges);
 			this._pendingExchanges.set(sessionId, newExchanges);
 			const cts = new CancellationTokenSource();
 			// here we should also unset all the previous exchanges which are going on
