@@ -58,7 +58,24 @@ export function TaskView() {
     return () => {
       window.removeEventListener('message', handleTerminalUpdates);
     };
-  });
+  }, []);
+
+  const exchangesContainerRef = React.useRef<HTMLDivElement>(null);
+  const [userDidScroll, setUserDidScroll] = React.useState(false);
+
+  React.useEffect(() => {
+    const exchangesContainer = exchangesContainerRef.current;
+    if (!userDidScroll && exchangesContainer) {
+      exchangesContainer.scrollTop = exchangesContainer.scrollHeight;
+    }
+  }, [exchanges, terminals.length]);
+
+  function handleMessagesScroll(event: React.UIEvent<HTMLDivElement>) {
+    const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
+    const scrolledToBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 1;
+    // Reset `userDidScroll` if they went all the way down to the bottom
+    setUserDidScroll(!scrolledToBottom);
+  }
 
   React.useEffect(() => {
     if (task.data) {
@@ -102,7 +119,7 @@ export function TaskView() {
   }
 
   return (
-    <React.Fragment>
+    <React.Fragment key={task.data.task.sessionId}>
       <main className="flex h-full flex-col">
         <header className="sticky top-0 z-10 bg-panel-background p-2">
           <div className="group">
@@ -193,7 +210,11 @@ export function TaskView() {
             </div>
           )}
         </header>
-        <div className="flex flex-grow flex-col gap-2 overflow-x-hidden overflow-y-scroll">
+        <div
+          className="flex flex-grow flex-col gap-2 overflow-x-hidden overflow-y-scroll"
+          onScroll={handleMessagesScroll}
+          ref={exchangesContainerRef}
+        >
           <section className="flex-grow px-3 py-2">
             {exchanges && (
               <ol>

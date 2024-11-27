@@ -82,6 +82,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
         }
 
         this._view.webview.postMessage({ type: 'open-view', view: View.Task });
+
       }
     });
 
@@ -160,7 +161,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
       switch (data.type) {
         case 'init': {
-          console.log('init to panel provider');
+
           const activePresetId = this.context.globalState.get<string>('active-preset-id');
           let activePreset = undefined;
           if (activePresetId) {
@@ -178,6 +179,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           }
 
           if ((data.newSession || !this._runningTask) && activePreset) {
+            console.log('new session started');
             this._runningTask = getDefaultTask(activePreset);
           }
 
