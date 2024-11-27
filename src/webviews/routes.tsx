@@ -44,22 +44,27 @@ export const router = createMemoryRouter(
 
 export function useNavigationFromExtension() {
   const navigate = useNavigate();
-  const routerLocation = useLocation();
+  const location = useLocation();
 
   React.useEffect(() => {
     const handleMessage = (event: MessageEvent<Event>) => {
       if (event.data.type === 'open-view') {
-        // temporary workaround to avoid navigating away to active tasks
-        // handled in @task/view.tsx
-        console.log(routerLocation.pathname);
-        if (!routerLocation.pathname.startsWith('/task')) {
-          navigate(event.data.view);
-        }
+        navigate(event.data.view);
       }
     };
     window.addEventListener('message', handleMessage);
     return () => {
       window.removeEventListener('message', handleMessage);
     };
-  }, [routerLocation]);
+  }, []);
+
+  // workaround to start a new task
+  React.useEffect(() => {
+    if (location.pathname === '/task') {
+      vscode.postMessage({
+        type: 'init',
+        newSession: true,
+      });
+    }
+  }, [location]);
 }

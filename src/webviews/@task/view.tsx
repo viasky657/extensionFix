@@ -6,7 +6,7 @@ import Tiptap from 'components/input/TipTapEditor';
 import { PresetLogo } from 'components/preset';
 import { TaskDD, TaskDL, TaskDT } from 'components/task-definition-list';
 import * as React from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useBlocker, useLocation, useNavigate } from 'react-router-dom';
 import { useSubmenuContext } from 'store/submenuContext';
 import { cn } from 'utils/cn';
 import { Event, Exchange, TerminalInformation, View, ViewType } from '../../model';
@@ -21,48 +21,6 @@ export function TaskView() {
 
   const [showActions, setShowActions] = React.useState(false);
   const acceptButtonRef = React.useRef<HTMLButtonElement>(null);
-
-  const navigate = useNavigate();
-
-  const [confirmNavigationTo, setShowConfirmNavigationTo] = React.useState<ViewType | undefined>();
-
-  const continueNavigation = () => {
-    navigate(`/${confirmNavigationTo}`);
-  };
-
-  React.useEffect(() => {
-    setShowConfirmNavigationTo(undefined);
-  }, [task.data?.task.sessionId]);
-
-  const hasExchangesRef = React.useRef(false);
-  React.useEffect(() => {
-    if (task.data && task.data.task.exchanges.length > 0) {
-      hasExchangesRef.current = true;
-    }
-  }, [task.data?.task.exchanges]);
-
-  React.useEffect(() => {
-    const handleMessage = (event: MessageEvent<Event>) => {
-      if (event.data.type === 'open-view') {
-        if (hasExchangesRef.current && event.data.view !== View.Task) {
-          setShowConfirmNavigationTo(event.data.view);
-        } else {
-          navigate(`/${event.data.view}`);
-        }
-      } else {
-      }
-    };
-    window.addEventListener('message', handleMessage);
-    return () => {
-      window.removeEventListener('message', handleMessage);
-    };
-  }, []);
-
-  function onOpenChange(open: boolean) {
-    if (!open) {
-      setShowConfirmNavigationTo(undefined);
-    }
-  }
 
   React.useEffect(() => {
     if (showActions && acceptButtonRef.current) {
@@ -82,7 +40,7 @@ export function TaskView() {
     }
   }
 
-  const [exchanges, setExchanges] = React.useState(task.data?.task?.exchanges);
+  const [exchanges, setExchanges] = React.useState(task.data?.task?.exchanges || []);
   const [preset, setPreset] = React.useState(task.data?.task?.preset);
   const [query, setQuery] = React.useState(task.data?.task?.query);
   const isQueryEmpty = query === '';
@@ -103,8 +61,10 @@ export function TaskView() {
   });
 
   React.useEffect(() => {
-    setExchanges(task.data?.task.exchanges);
-    setPreset(task.data?.task.preset);
+    if (task.data) {
+      setExchanges(task.data.task.exchanges);
+      setPreset(task.data.task.preset);
+    }
     //setQuery(task.data?.task.query);
   }, [task.data?.task]);
 
@@ -115,13 +75,21 @@ export function TaskView() {
     });
   }
 
+  const blocker = useBlocker(exchanges?.length > 0);
+
   function onCancelTask() {
-    continueNavigation();
+    blocker.proceed?.();
     if (task.data?.task) {
       vscode.postMessage({
         type: 'cancel-request',
         sessionId: task.data.task.sessionId,
       });
+    }
+  }
+
+  function onDialogOpenChange(open: boolean) {
+    if (!open) {
+      blocker.reset?.();
     }
   }
 
@@ -311,7 +279,7 @@ export function TaskView() {
           </div>
         </div>
       </main>
-      <AlertDialog.Root open={!!confirmNavigationTo} onOpenChange={onOpenChange}>
+      <AlertDialog.Root open={blocker.state === 'blocked'} onOpenChange={onDialogOpenChange}>
         <AlertDialog.Portal>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <AlertDialog.Overlay className="bg-panel-background opacity-40 backdrop-blur-sm" />
