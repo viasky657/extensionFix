@@ -16,13 +16,13 @@ interface TaskFeedback {
   sessionId: string;
   variables: ContextItemWithId[];
   modelSelection: {
-    model: Provider,
+    model: Models;
     provider: {
-      name: Provider,
+      name: ProviderType;
       apiBase?: string;
-      apiKey: string
-    }
-  }
+      apiKey: string;
+    };
+  };
 }
 
 interface InitRequest {
@@ -80,13 +80,13 @@ interface GetContextItems {
 }
 
 interface OpenTerminal {
-  type: 'open-terminal',
-  id: number
+  type: 'open-terminal';
+  id: number;
 }
 
 interface CancelRequest {
-  type: 'cancel-request',
-  sessionId: string
+  type: 'cancel-request';
+  sessionId: string;
 }
 
 export type ClientRequest =
@@ -151,12 +151,24 @@ interface NewSession {
 }
 
 interface TaskTerminals {
-  type: 'task-terminals',
-  terminals: TerminalInformation[]
+  type: 'task-terminals';
+  terminals: TerminalInformation[];
+}
+
+interface AddPresetResponse {
+  type: 'add-preset/response';
+  valid: boolean;
+  error?: string;
+}
+
+interface UpdatePresetResponse {
+  type: 'update-preset/response';
+  valid: boolean;
+  error?: string;
 }
 
 export type Event =
-  TaskTerminals
+  | TaskTerminals
   | OpenView
   | NewSession
   | PresetsLoaded
@@ -165,7 +177,9 @@ export type Event =
   | InitResponse
   | InitialState
   | TaskUpdate
-  | SidecarReadyState;
+  | SidecarReadyState
+  | AddPresetResponse
+  | UpdatePresetResponse;
 
 export type NewSessionRequest = {
   type: 'new-request';
@@ -180,7 +194,7 @@ export type ResponsePart =
   | ToolThinkingToolTypeResponsePart
   | ToolParameterResponsePart
   | ToolOutputResponsePart
-  | ToolNotFoundPart
+  | ToolNotFoundPart;
 
 export type MarkdownResponsePart = {
   type: 'markdown';
@@ -212,7 +226,6 @@ export type ToolParameterResponsePart = {
   };
 };
 
-
 export type ToolOutputResponsePart = {
   type: 'toolOutput';
   toolOutput: {
@@ -223,9 +236,9 @@ export type ToolOutputResponsePart = {
 };
 
 export type ToolNotFoundPart = {
-  type: 'tool-not-found',
+  type: 'tool-not-found';
   output: string;
-}
+};
 
 export type ToolTypeForOutput = {
   type: 'toolOutputType';
@@ -265,13 +278,12 @@ export enum ToolType {
 
 export type ToolTypeType = `${ToolType}`;
 
-
 export type TerminalInformation = {
   id: number;
   name: string;
   lastCommand: string;
   busy: boolean;
-}
+};
 
 interface MessageBase {
   username: string;
@@ -324,8 +336,10 @@ export enum Provider {
 export enum AnthropicModels {
   ClaudeSonnet = 'ClaudeSonnet',
   ClaudeHaiku = 'ClaudeHaiku',
-  ClaudeOpus = 'ClaudeOpus'
+  ClaudeOpus = 'ClaudeOpus',
 }
+
+export type Models = keyof typeof AnthropicModels;
 
 export enum PermissionState {
   Always = 'always',
@@ -345,7 +359,7 @@ export type ProviderType = `${Provider}`;
 
 type BasePreset = {
   provider: ProviderType;
-  model: string;
+  model: Models;
   apiKey: string;
   customBaseUrl?: string;
   permissions: Permissions;

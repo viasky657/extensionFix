@@ -31,19 +31,39 @@ export function usePresets(initialData: PresetsData) {
   const presets = useAsync<PresetsData>(getPresets, { enabled: !!initialData, initialData });
 
   function addPreset(preset: NewPreset) {
-    vscode.postMessage({
-      type: 'add-preset',
-      preset,
+    return new Promise<{ valid: boolean; error?: string }>((resolve) => {
+      const handleMessage = (event: MessageEvent<Event>) => {
+        if (event.data.type === 'add-preset/response') {
+          presets.execute();
+          resolve({ valid: event.data.valid, error: event.data.error });
+          window.removeEventListener('message', handleMessage);
+        }
+      };
+      window.addEventListener('message', handleMessage);
+
+      vscode.postMessage({
+        type: 'add-preset',
+        preset,
+      });
     });
-    presets.execute();
   }
 
   function updatePreset(preset: Preset) {
-    vscode.postMessage({
-      type: 'update-preset',
-      preset,
+    return new Promise<{ valid: boolean; error?: string }>((resolve) => {
+      const handleMessage = (event: MessageEvent<Event>) => {
+        if (event.data.type === 'update-preset/response') {
+          presets.execute();
+          resolve({ valid: event.data.valid, error: event.data.error });
+          window.removeEventListener('message', handleMessage);
+        }
+      };
+      window.addEventListener('message', handleMessage);
+
+      vscode.postMessage({
+        type: 'update-preset',
+        preset,
+      });
     });
-    presets.execute();
   }
 
   function deletePreset(presetId: string) {

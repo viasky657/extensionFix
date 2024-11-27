@@ -6,7 +6,11 @@ import { RecentEditsRetriever } from './server/editedFiles';
 import { RepoRef, RepoRefBackend, SideCarClient } from './sidecar/client';
 import { TerminalManager } from './terminal/TerminalManager';
 import { AideAgentMode } from './types';
-import { checkOrKillRunningServer, getSidecarBinaryURL, startSidecarBinary } from './utilities/setupSidecarBinary';
+import {
+  checkOrKillRunningServer,
+  getSidecarBinaryURL,
+  startSidecarBinary,
+} from './utilities/setupSidecarBinary';
 import { ProjectContext } from './utilities/workspaceContext';
 import { sidecarUseSelfRun } from './utilities/sidecarUrl';
 import { MockModelSelection } from './utilities/modelSelection';
@@ -27,7 +31,6 @@ Example flow:
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
-
   // Create a terminal manager instance
   const terminalManager = new TerminalManager();
 
@@ -78,7 +81,7 @@ export async function activate(context: vscode.ExtensionContext) {
       await sidecarClient.healthCheck();
 
       // Tell the PanelProvider that the sidecar is ready
-      panelProvider.setSidecarReady(true);
+      panelProvider.setSidecarClient(sidecarClient);
       SIDECAR_CLIENT = sidecarClient;
     })
     .catch((error) => {
@@ -127,9 +130,9 @@ export async function activate(context: vscode.ExtensionContext) {
             [provider.name]: {
               name: provider.name,
               apiBase: provider.apiBase,
-              apiKey: provider.apiKey
-            }
-          }
+              apiKey: provider.apiKey,
+            },
+          },
         };
 
         panelProvider.setTaskStatus(message.sessionId, false);
@@ -146,7 +149,7 @@ export async function activate(context: vscode.ExtensionContext) {
           projectContext.labels,
           false,
           'workos-fake-id',
-          modelSelection,
+          modelSelection
         );
         // - have a respose somewhere and the chat model would update
         await agentSessionProvider.reportAgentEventsToChat(true, stream);
