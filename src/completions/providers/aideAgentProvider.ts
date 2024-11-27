@@ -549,6 +549,8 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 		for await (const event of asyncIterable) {
 			// now we ping the sidecar that the probing needs to stop
 
+			console.log(event);
+
 			if ('keep_alive' in event) {
 				continue;
 			}

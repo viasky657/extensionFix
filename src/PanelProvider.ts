@@ -161,9 +161,8 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
       switch (data.type) {
         case 'init': {
-
-          const activePresetId = this.context.globalState.get<string>('active-preset-id');
           let activePreset = undefined;
+          const activePresetId = this.context.globalState.get<string>('active-preset-id');
           if (activePresetId) {
             activePreset = this._presets.get(activePresetId);
             if (activePreset) {
@@ -179,7 +178,6 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           }
 
           if ((data.newSession || !this._runningTask) && activePreset) {
-            console.log('new session started');
             this._runningTask = getDefaultTask(activePreset);
           }
 
@@ -230,6 +228,9 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           const activePresetId = this.context.globalState.get<string>('active-preset-id');
           if (activePresetId === data.presetId) {
             this.context.globalState.update('active-preset-id', undefined);
+          }
+          if (this._runningTask && this._runningTask.preset.id === data.presetId) {
+            this._runningTask = undefined;
           }
           break;
         }
