@@ -20,10 +20,19 @@ type TipTapEditorProps = SimpleHTMLElementProps<HTMLDivElement> & {
   onEnter: (editorState: JSONContent, editor: Editor) => void;
   onClear: () => void;
   onCancel: () => void;
+  showCancelButton: boolean;
 };
 
 const Tiptap = (props: TipTapEditorProps) => {
-  const { availableContextProviders, historyKey, onEnter, onClear, onCancel, ...rest } = props;
+  const {
+    availableContextProviders,
+    historyKey,
+    onEnter,
+    onClear,
+    onCancel,
+    showCancelButton,
+    ...rest
+  } = props;
   const getSubmenuContextItems = useSubmenuContext((state) => state.getSubmenuContextItems);
   const availableContextProvidersRef = useUpdatingRef(availableContextProviders);
 
@@ -230,6 +239,7 @@ const Tiptap = (props: TipTapEditorProps) => {
         onEnter={onEnterRef.current}
         onClear={onClearRef.current}
         onCancel={onCancelRef.current}
+        showCancelButton={showCancelButton}
       />
     </div>
   );

@@ -267,6 +267,7 @@ export function TaskView() {
             )}
             <Tiptap
               availableContextProviders={availableContextProviders ?? []}
+              showCancelButton={!task.data?.task.complete}
               historyKey="chat"
               onEnter={async (editorState, editor) => {
                 const sessionId = task.data?.task.sessionId;

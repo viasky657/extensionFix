@@ -30,6 +30,7 @@ const getDefaultTask = (activePreset: Preset) => ({
     cacheWrites: 0,
   },
   exchanges: [],
+  complete: true,
   responseOnGoing: false,
 });
 
@@ -543,6 +544,22 @@ export class PanelProvider implements vscode.WebviewViewProvider {
         }
       }
 
+      // we update our webview with the latest state
+      this._view?.webview.postMessage({
+        command: 'state-updated',
+        initialAppState: {
+          extensionReady: false,
+          view: View.Task,
+          currentTask: this._runningTask,
+          loadedTasks: new Map(),
+        },
+      });
+    }
+  }
+
+  public setTaskStatus(sessionId: string, complete: boolean) {
+    if (this._runningTask && this._runningTask.sessionId === sessionId) {
+      this._runningTask.complete = complete;
       // we update our webview with the latest state
       this._view?.webview.postMessage({
         command: 'state-updated',

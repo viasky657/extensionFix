@@ -4,6 +4,7 @@ interface InputToolbarProps {
   onEnter: () => void;
   onClear: () => void;
   onCancel: () => void;
+  showCancelButton: boolean;
 }
 
 function InputToolbar(props: InputToolbarProps) {
@@ -44,17 +45,18 @@ function InputToolbar(props: InputToolbarProps) {
           <span className="codicon codicon-newline mr-[2px]" />
           <span className="text-disabled-foreground">Send</span>
         </div>
-
-        <div
-          className="flex cursor-pointer items-center rounded px-1.5 py-0.5 text-foreground hover:bg-panel-background disabled:cursor-wait"
-          onClick={(e) => {
-            props.onCancel();
-          }}
-          role="button"
-          tabIndex={0}
-        >
-          <span className="text-disabled-foreground">Cancel</span>
-        </div>
+        {props.showCancelButton && (
+          <div
+            className="flex cursor-pointer items-center rounded px-1.5 py-0.5 text-foreground hover:bg-panel-background disabled:cursor-wait"
+            onClick={(e) => {
+              props.onCancel();
+            }}
+            role="button"
+            tabIndex={0}
+          >
+            <span className="text-disabled-foreground">Cancel</span>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -306,6 +306,7 @@ export interface Task {
   usage: Usage; // metric, number of tokens
   context: any[]; // temporary,
   exchanges: Exchange[];
+  complete: boolean;
 }
 
 export type Exchange = Request | Response;

@@ -132,6 +132,8 @@ export async function activate(context: vscode.ExtensionContext) {
           }
         };
 
+        panelProvider.setTaskStatus(message.sessionId, false);
+
         // - ping the sidecar over here. currentRepo can be undefined, which will 422 sidecar
         const stream = SIDECAR_CLIENT!.agentSessionPlanStep(
           query,
@@ -147,7 +149,9 @@ export async function activate(context: vscode.ExtensionContext) {
           modelSelection,
         );
         // - have a respose somewhere and the chat model would update
-        agentSessionProvider.reportAgentEventsToChat(true, stream);
+        await agentSessionProvider.reportAgentEventsToChat(true, stream);
+
+        panelProvider.setTaskStatus(message.sessionId, true);
         // and the model will have a on did change
         // - the extension needs the state
         // - on did change chat model gets back over here
