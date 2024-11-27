@@ -480,6 +480,7 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 			event: 'processEvent',
 			properties: {
 				platform: os.platform(),
+				product: 'extension',
 				email,
 				query: event.prompt,
 				mode: event.mode,

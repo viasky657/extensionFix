@@ -1,19 +1,22 @@
 import { uniqueId } from 'lodash';
+import * as os from 'os';
 import * as vscode from 'vscode';
 import { AideAgentSessionProvider } from './completions/providers/aideAgentProvider';
 import { PanelProvider } from './PanelProvider';
+import postHogClient from './posthog/client';
 import { RecentEditsRetriever } from './server/editedFiles';
 import { RepoRef, RepoRefBackend, SideCarClient } from './sidecar/client';
 import { TerminalManager } from './terminal/TerminalManager';
 import { AideAgentMode } from './types';
+import { MockModelSelection } from './utilities/modelSelection';
 import {
   checkOrKillRunningServer,
   getSidecarBinaryURL,
   startSidecarBinary,
 } from './utilities/setupSidecarBinary';
-import { ProjectContext } from './utilities/workspaceContext';
 import { sidecarUseSelfRun } from './utilities/sidecarUrl';
-import { MockModelSelection } from './utilities/modelSelection';
+import { getUniqueId } from './utilities/uniqueId';
+import { ProjectContext } from './utilities/workspaceContext';
 
 export let SIDECAR_CLIENT: SideCarClient | null = null;
 
@@ -31,6 +34,18 @@ Example flow:
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
+  const session = await vscode.csAuthentication.getSession();
+  const email = session?.account.email ?? '';
+  postHogClient?.capture({
+    distinctId: getUniqueId(),
+    event: 'activate',
+    properties: {
+      platform: os.platform(),
+      product: 'extension',
+      email,
+    },
+  });
+
   // Create a terminal manager instance
   const terminalManager = new TerminalManager();
 
@@ -132,8 +147,8 @@ export async function activate(context: vscode.ExtensionContext) {
               temperature: MockModelSelection.models[model].temperature,
               provider: {
                 type: provider.name,
-              }
-            }
+              },
+            },
           },
           providers: {
             [provider.name]: {
