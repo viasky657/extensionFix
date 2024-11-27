@@ -3,7 +3,7 @@ import { ModelSelection } from 'vscode';
 
 export namespace MockModelSelection {
   export const slowModel: string = 'ClaudeSonnet';
-  export const fastModel: string = 'DeepSeekCoder33BInstruct';
+  export const fastModel: string = 'ClaudeSonnet';
 
   export const models: LanguageModels = {
     // Gpt4: {
