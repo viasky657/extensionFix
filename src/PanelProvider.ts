@@ -215,10 +215,9 @@ export class PanelProvider implements vscode.WebviewViewProvider {
               createdOn: new Date().toISOString(),
               id: v4(),
             } as Preset; // Why do we need casting?
-            this._presets.set(newPreset.id, newPreset);
-
             const response = await this.validateModelConfiguration(this.sidecarClient, newPreset);
             if (response.valid) {
+              this._presets.set(newPreset.id, newPreset);
               this.context.globalState.update('presets', Array.from(this._presets.values()));
               this.context.globalState.update('active-preset-id', newPreset.id);
             }
