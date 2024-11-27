@@ -42,18 +42,24 @@ export function PresetView() {
 
   const [formErrors, setFormErrors] = React.useState<[string, string][]>();
 
-  function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormErrors(undefined);
     const form = event.currentTarget;
     try {
       const result = parsePresetFormData(new FormData(form));
+      let response;
       if (result.type === 'preset') {
-        updatePreset(result);
+        response = await updatePreset(result);
       } else if (result.type === 'new-preset') {
-        addPreset(result);
+        response = await addPreset(result);
       }
-      navigate(`/${View.Settings}`);
+
+      if (response?.valid) {
+        navigate(`/${View.Settings}`);
+      } else {
+        setFormErrors([['Validation Error', response?.error || 'Unknown error']]);
+      }
     } catch (err) {
       if (err instanceof z.ZodError) {
         setFormErrors(printValidationIssues(err.issues));

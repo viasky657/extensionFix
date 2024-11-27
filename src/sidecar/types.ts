@@ -581,7 +581,7 @@ export type IdentifierNodeType = {
 // 		}
 // 	]
 // }
-export async function getSideCarModelConfiguration(modelSelection: ModelSelection, workosAccessToken: string | undefined = undefined) {
+export function getSideCarModelConfiguration(modelSelection: ModelSelection) {
 	const slowModel = modelSelection.slowModel;
 	const fastModel = modelSelection.fastModel;
 	const models = modelSelection.models;
@@ -599,7 +599,7 @@ export async function getSideCarModelConfiguration(modelSelection: ModelSelectio
 
 	const finalProviders = [];
 	for (const [key, value] of Object.entries(providers)) {
-		const providerConfigSideCar = getProviderConfiguration(key as Provider, value, workosAccessToken);
+		const providerConfigSideCar = getProviderConfiguration(key as Provider, value);
 		if (providerConfigSideCar !== null) {
 			finalProviders.push(providerConfigSideCar);
 		}
@@ -616,7 +616,7 @@ export async function getSideCarModelConfiguration(modelSelection: ModelSelectio
 
 
 
-function getProviderConfiguration(type: Provider, value: ModelProviderConfiguration, _workosAccessToken: string | undefined) {
+function getProviderConfiguration(type: Provider, value: ModelProviderConfiguration) {
 	//if (type === 'openai-default') {
 	//	return {
 	//		'OpenAI': {

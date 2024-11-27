@@ -108,11 +108,22 @@ export class SideCarClient {
     return response.json();
   }
 
-  // zi: removing model configuration as it doesn't seem to be used
-  // updateModelConfiguration(modelConfiguration: vscode.ModelSelection) {
-  // 	this._modelConfiguration = modelConfiguration;
-  // 	console.log('updated model configuration', this._modelConfiguration);
-  // }
+  async validateModelConfiguration(config: ReturnType<typeof getSideCarModelConfiguration>): Promise<{ valid: boolean; error?: string }> {
+    const baseUrl = new URL(this._url);
+    baseUrl.pathname = '/api/agentic/verify_model_config';
+    const url = baseUrl.toString();
+    const body = {
+      model_configuration: config,
+    };
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+    return response.json();
+  }
 
   getRepoListUrl(): string {
     const baseUrl = new URL(this._url);
@@ -175,8 +186,8 @@ export class SideCarClient {
     const baseUrl = new URL(this._url);
     baseUrl.pathname = '/api/in_editor/answer';
     const url = baseUrl.toString();
-    const sideCarModelConfiguration = await getSideCarModelConfiguration(
-      await MockModelSelection.getConfiguration()
+    const sideCarModelConfiguration = getSideCarModelConfiguration(
+      MockModelSelection.getConfiguration()
     );
     const finalContext = {
       ...context,
@@ -226,8 +237,8 @@ export class SideCarClient {
     const baseUrl = new URL(this._url);
     baseUrl.pathname = '/api/file/edit_file';
     const url = baseUrl.toString();
-    const sideCarModelConfiguration = await getSideCarModelConfiguration(
-      await MockModelSelection.getConfiguration()
+    const sideCarModelConfiguration = getSideCarModelConfiguration(
+      MockModelSelection.getConfiguration()
     );
     const body = {
       file_path: filePath,
@@ -472,8 +483,8 @@ export class SideCarClient {
     baseUrl.pathname = '/api/agent/followup_chat';
     const url = baseUrl.toString();
     const activeWindowData = getCurrentActiveWindow();
-    const sideCarModelConfiguration = await getSideCarModelConfiguration(
-      await MockModelSelection.getConfiguration()
+    const sideCarModelConfiguration = getSideCarModelConfiguration(
+      MockModelSelection.getConfiguration()
     );
     const userContext = await convertVSCodeVariableToSidecarHackingForPlan(variables, query);
     // starts the plan timer at this point if we are at plan generation step
@@ -607,8 +618,8 @@ export class SideCarClient {
     startTime: number
   ): AsyncIterable<StreamCompletionResponseUpdates> {
     const baseUrl = new URL(this._url);
-    const sideCarModelConfiguration = await getSideCarModelConfiguration(
-      await MockModelSelection.getConfiguration()
+    const sideCarModelConfiguration = getSideCarModelConfiguration(
+      MockModelSelection.getConfiguration()
     );
     // console.log('sidecar.model_configuration');
     // console.log(JSON.stringify(sideCarModelConfiguration));
@@ -740,8 +751,8 @@ export class SideCarClient {
     signal: AbortSignal
   ): AsyncIterable<StreamCompletionResponse> {
     const baseUrl = new URL(this._url);
-    const sideCarModelConfiguration = await getSideCarModelConfiguration(
-      await MockModelSelection.getConfiguration()
+    const sideCarModelConfiguration = getSideCarModelConfiguration(
+      MockModelSelection.getConfiguration()
     );
     baseUrl.pathname = '/api/inline_completion/inline_completion';
 
@@ -934,8 +945,8 @@ export class SideCarClient {
     _signal: AbortSignal
   ): AsyncIterable<CompletionResponse> {
     const baseUrl = new URL(this._url);
-    const sideCarModelConfiguration = await getSideCarModelConfiguration(
-      await MockModelSelection.getConfiguration()
+    const sideCarModelConfiguration = getSideCarModelConfiguration(
+      MockModelSelection.getConfiguration()
     );
     baseUrl.pathname = '/api/inline_completion/inline_completion';
 
@@ -1108,13 +1119,10 @@ export class SideCarClient {
     let _modelSelection = modelSelection;
     if (_modelSelection === undefined) {
       console.warn('Falling back to hardcoded keys');
-      _modelSelection = await MockModelSelection.getConfiguration();
+      _modelSelection = MockModelSelection.getConfiguration();
     }
 
-    const sideCarModelConfiguration = await getSideCarModelConfiguration(
-      _modelSelection,
-      workosAccessToken
-    );
+    const sideCarModelConfiguration = getSideCarModelConfiguration(_modelSelection);
 
     console.log('sideCarModelConfiguration', sideCarModelConfiguration);
 
@@ -1177,9 +1185,8 @@ export class SideCarClient {
       exchange_id: exchangeId,
       editor_url: editorUrl,
       access_token: accessToken,
-      model_configuration: await getSideCarModelConfiguration(
-        await MockModelSelection.getConfiguration(),
-        accessToken
+      model_configuration: getSideCarModelConfiguration(
+        MockModelSelection.getConfiguration(),
       ),
     };
     const asyncIterableResponse = callServerEventStreamingBufferedPOST(url, body);
@@ -1215,8 +1222,8 @@ export class SideCarClient {
       return textDocument.document.uri.fsPath;
     });
     const currentShell = detectDefaultShell();
-    const sideCarModelConfiguration = await getSideCarModelConfiguration(
-      await MockModelSelection.getConfiguration()
+    const sideCarModelConfiguration = getSideCarModelConfiguration(
+      MockModelSelection.getConfiguration()
     );
     baseUrl.pathname = '/api/agentic/agent_session_edit_agentic';
     const url = baseUrl.toString();
@@ -1270,9 +1277,8 @@ export class SideCarClient {
       return textDocument.document.uri.fsPath;
     });
     const currentShell = detectDefaultShell();
-    const sideCarModelConfiguration = await getSideCarModelConfiguration(
-      await MockModelSelection.getConfiguration(),
-      workosAccessToken
+    const sideCarModelConfiguration = getSideCarModelConfiguration(
+      MockModelSelection.getConfiguration(),
     );
     baseUrl.pathname = '/api/agentic/agent_session_plan_iterate';
     const url = baseUrl.toString();
@@ -1320,9 +1326,8 @@ export class SideCarClient {
     workosAccessToken: string
   ): AsyncIterableIterator<SideCarAgentEvent> {
     const baseUrl = new URL(this._url);
-    const sideCarModelConfiguration = await getSideCarModelConfiguration(
-      await MockModelSelection.getConfiguration(),
-      workosAccessToken
+    const sideCarModelConfiguration = getSideCarModelConfiguration(
+      MockModelSelection.getConfiguration(),
     );
     const allFiles = vscode.workspace.textDocuments.map((textDocument) => {
       return textDocument.uri.fsPath;
@@ -1393,8 +1398,8 @@ export class SideCarClient {
   ): AsyncIterableIterator<SideCarAgentEvent> {
     const baseUrl = new URL(this._url);
     baseUrl.pathname = '/api/agentic/user_feedback_on_exchange';
-    const sideCarModelConfiguration = await getSideCarModelConfiguration(
-      await MockModelSelection.getConfiguration()
+    const sideCarModelConfiguration = getSideCarModelConfiguration(
+      MockModelSelection.getConfiguration()
     );
     const url = baseUrl.toString();
     const body = {
@@ -1445,9 +1450,8 @@ export class SideCarClient {
       return textDocument.document.uri.fsPath;
     });
     const currentShell = detectDefaultShell();
-    const sideCarModelConfiguration = await getSideCarModelConfiguration(
-      await MockModelSelection.getConfiguration(),
-      workosAccessToken
+    const sideCarModelConfiguration = getSideCarModelConfiguration(
+      MockModelSelection.getConfiguration(),
     );
     console.log('sideCarModelConfiguration', sideCarModelConfiguration);
     baseUrl.pathname = '/api/agentic/agent_session_chat';
@@ -1508,8 +1512,8 @@ export class SideCarClient {
         language: activeWindowData.language,
       };
     }
-    const sideCarModelConfiguration = await getSideCarModelConfiguration(
-      await MockModelSelection.getConfiguration()
+    const sideCarModelConfiguration = getSideCarModelConfiguration(
+      MockModelSelection.getConfiguration()
     );
     const body: ProbeAgentBody = {
       query,

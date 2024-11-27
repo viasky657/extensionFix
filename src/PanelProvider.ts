@@ -1,21 +1,24 @@
 import { v4 } from 'uuid';
 import * as vscode from 'vscode';
+import { ContextItemId, ContextItemWithId } from '.';
 import FileContextProvider from './context/providers/FileContextProvider';
 import { IContextProvider } from './context/providers/types';
 import { VSCodeIDE } from './ide';
 import {
   ClientRequest,
   Preset,
-  Task,
-  ToolTypeType,
-  View,
   PresetsLoaded,
   Response,
+  Task,
   ToolParameterType,
+  ToolTypeType,
+  View,
 } from './model';
-import { getNonce } from './webviews/utils/nonce';
-import { ContextItemId, ContextItemWithId } from '.';
+import { SideCarClient } from './sidecar/client';
+import { getSideCarModelConfiguration } from './sidecar/types';
 import { TerminalManager } from './terminal/TerminalManager';
+import { MockModelSelection } from './utilities/modelSelection';
+import { getNonce } from './webviews/utils/nonce';
 
 const getDefaultTask = (activePreset: Preset) => ({
   query: '',
@@ -34,12 +37,11 @@ const getDefaultTask = (activePreset: Preset) => ({
   responseOnGoing: false,
 });
 
-
 export type Terminal = vscode.Terminal & {
   busy: boolean;
   lastCommand: string;
   id: number;
-}
+};
 
 export class PanelProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
@@ -47,11 +49,14 @@ export class PanelProvider implements vscode.WebviewViewProvider {
   private _taskTerminals: Terminal[] = [];
   // private _terminalsTimer: NodeJS.Timeout | undefined;
   private _presets: Map<string, Preset> = new Map();
-  private _isSidecarReady: boolean = false;
+  private sidecarClient: SideCarClient | undefined;
   private readonly _extensionUri: vscode.Uri;
   private ide: VSCodeIDE;
 
-  constructor(private readonly context: vscode.ExtensionContext, private readonly terminalManager: TerminalManager) {
+  constructor(
+    private readonly context: vscode.ExtensionContext,
+    private readonly terminalManager: TerminalManager
+  ) {
     this._extensionUri = context.extensionUri;
     this.ide = new VSCodeIDE();
 
@@ -103,9 +108,12 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     // Simple set interval for now
     setInterval(() => {
       if (this._view && this._runningTask) {
-
-        const busyTerminalsMap = new Map(this.terminalManager.getTerminals(true).map(t => ([t.id, t])));
-        const inactiveTerminals = new Map(this.terminalManager.getTerminals(false).map(t => ([t.id, t])));
+        const busyTerminalsMap = new Map(
+          this.terminalManager.getTerminals(true).map((t) => [t.id, t])
+        );
+        const inactiveTerminals = new Map(
+          this.terminalManager.getTerminals(false).map((t) => [t.id, t])
+        );
 
         let terminals: Terminal[] = [];
         for (const [id, terminal] of vscode.window.terminals.entries()) {
@@ -125,13 +133,11 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
         this._view.webview.postMessage({
           type: 'task-terminals',
-          terminals: this._taskTerminals
+          terminals: this._taskTerminals,
         });
-
       }
     }, 1000);
   }
-
 
   private _onMessageFromWebview = new vscode.EventEmitter<ClientRequest>();
   onMessageFromWebview = this._onMessageFromWebview.event;
@@ -185,7 +191,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           webviewView.webview.postMessage({
             type: 'init-response',
             task: this._runningTask,
-            isSidecarReady: this._isSidecarReady,
+            isSidecarReady: !!this.sidecarClient,
           });
           break;
         }
@@ -202,22 +208,38 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           break;
         }
         case 'add-preset': {
-          const newPreset = {
-            ...data.preset,
-            type: 'preset',
-            createdOn: new Date().toISOString(),
-            id: v4(),
-          } as Preset; // Why do we need casting?
-          this._presets.set(newPreset.id, newPreset);
-          this.context.globalState.update('presets', Array.from(this._presets.values()));
-          this.context.globalState.update('active-preset-id', newPreset.id);
+          if (this.sidecarClient) {
+            const newPreset = {
+              ...data.preset,
+              type: 'preset',
+              createdOn: new Date().toISOString(),
+              id: v4(),
+            } as Preset; // Why do we need casting?
+            this._presets.set(newPreset.id, newPreset);
+
+            const response = await this.validateModelConfiguration(this.sidecarClient, newPreset);
+            if (response.valid) {
+              this.context.globalState.update('presets', Array.from(this._presets.values()));
+              this.context.globalState.update('active-preset-id', newPreset.id);
+            }
+
+            const message = { type: 'add-preset/response', ...response };
+            webviewView.webview.postMessage(message);
+          }
           break;
         }
         case 'update-preset': {
-          if (this._presets.has(data.preset.id)) {
+          if (this.sidecarClient && this._presets.has(data.preset.id)) {
             const previousData = this._presets.get(data.preset.id);
-            this._presets.set(data.preset.id, { ...previousData, ...data.preset });
-            this.context.globalState.update('presets', Array.from(this._presets.values()));
+            const updatedData = { ...previousData, ...data.preset };
+            const response = await this.validateModelConfiguration(this.sidecarClient, updatedData);
+            if (response.valid) {
+              this._presets.set(data.preset.id, updatedData);
+              this.context.globalState.update('presets', Array.from(this._presets.values()));
+            }
+
+            const message = { type: 'update-preset/response', ...response };
+            webviewView.webview.postMessage(message);
           }
           break;
         }
@@ -238,7 +260,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
         case 'open-terminal': {
           const terminalId = data.id;
           // console.log(this._taskTerminals, terminalId);
-          this._taskTerminals.find(t => t.id === terminalId)?.show();
+          this._taskTerminals.find((t) => t.id === terminalId)?.show();
           break;
         }
         case 'set-active-preset': {
@@ -348,7 +370,6 @@ export class PanelProvider implements vscode.WebviewViewProvider {
   }
 
   public addToolNotFound(sessionId: string, exchangeId: string, output: string) {
-
     if (this._runningTask && this._runningTask.sessionId === sessionId) {
       const exchangePossible = this._runningTask.exchanges.find((exchange) => {
         return exchange.exchangeId === exchangeId;
@@ -466,7 +487,6 @@ export class PanelProvider implements vscode.WebviewViewProvider {
       });
     }
   }
-
 
   public addToolOutputFound(
     sessionId: string,
@@ -677,7 +697,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
     const sidecarReadyState = {
       type: 'sidecar-ready-state',
-      isSidecarReady: this._isSidecarReady,
+      isSidecarReady: !!this.sidecarClient,
     };
 
     // tell the webview that the sidecar is ready
@@ -685,9 +705,29 @@ export class PanelProvider implements vscode.WebviewViewProvider {
   }
 
   // updates internal state and tells the webview
-  public setSidecarReady(ready: boolean) {
-    this._isSidecarReady = ready;
+  public setSidecarClient(client: SideCarClient) {
+    this.sidecarClient = client;
     this.updateState();
+  }
+
+  private async validateModelConfiguration(
+    sidecarClient: SideCarClient,
+    preset: Preset,
+  ) {
+    const modelSelection: vscode.ModelSelection = {
+      slowModel: preset.model,
+      fastModel: preset.model,
+      models: MockModelSelection.models,
+      providers: {
+        [preset.provider]: {
+          name: preset.provider,
+          apiBase: preset.customBaseUrl,
+          apiKey: preset.apiKey,
+        },
+      },
+    };
+    const sideCarModelConfiguration = getSideCarModelConfiguration(modelSelection);
+    return await sidecarClient.validateModelConfiguration(sideCarModelConfiguration);
   }
 
   private _getHtmlForWebview(webview: vscode.Webview) {
