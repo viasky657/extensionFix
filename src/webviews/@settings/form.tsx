@@ -83,14 +83,14 @@ export function PresetForm(props: PresetFormProps) {
             defaultValue={initialData?.apiKey}
           />
         </label>
-        <label className="-mt-1 flex items-start">
+        {/*<label className="-mt-1 flex items-start">
           <Checkbox
             name="custom-base-URL"
             checked={hasCustomBaseUrl}
             onCheckedChange={setHasCustomBaseUrl}
           />
           <span className="ml-2">Use custom base URL</span>
-        </label>
+        </label>*/}
         <label className={cn(!hasCustomBaseUrl && 'sr-only', 'mt-2')}>
           <p className="font-medium text-foreground">Custom base URL</p>
           <Input
