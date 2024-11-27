@@ -716,7 +716,16 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     const modelSelection: vscode.ModelSelection = {
       slowModel: preset.model,
       fastModel: preset.model,
-      models: MockModelSelection.models,
+      models: {
+        [preset.model]: {
+          name: MockModelSelection.models[preset.model].name,
+          contextLength: MockModelSelection.models[preset.model].contextLength,
+          temperature: MockModelSelection.models[preset.model].temperature,
+          provider: {
+            type: preset.provider,
+          }
+        }
+      },
       providers: {
         [preset.provider]: {
           name: preset.provider,

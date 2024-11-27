@@ -125,7 +125,16 @@ export async function activate(context: vscode.ExtensionContext) {
         const modelSelection: vscode.ModelSelection = {
           slowModel: model,
           fastModel: model,
-          models: MockModelSelection.models,
+          models: {
+            [model]: {
+              name: MockModelSelection.models[model].name,
+              contextLength: MockModelSelection.models[model].contextLength,
+              temperature: MockModelSelection.models[model].temperature,
+              provider: {
+                type: provider.name,
+              }
+            }
+          },
           providers: {
             [provider.name]: {
               name: provider.name,
