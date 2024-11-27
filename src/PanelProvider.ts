@@ -607,7 +607,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
         type: 'response',
         parts: [],
         exchangeId,
-        username: 'testing',
+        username: 'You',
         context: [],
         sessionId,
       });
@@ -637,7 +637,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
         exchangeId,
         sessionId,
         context: [],
-        username: 'testing',
+        username: 'You',
       });
 
       this._view?.webview.postMessage({
