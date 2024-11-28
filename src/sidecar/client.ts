@@ -1175,19 +1175,19 @@ export class SideCarClient {
     sessionId: string,
     exchangeId: string,
     editorUrl: string,
-    accessToken: string
+    accessToken: string,
+    modelSelection: vscode.ModelSelection
   ): AsyncIterableIterator<SideCarAgentEvent> {
     const baseUrl = new URL(this._url);
     baseUrl.pathname = '/api/agentic/cancel_running_event';
     const url = baseUrl.toString();
+    const sideCarModelConfiguration = getSideCarModelConfiguration(modelSelection);
     const body = {
       session_id: sessionId,
       exchange_id: exchangeId,
       editor_url: editorUrl,
       access_token: accessToken,
-      model_configuration: getSideCarModelConfiguration(
-        MockModelSelection.getConfiguration(),
-      ),
+      model_configuration: sideCarModelConfiguration,
     };
     const asyncIterableResponse = callServerEventStreamingBufferedPOST(url, body);
     for await (const line of asyncIterableResponse) {

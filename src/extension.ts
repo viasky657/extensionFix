@@ -34,15 +34,15 @@ Example flow:
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
-  const session = await vscode.csAuthentication.getSession();
-  const email = session?.account.email ?? '';
+  //const session = await vscode.csAuthentication.getSession();
+  //const email = session?.account.email ?? '';
   postHogClient?.capture({
     distinctId: getUniqueId(),
     event: 'activate',
     properties: {
       platform: os.platform(),
       product: 'extension',
-      email,
+      email: 'test@test.com',
     },
   });
 

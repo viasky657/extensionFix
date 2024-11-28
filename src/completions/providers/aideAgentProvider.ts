@@ -24,6 +24,8 @@ import { TerminalManager } from '../../terminal/TerminalManager';
 import assert from 'assert';
 import { createFileIfNotExists } from '../../server/createFile';
 import { CancellationTokenSource } from 'vscode';
+import { Models, ProviderType } from '../../model';
+import { MockModelSelection } from '../../utilities/modelSelection';
 
 /**
  * Stores the necessary identifiers required for identifying a response stream
@@ -79,16 +81,50 @@ class RequestsCanellationTokenSourceCollection {
 		return `${responseStreamIdentifier.sessionId}-${responseStreamIdentifier.exchangeId}`;
 	}
 
-	addCancellationToken(responseStreamIdentifier: ResponseStreamIdentifier, cts: CancellationTokenSource) {
+	addCancellationToken(responseStreamIdentifier: ResponseStreamIdentifier, cts: CancellationTokenSource, modelSelection: {
+		model: Models;
+		provider: {
+			name: ProviderType;
+			apiBase?: string;
+			apiKey: string;
+		};
+	}) {
 		this.extensionContext.subscriptions.push(cts.token.onCancellationRequested(() => {
-			console.log('responseStream::token_cancelled', responseStreamIdentifier);
+
 			// over here we get the stream of events from the cancellation
 			// we need to send it over on the stream as usual so we can work on it
 			// we can send empty access token here since we are not making llm calls
 			// on the sidecar... pretty sure I will forget and scream at myself later on
 			// for having herd knowledged like this
-			SIDECAR_CLIENT!.cancelRunningEvent(responseStreamIdentifier.sessionId, responseStreamIdentifier.exchangeId, this.aideAgentSessionProvider.editorUrl!, '');
-			//this.aideAgentSessionProvider.reportAgentEventsToChat(true, responseStreamAnswer);
+
+			const { model, provider } = modelSelection;
+
+			const modelSelectionForCancellation: vscode.ModelSelection = {
+				slowModel: model,
+				fastModel: model,
+				models: {
+					[model]: {
+						name: MockModelSelection.models[model].name,
+						contextLength: MockModelSelection.models[model].contextLength,
+						temperature: MockModelSelection.models[model].temperature,
+						provider: {
+							type: provider.name,
+						},
+					},
+				},
+				providers: {
+					[provider.name]: {
+						name: provider.name,
+						apiBase: provider.apiBase,
+						apiKey: provider.apiKey,
+					},
+				},
+			};
+
+			console.log('responseStream::token_cancelled', responseStreamIdentifier, modelSelectionForCancellation);
+
+			const responseStreamAnswer = SIDECAR_CLIENT!.cancelRunningEvent(responseStreamIdentifier.sessionId, responseStreamIdentifier.exchangeId, this.aideAgentSessionProvider.editorUrl!, '', modelSelectionForCancellation);
+			this.aideAgentSessionProvider.reportAgentEventsToChat(true, responseStreamAnswer);
 		}));
 		this.ctsCollection.set(this.getKey(responseStreamIdentifier), cts);
 	}
@@ -237,6 +273,11 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 		exchange_id: string | undefined;
 	}> {
 		const exchangeId = this.panelProvider.createNewExchangeResponse(sessionId);
+
+		if (!this.panelProvider.runningTask) {
+			throw new Error('No task running');
+		}
+
 		if (exchangeId) {
 			const newExchanges = [exchangeId];
 			// console.log('newExchanges', newExchanges);
@@ -245,11 +286,20 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 			// here we should also unset all the previous exchanges which are going on
 			// since that would lead to lot of cancellation events
 			this.requestCancellationTokensCollection.removeAllTokenForSession(sessionId);
+
+			const { preset } = this.panelProvider.runningTask;
 			// only track the current one
 			this.requestCancellationTokensCollection.addCancellationToken({
 				sessionId,
 				exchangeId,
-			}, cts);
+			}, cts, {
+				model: preset.model,
+				provider: {
+					name: preset.provider,
+					apiBase: preset.customBaseUrl,
+					apiKey: preset.apiKey,
+				},
+			});
 		}
 		return { exchange_id: exchangeId };
 	}
@@ -550,7 +600,7 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 		for await (const event of asyncIterable) {
 			// now we ping the sidecar that the probing needs to stop
 
-			console.log(event);
+			// console.log(event);
 
 			if ('keep_alive' in event) {
 				continue;
