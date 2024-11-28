@@ -72,7 +72,7 @@ const App = () => {
       ) : state.isSidecarDownloading ? (
         <React.Fragment>
           <ProgressIndicator className="absolute inset-x-0 top-0 z-20" />
-          <p className="mx-auto self-center text-center text-sm text-description">
+          <p className="mx-auto my-2 self-center text-center text-sm text-description">
             Downloading Sota PR Assistant...
           </p>
         </React.Fragment>

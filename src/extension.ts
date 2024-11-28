@@ -89,7 +89,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   console.log('extension:will start sidecar binary');
   // sidecar binary download in background
-  startSidecarBinary(context.globalStorageUri.fsPath)
+  startSidecarBinary(context.globalStorageUri.fsPath, panelProvider)
     .then(async (sidecarUrl) => {
       const sidecarClient = new SideCarClient(sidecarUrl);
       // Perform a health check
