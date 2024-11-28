@@ -168,6 +168,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
     const providers: IContextProvider[] = [new FileContextProvider({})];
 
+
     // Handle messages from the webview
     webviewView.webview.onDidReceiveMessage(async (data: ClientRequest) => {
       this._onMessageFromWebview.fire(data);
@@ -198,6 +199,11 @@ export class PanelProvider implements vscode.WebviewViewProvider {
             type: 'init-response',
             task: this._runningTask,
             isSidecarReady: !!this.sidecarClient,
+          });
+
+          webviewView.webview.postMessage({
+            type: 'workspace-folders',
+            workspaceFolders: vscode.workspace.workspaceFolders?.map(f => f.uri.fsPath),
           });
           break;
         }

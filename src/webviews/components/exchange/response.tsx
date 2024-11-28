@@ -9,7 +9,7 @@ import {
 } from '../../../model';
 import MarkdownRenderer from '../markdown-renderer';
 import { ContextSummary } from '../context-summary';
-import { Exchange, ExchangeContent, ExchangeHeader } from './exchange-base';
+import { Exchange, ExchangeContent } from './exchange-base';
 import FileIcon from 'components/fileicon';
 import { TerminalPreview } from 'components/terminal-preview';
 import { Spinner } from 'components/spinner';
@@ -58,7 +58,8 @@ function ParameterContent({
             <FileIcon height="22px" width="22px" filename={content} />
           </div>
           <span className="w-0 flex-grow -translate-x-1.5 overflow-hidden text-ellipsis whitespace-nowrap group-hover:underline">
-            {content.split(/[/\\]/).pop()}
+            {/*content.split(/[/\\]/).pop()*/}
+            {content}
           </span>
         </button>
       );
@@ -108,14 +109,14 @@ function ParameterContent({
 
     case ToolParameter.RegexPattern:
     case ToolParameter.FilePattern:
-      return (
-        <pre className="relative isolate rounded-xs bg-input-background p-2 text-xs">
+      return <TerminalPreview lines={content.split('\n')} busy={false} />;
+
+    /*<pre className="relative isolate rounded-xs bg-input-background p-2 text-xs">
           <div className="absolute inset-0 -z-10 rounded-xs border border-input-border opacity-50" />
           {content.split('\n').map((line, i) => (
             <p key={i}>{line}</p>
           ))}
-        </pre>
-      );
+        </pre>*/
 
     case ToolParameter.Recursive:
       return (

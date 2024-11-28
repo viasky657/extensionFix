@@ -172,7 +172,13 @@ interface UpdatePresetResponse {
   error?: string;
 }
 
+interface WorkspaceFolders {
+  type: 'workspace-folders';
+  workspaceFolders?: string[];
+}
+
 export type Event =
+  | WorkspaceFolders
   | SidecarDownloading
   | TaskTerminals
   | OpenView
@@ -389,4 +395,5 @@ export interface AppState {
   isSidecarDownloading: boolean;
   currentTask?: Task;
   activePreset?: Preset;
+  workspaceFolders?: string[];
 }
