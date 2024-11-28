@@ -45,6 +45,9 @@ export type Terminal = vscode.Terminal & {
 
 export class PanelProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
+  get view() {
+    return this._view;
+  }
   private _runningTask: Task | undefined;
   get runningTask() {
     return this._runningTask;

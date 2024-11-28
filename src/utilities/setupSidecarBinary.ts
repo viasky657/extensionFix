@@ -11,6 +11,7 @@ import { promisify } from 'util';
 import { ProgressLocation, window } from 'vscode';
 import { downloadFromGCPBucket, downloadUsingURL } from './gcpBucket';
 import { sidecarUseSelfRun } from './sidecarUrl';
+import { PanelProvider } from '../PanelProvider';
 
 // Here I want to ask a question about what value does the extracDir take
 // it should be pretty easy to do that
@@ -196,7 +197,8 @@ export async function startSidecarBinaryWithLocal(installLocation: string): Prom
 }
 
 export async function startSidecarBinary(
-  extensionBasePath: string
+  extensionBasePath: string,
+  panelProvider: PanelProvider
   //installLocation: string
 ): Promise<string> {
   // We want to check where the sidecar binary is stored
@@ -247,6 +249,14 @@ export async function startSidecarBinary(
   console.log('will download sidecar binary');
 
   // First, check if the server is already downloaded
+
+  if (panelProvider.view?.webview) {
+    panelProvider.view.webview.postMessage({
+      type: 'sidecar-downloading',
+      complete: false,
+    });
+  }
+
   await window.withProgress(
     {
       location: ProgressLocation.SourceControl,
@@ -259,6 +269,14 @@ export async function startSidecarBinary(
         await downloadFromGCPBucket(bucket, fileName, zipDestination);
       } catch (e) {
         await downloadUsingURL(bucket, fileName, zipDestination);
+      } finally {
+        if (panelProvider.view?.webview) {
+          panelProvider.view.webview.postMessage({
+            type: 'sidecar-downloading',
+            complete: false,
+          });
+        }
+
       }
     }
   );

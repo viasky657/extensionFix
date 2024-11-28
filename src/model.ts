@@ -110,6 +110,11 @@ export interface PresetsLoaded {
   activePresetId?: string;
 }
 
+export interface SidecarDownloading {
+  type: 'sidecar-downloading';
+  complete: boolean;
+}
+
 interface OpenTaskEvent {
   type: 'open-task';
   task: Task;
@@ -168,6 +173,7 @@ interface UpdatePresetResponse {
 }
 
 export type Event =
+  | SidecarDownloading
   | TaskTerminals
   | OpenView
   | NewSession
@@ -380,6 +386,7 @@ export type NewPreset = BasePreset & {
 export interface AppState {
   extensionReady: boolean;
   isSidecarReady: boolean;
+  isSidecarDownloading: boolean;
   currentTask?: Task;
   activePreset?: Preset;
 }

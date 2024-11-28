@@ -23,6 +23,10 @@ function reducer(state: AppState, action: Event) {
     newState.isSidecarReady = action.isSidecarReady;
   }
 
+  if (action.type === 'sidecar-downloading') {
+    newState.isSidecarDownloading = !action.complete;
+  }
+
   return newState;
 }
 
@@ -65,6 +69,13 @@ const App = () => {
       )}
       {state.isSidecarReady ? (
         <Outlet />
+      ) : state.isSidecarDownloading ? (
+        <React.Fragment>
+          <ProgressIndicator className="absolute inset-x-0 top-0 z-20" />
+          <p className="mx-auto self-center text-center text-sm text-description">
+            Downloading Sota PR Assistant...
+          </p>
+        </React.Fragment>
       ) : (
         <p className="mx-auto self-center text-center text-sm text-description">
           Starting Sota PR Assistant...
@@ -79,6 +90,7 @@ export default App;
 export const initialState: AppState = {
   extensionReady: false,
   isSidecarReady: false, // this is extra
+  isSidecarDownloading: false,
 };
 
 declare global {
