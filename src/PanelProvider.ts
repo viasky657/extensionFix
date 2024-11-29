@@ -177,7 +177,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
         case 'init': {
           let activePreset = undefined;
           const activePresetId = this.context.globalState.get<string>('active-preset-id');
-          if (activePresetId) {=
+          if (activePresetId) {
             activePreset = this._presets.get(activePresetId);
             if (activePreset) {
               this._runningTask = getDefaultTask(activePreset);
