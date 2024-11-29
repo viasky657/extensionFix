@@ -177,7 +177,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
         case 'init': {
           let activePreset = undefined;
           const activePresetId = this.context.globalState.get<string>('active-preset-id');
-          if (activePresetId) {
+          if (activePresetId) {=
             activePreset = this._presets.get(activePresetId);
             if (activePreset) {
               this._runningTask = getDefaultTask(activePreset);
@@ -249,8 +249,10 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           if (this.sidecarClient && this._presets.has(data.preset.id)) {
             const previousData = this._presets.get(data.preset.id);
             const updatedData = { ...previousData, ...data.preset };
-            const currentPresetNames = new Set(Array.from(this._presets.values()).map((p) => p.name));
-            if (currentPresetNames.has(updatedData.name)) {
+            const otherPresets = new Map(this._presets);
+            otherPresets.delete(data.preset.id);
+            const otherPresetNames = new Set(Array.from(otherPresets.values()).map((p) => p.name));
+            if (otherPresetNames.has(updatedData.name)) {
               const message = { type: 'update-preset/response', valid: false, error: `Another preset named "${updatedData.name}" already exists` };
               webviewView.webview.postMessage(message);
               return;
