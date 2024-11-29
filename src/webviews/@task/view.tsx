@@ -233,7 +233,7 @@ export function TaskView() {
               </ol>
             )}
           </section>
-          {true && ( // !task.data?.task.complete
+          {!task.data?.task.complete && (
             <span
               aria-live="polite"
               className="-mb-2 flex items-center gap-2 rounded-xs bg-panel-background px-2 py-1 text-description"
