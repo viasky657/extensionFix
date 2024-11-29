@@ -773,26 +773,15 @@ export class PanelProvider implements vscode.WebviewViewProvider {
       vscode.Uri.joinPath(this._extensionUri, 'dist', 'style.css')
     );
 
-    const codiconsUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(
-        this._extensionUri,
-        'node_modules',
-        '@vscode/codicons',
-        'dist',
-        'codicon.css'
-      )
-    );
-
     const nonce = getNonce();
 
     return `<!DOCTYPE html>
           <html lang="en">
           <head>
               <meta charset="UTF-8">
-              <meta http-equiv="Content-Security-Policy" content="default-src 'self' ${webview.cspSource}; style-src 'unsafe-inline' 'self' ${webview.cspSource}; script-src 'nonce-${nonce}' 'wasm-unsafe-eval'; wasm-unsafe-eval 'self'">
+              <meta http-equiv="Content-Security-Policy" content="default-src 'self' ${webview.cspSource}; font-src ${webview.cspSource}; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';'">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
               <title>Example View</title>
-              <link rel="stylesheet" href="${codiconsUri}">
               <link rel="stylesheet" href="${styleUri}">
           </head>
           <body>

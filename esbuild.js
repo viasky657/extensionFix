@@ -62,6 +62,7 @@ async function webview() {
     ],
     loader: {
       '.svg': 'file',
+      '.ttf': 'file',
     },
   });
   if (watch) {
