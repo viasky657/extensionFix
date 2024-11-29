@@ -13,6 +13,7 @@ import { Event, Exchange, TerminalInformation, View, ViewType } from '../../mode
 import { useTask } from './use-task';
 import { TerminalPreview } from 'components/terminal-preview';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
+import { Spinner } from 'components/spinner';
 
 export function TaskView() {
   const task = useTask();
@@ -232,6 +233,15 @@ export function TaskView() {
               </ol>
             )}
           </section>
+          {true && ( // !task.data?.task.complete
+            <span
+              aria-live="polite"
+              className="-mb-2 flex items-center gap-2 rounded-xs bg-panel-background px-2 py-1 text-description"
+            >
+              <Spinner className="h-3 w-3" />
+              Generating
+            </span>
+          )}
           <div className="sticky bottom-0 bg-sidebar-background p-2">
             {showActions && (
               <div
