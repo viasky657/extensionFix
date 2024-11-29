@@ -10,7 +10,7 @@ type HTMLElementProps = React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement
 export function TaskDL(props: TaskDLProps) {
   const { className, children, ...rest } = props;
   return (
-    <div className={cn(className, 'relative text-description')}>
+    <div className={cn('relative text-description', className)}>
       <dl {...rest}>{children}</dl>
     </div>
   );

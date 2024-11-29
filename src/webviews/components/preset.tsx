@@ -9,12 +9,12 @@ import { cn } from 'utils/cn';
 
 const logoMap = new Map<string, React.FunctionComponent<React.SVGProps<SVGSVGElement>>>();
 logoMap.set(Provider.Anthropic, AnthropicLogo);
-//logoMap.set(Provider.OpenAI, OpenAILogo);
+// logoMap.set(Provider.OpenAI, OpenAILogo);
 logoMap.set(Provider.OpenRouter, OpenRouterLogo);
-//logoMap.set(Provider.GoogleGemini, GeminiLogo);
-//logoMap.set(Provider.AWSBedrock, AWSBedrockLogo);
-//logoMap.set(Provider.OpenAICompatible, OpenAILogo);
-//logoMap.set(Provider.Ollama, OllamaLogo);
+// logoMap.set(Provider.GoogleGemini, GeminiLogo);
+// logoMap.set(Provider.AWSBedrock, AWSBedrockLogo);
+// logoMap.set(Provider.OpenAICompatible, OpenAILogo);
+// logoMap.set(Provider.Ollama, OllamaLogo);
 
 export type PresetLogoProps = React.SVGProps<SVGSVGElement> & {
   provider: ProviderType;
@@ -23,5 +23,5 @@ export type PresetLogoProps = React.SVGProps<SVGSVGElement> & {
 export function PresetLogo(props: PresetLogoProps) {
   const { provider, className, ...rest } = props;
   const Logo = logoMap.get(provider);
-  return Logo ? <Logo className={cn(className, 'h-3 w-3')} {...rest} /> : null;
+  return Logo ? <Logo className={cn('h-3 w-3', className)} {...rest} /> : null;
 }

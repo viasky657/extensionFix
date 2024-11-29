@@ -351,7 +351,7 @@ export enum AnthropicModels {
   ClaudeOpus = 'ClaudeOpus',
 }
 
-export type Models = keyof typeof AnthropicModels;
+export type Models = `${AnthropicModels}`;
 
 export enum PermissionState {
   Always = 'always',

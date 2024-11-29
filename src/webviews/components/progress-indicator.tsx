@@ -14,11 +14,11 @@ export function ProgressIndicator(props: ProgressIndicatorProps) {
       role="progressbar"
       aria-label={label}
       aria-busy
-      className={cn(className, '-mx-3')}
+      className={cn('-mx-3', className)}
       {...rest}
     >
-      <div className="animate-translate-lr relative h-0.5 w-full">
-        <div className="bg-progress-bar-background absolute right-0 h-full w-3" />
+      <div className="relative h-0.5 w-full animate-translate-lr">
+        <div className="absolute right-0 h-full w-3 bg-progress-bar-background" />
       </div>
     </div>
   );

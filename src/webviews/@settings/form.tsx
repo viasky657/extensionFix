@@ -44,7 +44,7 @@ export function PresetForm(props: PresetFormProps) {
   const [hasCustomBaseUrl, setHasCustomBaseUrl] = React.useState<CheckedState>(false);
 
   return (
-    <form id={formId} className={cn(className, 'flex flex-col gap-4 text-description')} {...rest}>
+    <form id={formId} className={cn('flex flex-col gap-4 text-description', className)} {...rest}>
       {initialData?.id && <input type="hidden" name="id" required value={initialData?.id} />}
       {initialData?.id && (
         <input type="hidden" name="createdOn" required value={initialData?.createdOn} />
@@ -91,7 +91,7 @@ export function PresetForm(props: PresetFormProps) {
           />
           <span className="ml-2">Use custom base URL</span>
         </label>*/}
-        <label className={cn(!hasCustomBaseUrl && 'sr-only', 'mt-2')}>
+        <label className={cn('mt-2', !hasCustomBaseUrl && 'sr-only')}>
           <p className="font-medium text-foreground">Custom base URL</p>
           <Input
             className="mt-1 w-full"

@@ -9,8 +9,8 @@ export function CostIcon(props: CostIconProps) {
     <span
       aria-hidden
       className={cn(
-        className,
-        'flex h-3.5 w-3.5 items-center justify-center rounded-xs border border-badge-background bg-input-background'
+        'flex h-3.5 w-3.5 items-center justify-center rounded-xs border border-badge-background bg-input-background',
+        className
       )}
       {...rest}
     >

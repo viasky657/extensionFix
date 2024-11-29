@@ -89,8 +89,8 @@ function PresetItem(props: PresetItemProps) {
       >
         <span
           className={cn(
-            isActivePreset ? 'opacity-100' : 'opacity-0',
-            'codicon codicon-check p-1 group-hover/active:opacity-80'
+            'codicon codicon-check p-1 group-hover/active:opacity-80',
+            isActivePreset ? 'opacity-100' : 'opacity-0'
           )}
         />
         <span className="sr-only">

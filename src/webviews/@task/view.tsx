@@ -238,8 +238,8 @@ export function TaskView() {
                 aria-live="assertive"
                 aria-hidden={!showActions}
                 className={cn(
-                  showActions ? 'translate-y-1/2 opacity-100' : 'translate-y-0 opacity-0',
-                  'mb-2 flex gap-2 transition-all duration-150 ease-in-out'
+                  'mb-2 flex gap-2 transition-all duration-150 ease-in-out',
+                  showActions ? 'translate-y-1/2 opacity-100' : 'translate-y-0 opacity-0'
                 )}
               >
                 <Button

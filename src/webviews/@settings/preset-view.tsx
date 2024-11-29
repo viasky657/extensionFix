@@ -1,12 +1,14 @@
 import { z } from 'zod';
 import * as React from 'react';
-import { NewPreset, Permissions, Preset, Provider, View } from '../../model';
+import { AnthropicModels, NewPreset, Permissions, Preset, Provider, View } from '../../model';
 import { PresetForm } from './form';
 import { getPresets, PresetsData, usePresets } from './use-preset';
 import { processFormData } from 'utils/form';
 import { Link, LoaderFunctionArgs, useLoaderData, useNavigate } from 'react-router-dom';
 import { Button } from 'components/button';
 import { LoaderData } from 'utils/types';
+import { ProgressIndicator } from 'components/progress-indicator';
+import { Spinner } from 'components/spinner';
 
 type ViewData = {
   presetsData: PresetsData;
@@ -40,9 +42,11 @@ export function PresetView() {
 
   const stableId = React.useId();
 
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [formErrors, setFormErrors] = React.useState<[string, string][]>();
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+    setIsSubmitting(true);
     event.preventDefault();
     setFormErrors(undefined);
     const form = event.currentTarget;
@@ -64,6 +68,8 @@ export function PresetView() {
       if (err instanceof z.ZodError) {
         setFormErrors(printValidationIssues(err.issues));
       }
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -79,7 +85,8 @@ export function PresetView() {
   }
 
   return (
-    <main className="flex flex-grow flex-col gap-2 p-2">
+    <main className="relative flex flex-grow flex-col gap-2 p-2">
+      {isSubmitting && <ProgressIndicator className="absolute inset-x-0 top-0 z-20" />}
       <header className="mb-2 flex items-start gap-2 text-description">
         <button
           type="button"
@@ -111,12 +118,18 @@ export function PresetView() {
         <Button variant="secondary" asChild>
           <Link to={`/${View.Settings}`}>Cancel</Link>
         </Button>
-        <Button type="submit" variant="primary" form={stableId}>
+        <Button type="submit" variant="primary" form={stableId} disabled={isSubmitting}>
+          {true && <Spinner className="h-3 w-3 border-b-current" />}
           Save
         </Button>
       </div>
       <div className="flex justify-end gap-2">
-        <Button type="button" variant="destructive" onClick={onDeletePreset}>
+        <Button
+          type="button"
+          variant="destructive"
+          onClick={onDeletePreset}
+          disabled={isSubmitting}
+        >
           Delete preset
         </Button>
       </div>
@@ -126,7 +139,7 @@ export function PresetView() {
 
 const NewPresetSchema = z.object({
   provider: z.nativeEnum(Provider),
-  model: z.string(),
+  model: z.nativeEnum(AnthropicModels),
   apiKey: z.string(),
   customBaseUrl: z.string().optional(),
   permissions: z.custom<Permissions>(),
