@@ -1,45 +1,24 @@
-const esbuild = require("esbuild");
-const tailwindcss = require("tailwindcss");
-const autoprefixer = require("autoprefixer");
-const stylePlugin = require("esbuild-style-plugin");
+const esbuild = require('esbuild');
+const tailwindcss = require('tailwindcss');
+const autoprefixer = require('autoprefixer');
+const stylePlugin = require('esbuild-style-plugin');
 const svgr = require('esbuild-plugin-svgr');
+const { esbuildProblemMatcherPlugin, copyFilesPlugin } = require('./src/esbuild-plugins');
 
-const production = process.argv.includes("--production");
-const watch = process.argv.includes("--watch");
-
-/**
- * @type {import('esbuild').Plugin}
- */
-const esbuildProblemMatcherPlugin = {
-  name: "esbuild-problem-matcher",
-
-  setup(build) {
-    build.onStart(() => {
-      console.log("[watch] build started");
-    });
-    build.onEnd((result) => {
-      result.errors.forEach(({ text, location }) => {
-        console.error(`✘ [ERROR] ${text}`);
-        console.error(
-          `    ${location.file}:${location.line}:${location.column}:`
-        );
-      });
-      console.log("[watch] build finished");
-    });
-  },
-};
+const production = process.argv.includes('--production');
+const watch = process.argv.includes('--watch');
 
 async function extension() {
   const ctx = await esbuild.context({
-    entryPoints: ["src/extension.ts"],
+    entryPoints: ['src/extension.ts'],
     bundle: true,
-    format: "cjs",
+    format: 'cjs',
     minify: production,
     sourcemap: !production,
     sourcesContent: false,
-    platform: "node",
-    external: ["vscode"],
-    outfile: "dist/extension.js",
+    platform: 'node',
+    external: ['vscode'],
+    outfile: 'dist/extension.js',
     // logLevel: 'silent',
     plugins: [
       /* add to the end of plugins array */
@@ -56,18 +35,18 @@ async function extension() {
 
 async function webview() {
   const ctx = await esbuild.context({
-    entryPoints: ["src/webviews/index.tsx", "src/webviews/style.css"],
+    entryPoints: ['src/webviews/index.tsx', 'src/webviews/style.css'],
     bundle: true,
-    format: "esm",
+    format: 'esm',
     minify: production,
     sourcemap: !production,
     sourcesContent: false,
-    platform: "browser",
-    outdir: "dist",
-    jsx: "automatic",
+    platform: 'browser',
+    outdir: 'dist',
+    jsx: 'automatic',
     define: {
       'process.env.NODE_ENV': production ? '"production"' : '"development"',
-      'process.env.IS_PRODUCTION': production ? 'true' : 'false'
+      'process.env.IS_PRODUCTION': production ? 'true' : 'false',
     },
     // logLevel: 'silent',
     plugins: [
@@ -77,11 +56,12 @@ async function webview() {
         },
       }),
       svgr(),
+      copyFilesPlugin([{ from: './src/icon.png', to: 'icon.png' }]),
       /* add to the end of plugins array */
       esbuildProblemMatcherPlugin,
     ],
     loader: {
-      ".svg": "file",
+      '.svg': 'file',
     },
   });
   if (watch) {
