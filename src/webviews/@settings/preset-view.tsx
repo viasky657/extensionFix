@@ -119,7 +119,7 @@ export function PresetView() {
           <Link to={`/${View.Settings}`}>Cancel</Link>
         </Button>
         <Button type="submit" variant="primary" form={stableId} disabled={isSubmitting}>
-          {true && <Spinner className="h-3 w-3 border-b-current" />}
+          {isSubmitting && <Spinner className="h-3 w-3 border-b-current" />}
           Save
         </Button>
       </div>
