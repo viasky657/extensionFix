@@ -203,7 +203,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
           webviewView.webview.postMessage({
             type: 'workspace-folders',
-            workspaceFolders: vscode.workspace.workspaceFolders?.map(f => f.uri.fsPath),
+            workspaceFolders: vscode.workspace.workspaceFolders?.map(f => ({ fsPath: f.uri.fsPath, name: f.name })),
           });
           break;
         }

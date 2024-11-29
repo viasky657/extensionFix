@@ -174,7 +174,7 @@ interface UpdatePresetResponse {
 
 interface WorkspaceFolders {
   type: 'workspace-folders';
-  workspaceFolders?: string[];
+  workspaceFolders?: WorkspaceFolder[];
 }
 
 export type Event =
@@ -389,11 +389,16 @@ export type NewPreset = BasePreset & {
   type: 'new-preset';
 };
 
+export type WorkspaceFolder = {
+  name: string;
+  fsPath: string;
+}
+
 export interface AppState {
   extensionReady: boolean;
   isSidecarReady: boolean;
   isSidecarDownloading: boolean;
   currentTask?: Task;
   activePreset?: Preset;
-  workspaceFolders?: string[];
+  workspaceFolders?: WorkspaceFolder[];
 }

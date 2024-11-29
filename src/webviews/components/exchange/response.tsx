@@ -6,6 +6,7 @@ import {
   ToolParameterType,
   ToolType,
   ToolTypeType,
+  WorkspaceFolder,
 } from '../../../model';
 import MarkdownRenderer from '../markdown-renderer';
 import { ContextSummary } from '../context-summary';
@@ -13,6 +14,7 @@ import { Exchange, ExchangeContent } from './exchange-base';
 import FileIcon from 'components/fileicon';
 import { TerminalPreview } from 'components/terminal-preview';
 import { Spinner } from 'components/spinner';
+import { AppState } from 'app';
 
 const toolTypesInfo: Record<ToolType, { label: string; codiconId: string }> = {
   [ToolType.AskFollowupQuestions]: { label: 'Follow up question', codiconId: 'comment-discussion' },
@@ -28,6 +30,20 @@ const toolTypesInfo: Record<ToolType, { label: string; codiconId: string }> = {
   [ToolType.AttemptCompletion]: { label: 'Attempt completion', codiconId: 'wand' },
   [ToolType.RepoMapGeneration]: { label: 'Repo map generation', codiconId: 'folder-library' },
 };
+
+function getRelativePath(workspaceFoldersPaths: WorkspaceFolder[], path: string) {
+  // Workspace roots should be ordered by depth
+  for (const workspaceFoldersPath of workspaceFoldersPaths) {
+    if (workspaceFoldersPath.fsPath === path) {
+      return workspaceFoldersPath.name;
+    }
+    if (path.startsWith(workspaceFoldersPath.fsPath)) {
+      return path.replace(`${workspaceFoldersPath.fsPath}/`, '');
+    }
+  }
+
+  return path;
+}
 
 function ParameterContent({
   type,
@@ -47,6 +63,8 @@ function ParameterContent({
     }
   }
 
+  const { workspaceFolders } = React.useContext(AppState);
+
   switch (type) {
     case ToolParameter.FSFilePath:
       return (
@@ -59,7 +77,7 @@ function ParameterContent({
           </div>
           <span className="w-0 flex-grow -translate-x-1.5 overflow-hidden text-ellipsis whitespace-nowrap group-hover:underline">
             {/*content.split(/[/\\]/).pop()*/}
-            {content}
+            {workspaceFolders ? getRelativePath(workspaceFolders, content) : content}
           </span>
         </button>
       );
@@ -74,7 +92,7 @@ function ParameterContent({
             className="codicon codicon-folder-opened flex-shrink-0 translate-y-0.5"
           />
           <span className="w-0 flex-grow overflow-hidden text-ellipsis whitespace-nowrap">
-            {content}
+            {workspaceFolders ? getRelativePath(workspaceFolders, content) : content}
           </span>
         </button>
       );

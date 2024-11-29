@@ -26,8 +26,6 @@ import { createFileIfNotExists } from '../../server/createFile';
 import { CancellationTokenSource } from 'vscode';
 import { Models, ProviderType } from '../../model';
 import { MockModelSelection } from '../../utilities/modelSelection';
-import path from 'node:path';
-
 /**
  * Stores the necessary identifiers required for identifying a response stream
  */
@@ -168,8 +166,6 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 	// that work
 	private editCounter = 0;
 
-	private workspaceFoldersPaths: string[];
-
 	private async isPortOpen(port: number): Promise<boolean> {
 		return new Promise((resolve, _) => {
 			const s = net.createServer();
@@ -211,7 +207,6 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 		panelProvider: PanelProvider,
 		terminalManager: TerminalManager,
 	) {
-		this.workspaceFoldersPaths = vscode.workspace.workspaceFolders?.map(f => f.uri.fsPath) || [];
 		this.requestCancellationTokensCollection = new RequestsCanellationTokenSourceCollection(extensionContext, this);
 		this.panelProvider = panelProvider;
 		this.requestHandler = http.createServer(
@@ -639,18 +634,11 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 				if (event.event.FrameworkEvent.ToolParameterFound) {
 					const toolParameter = event.event.FrameworkEvent.ToolParameterFound.tool_parameter_input;
 
-					if (toolParameter.field_name === 'directory_path' || toolParameter.field_name === 'fs_file_path') {
 
-						const delta = getRelativePath(this.workspaceFoldersPaths, toolParameter.field_content_delta);
-						const answerUpUntilNow = getRelativePath(this.workspaceFoldersPaths, toolParameter.field_content_up_until_now);
-						console.log('toolParameter', { toolParameter, delta, answerUpUntilNow });
-						this.panelProvider.addToolParameterFound(sessionId, exchangeId, toolParameter.field_name, delta, answerUpUntilNow);
-					} else {
-						this.panelProvider.addToolParameterFound(sessionId, exchangeId, toolParameter.field_name, toolParameter.field_content_delta, toolParameter.field_content_up_until_now);
-					}
+					this.panelProvider.addToolParameterFound(sessionId, exchangeId, toolParameter.field_name, toolParameter.field_content_delta, toolParameter.field_content_up_until_now);
+
 				}
 				if (event.event.FrameworkEvent.ToolOutput) {
-					console.log('ToolOutput', event.event.FrameworkEvent.ToolOutput);
 					if (event.event.FrameworkEvent.ToolOutput.ToolTypeForOutput) {
 						// This contains the tool type for which we are generating the output over here
 						const toolTypeForOutput = event.event.FrameworkEvent.ToolOutput.ToolTypeForOutput.tool_type;
@@ -660,15 +648,7 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 						// This contains the tool output response, which shows you that we have the delta over here and the answer up until now
 						// we can just send the answer up until now completely and have it displayed on the extension layer
 						const toolOutput = event.event.FrameworkEvent.ToolOutput.ToolOutputResponse;
-						// Hack cause we can't check the file type and I don't want to set up a req/response to get this
-						try {
-							path.parse(toolOutput.answer_up_until_now);
-							const delta = getRelativePath(this.workspaceFoldersPaths, toolOutput.delta);
-							const answerUpUntilNow = getRelativePath(this.workspaceFoldersPaths, toolOutput.answer_up_until_now);
-							this.panelProvider.addToolOutputFound(sessionId, exchangeId, delta, answerUpUntilNow);
-						} catch {
-							this.panelProvider.addToolOutputFound(sessionId, exchangeId, toolOutput.delta, toolOutput.answer_up_until_now);
-						}
+						this.panelProvider.addToolOutputFound(sessionId, exchangeId, toolOutput.delta, toolOutput.answer_up_until_now);
 					}
 
 				}
@@ -679,52 +659,4 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 	dispose() {
 		// this.aideAgent.dispose();
 	}
-}
-
-
-function getRelativePath(rootPaths: string[], fullPath: string) {
-
-	// Handle array of root paths
-	if (!Array.isArray(rootPaths) || rootPaths.length === 0) {
-		return fullPath;
-	}
-
-	if (rootPaths.length === 1) {
-		console.log(rootPaths, fullPath, path.relative(rootPaths[0], fullPath));
-		return path.relative(rootPaths[0], fullPath);
-	}
-
-	// Normalize all paths
-	const normalizedFullPath = path.normalize(fullPath);
-	const normalizedRootPaths = rootPaths.map((p) => path.normalize(p));
-
-	// Find the matching root path (the one that's a parent of the full path)
-	let matchingRoot = null;
-	let shortestRelativePath = null;
-
-	for (const rootPath of normalizedRootPaths) {
-		const relative = path.relative(rootPath, normalizedFullPath);
-
-		// Check if the relative path doesn't start with '..' (meaning it's actually under this root)
-		if (!relative.startsWith('..') && !path.isAbsolute(relative)) {
-			// If we haven't found a match yet, or this path is shorter, use this one
-			if (!shortestRelativePath || relative.length < shortestRelativePath.length) {
-				matchingRoot = rootPath;
-				shortestRelativePath = relative;
-			}
-		}
-		if (shortestRelativePath === '') {
-			return rootPath;
-		}
-	}
-
-	if (!matchingRoot || !shortestRelativePath) {
-		return fullPath;
-	}
-
-
-	// Include the root folder name in the relative path
-	const rootFolderName = path.basename(matchingRoot);
-
-	return path.join(rootFolderName, shortestRelativePath);
 }
