@@ -779,7 +779,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           <html lang="en">
           <head>
               <meta charset="UTF-8">
-              <meta http-equiv="Content-Security-Policy" content="default-src 'self' ${webview.cspSource}; font-src ${webview.cspSource}; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';'">
+              <meta http-equiv="Content-Security-Policy" content="default-src ${webview.cspSource}; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}' 'wasm-unsafe-eval';">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
               <title>Example View</title>
               <link rel="stylesheet" href="${styleUri}">
