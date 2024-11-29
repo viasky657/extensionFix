@@ -221,12 +221,18 @@ export class PanelProvider implements vscode.WebviewViewProvider {
         }
         case 'add-preset': {
           if (this.sidecarClient) {
-            const newPreset = {
+            const newPreset: Preset = {
               ...data.preset,
               type: 'preset',
               createdOn: new Date().toISOString(),
               id: v4(),
-            } as Preset; // Why do we need casting?
+            };
+            const currentPresetNames = new Set(Array.from(this._presets.values()).map((p) => p.name));
+            if (currentPresetNames.has(newPreset.name)) {
+              const message = { type: 'add-preset/response', valid: false, error: `Another preset named "${newPreset.name}" already exists` };
+              webviewView.webview.postMessage(message);
+              return;
+            }
             const response = await this.validateModelConfiguration(this.sidecarClient, newPreset);
             if (response.valid) {
               this._presets.set(newPreset.id, newPreset);
@@ -243,6 +249,12 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           if (this.sidecarClient && this._presets.has(data.preset.id)) {
             const previousData = this._presets.get(data.preset.id);
             const updatedData = { ...previousData, ...data.preset };
+            const currentPresetNames = new Set(Array.from(this._presets.values()).map((p) => p.name));
+            if (currentPresetNames.has(updatedData.name)) {
+              const message = { type: 'update-preset/response', valid: false, error: `Another preset named "${updatedData.name}" already exists` };
+              webviewView.webview.postMessage(message);
+              return;
+            }
             const response = await this.validateModelConfiguration(this.sidecarClient, updatedData);
             if (response.valid) {
               this._presets.set(data.preset.id, updatedData);
