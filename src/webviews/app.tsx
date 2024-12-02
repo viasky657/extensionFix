@@ -62,9 +62,6 @@ const App = () => {
 
   React.useEffect(() => {
     // fetches state from the extension
-    vscode.postMessage({
-      type: 'init',
-    });
 
     const handleMessage = (event: MessageEvent<Event>) => {
       dispatch(event.data);

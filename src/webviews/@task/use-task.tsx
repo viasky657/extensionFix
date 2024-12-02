@@ -18,6 +18,7 @@ type AsyncState<T> =
 function getTask() {
   vscode.postMessage({
     type: 'init',
+    newSession: false,
   });
 }
 
@@ -37,6 +38,7 @@ export function useTask() {
     const handleMessage = (event: MessageEvent<Event>) => {
       if (event.data.type === 'init-response') {
         setState({ status: Status.Success, data: { task: event.data.task } });
+        console.log('sessionId', event.data.task.sessionId);
       }
     };
     window.addEventListener('message', handleMessage);

@@ -63,7 +63,7 @@ export function useNavigationFromExtension() {
     if (location.pathname === '/task') {
       vscode.postMessage({
         type: 'init',
-        newSession: true,
+        newSession: false,
       });
     }
   }, [location]);

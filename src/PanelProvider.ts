@@ -180,7 +180,9 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           if (activePresetId) {
             activePreset = this._presets.get(activePresetId);
             if (activePreset) {
-              this._runningTask = getDefaultTask(activePreset);
+              if (!this._runningTask) {
+                this._runningTask = getDefaultTask(activePreset);
+              }
             } else {
               this.context.globalState.update('active-preset-id', undefined);
               const firstPreset = Array.from(this._presets.values()).at(0);
@@ -190,6 +192,8 @@ export class PanelProvider implements vscode.WebviewViewProvider {
               }
             }
           }
+
+          console.log(data);
 
           if ((data.newSession || !this._runningTask) && activePreset) {
             this._runningTask = getDefaultTask(activePreset);
