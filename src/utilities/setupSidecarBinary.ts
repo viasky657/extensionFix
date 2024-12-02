@@ -48,7 +48,7 @@ export function getSidecarBinaryURL() {
 // if the version we are looking at is okay, or we need to download a new binary
 // for now, lets keep it as it is and figure out a way to update the hash on
 // important updates
-export const SIDECAR_VERSION = 'a077b88a38143728bc3db94084ec56545f7071b8ae64383ef0c1b9895d74b5da';
+export const SIDECAR_VERSION = '07ac26c88a019e4a7a41a1afff5f34195ba5bf42502369ef6fe1693144542cd2';
 
 async function checkCorrectVersionRunning(url: string): Promise<boolean> {
   try {
@@ -138,7 +138,6 @@ async function killProcessOnPort(port: number): Promise<boolean> {
         if (pid) {
           // Kill the process
           execFile('kill', ['-2', `${pid}`], (killError) => {
-
             if (killError) {
               console.error(`Error killing process: ${killError}`);
               reject(false);
@@ -276,7 +275,6 @@ export async function startSidecarBinary(
             complete: false,
           });
         }
-
       }
     }
   );
