@@ -13,6 +13,7 @@
     "url": "https://github.com/codestoryai/extension"
   },
   "homepage": "https://codestory.ai",
+  "icon": "./dist/icon.png",
   "categories": [
     "AI",
     "Chat",
