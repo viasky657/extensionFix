@@ -139,7 +139,7 @@ export function PresetView() {
 
 const NewPresetSchema = z.object({
   provider: z.nativeEnum(Provider),
-  model: z.nativeEnum(AnthropicModels),
+  model: z.string(),
   apiKey: z.string(),
   customBaseUrl: z.string().optional(),
   permissions: z.custom<Permissions>(),

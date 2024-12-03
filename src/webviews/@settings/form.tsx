@@ -104,7 +104,7 @@ export function PresetForm(props: PresetFormProps) {
 
       <label>
         <p className="font-medium text-foreground">Model</p>
-        <Select
+        {/* <Select
           className="mt-1 w-full"
           id="model"
           name="model"
@@ -116,7 +116,14 @@ export function PresetForm(props: PresetFormProps) {
               <div className="flex gap-2">{capitalize(model)}</div>
             </Option>
           ))}
-        </Select>
+        </Select> */}
+        <Input
+            className="mt-1 w-full"
+            id="model"
+            name="model"
+            required
+            defaultValue={initialData?.model ?? AnthropicModels.ClaudeSonnet.toString()}
+          />
       </label>
 
       {/* Hidden permission inputs with default values */}
