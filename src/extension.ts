@@ -8,7 +8,6 @@ import { RecentEditsRetriever } from './server/editedFiles';
 import { RepoRef, RepoRefBackend, SideCarClient } from './sidecar/client';
 import { TerminalManager } from './terminal/TerminalManager';
 import { AideAgentMode } from './types';
-import { MockModelSelection } from './utilities/modelSelection';
 import {
   checkOrKillRunningServer,
   getSidecarBinaryURL,

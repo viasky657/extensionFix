@@ -17,7 +17,6 @@ import {
 import { SideCarClient } from './sidecar/client';
 import { getSideCarModelConfiguration } from './sidecar/types';
 import { TerminalManager } from './terminal/TerminalManager';
-import { MockModelSelection } from './utilities/modelSelection';
 import { getNonce } from './webviews/utils/nonce';
 
 const getDefaultTask = (activePreset: Preset) => ({
