@@ -24,7 +24,7 @@ import { TerminalManager } from '../../terminal/TerminalManager';
 import assert from 'assert';
 import { createFileIfNotExists } from '../../server/createFile';
 import { CancellationTokenSource } from 'vscode';
-import { AnthropicModels, Models, ProviderType } from '../../model';
+import { AnthropicModels, ProviderType } from '../../model';
 import { MockModelSelection } from '../../utilities/modelSelection';
 /**
  * Stores the necessary identifiers required for identifying a response stream
@@ -81,7 +81,7 @@ class RequestsCanellationTokenSourceCollection {
 	}
 
 	addCancellationToken(responseStreamIdentifier: ResponseStreamIdentifier, cts: CancellationTokenSource, modelSelection: {
-		model: Models;
+		model: string;
 		provider: {
 			name: ProviderType;
 			apiBase?: string;
