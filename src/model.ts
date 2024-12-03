@@ -16,7 +16,7 @@ interface TaskFeedback {
   sessionId: string;
   variables: ContextItemWithId[];
   modelSelection: {
-    model: Models;
+    model: string;
     provider: {
       name: ProviderType;
       apiBase?: string;
@@ -371,7 +371,7 @@ export type ProviderType = `${Provider}`;
 
 type BasePreset = {
   provider: ProviderType;
-  model: Models;
+  model: string;
   apiKey: string;
   customBaseUrl?: string;
   permissions: Permissions;

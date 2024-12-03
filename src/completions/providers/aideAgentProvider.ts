@@ -24,7 +24,7 @@ import { TerminalManager } from '../../terminal/TerminalManager';
 import assert from 'assert';
 import { createFileIfNotExists } from '../../server/createFile';
 import { CancellationTokenSource } from 'vscode';
-import { Models, ProviderType } from '../../model';
+import { AnthropicModels, Models, ProviderType } from '../../model';
 import { MockModelSelection } from '../../utilities/modelSelection';
 /**
  * Stores the necessary identifiers required for identifying a response stream
@@ -291,7 +291,7 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 				sessionId,
 				exchangeId,
 			}, cts, {
-				model: preset.model,
+				model: AnthropicModels.ClaudeSonnet ?? preset.model,
 				provider: {
 					name: preset.provider,
 					apiBase: preset.customBaseUrl,
