@@ -1128,40 +1128,9 @@ export class SideCarClient {
       modelSelection = MockModelSelection.getConfiguration();
     }
 
-    try {
-      const sideCarModelConfiguration = getSideCarModelConfiguration(modelSelection);
-      console.log('sideCarModelConfiguration', sideCarModelConfiguration);
+    const sideCarModelConfiguration = getSideCarModelConfiguration(modelSelection);
+    console.log('sideCarModelConfiguration', sideCarModelConfiguration);
 
-      // Safely get file paths with platform-specific handling
-      const allFiles = vscode.workspace.textDocuments.map(textDocument =>
-        vscode.Uri.file(textDocument.uri.fsPath).fsPath
-      );
-
-      const openFiles = vscode.window.visibleTextEditors.map(textEditor =>
-        vscode.Uri.file(textEditor.document.uri.fsPath).fsPath
-      );
-
-      const currentShell = detectDefaultShell();
-      baseUrl.pathname = '/api/agentic/agent_tool_use';
-
-      const body = {
-        session_id: sessionId,
-        exchange_id: exchangeId,
-        editor_url: editorUrl,
-        query,
-        user_context: await convertVSCodeVariableToSidecar(variables),
-        agent_mode: agentMode.toString(),
-        repo_ref: repoRef.getRepresentation(),
-        root_directory: vscode.workspace.rootPath ?
-          vscode.Uri.file(vscode.workspace.rootPath).fsPath : undefined,
-        project_labels: projectLabels,
-        codebase_search: codebaseSearch,
-        access_token: workosAccessToken,
-        model_configuration: sideCarModelConfiguration,
-        all_files: allFiles,
-        open_files: openFiles,
-        shell: currentShell,
-      };
 
     const allFiles = vscode.workspace.textDocuments.map((textDocument) => {
       return textDocument.uri.fsPath;
@@ -1208,10 +1177,9 @@ export class SideCarClient {
         if (lineSinglePartTrimmed === '') {
           continue;
         }
+        const conversationMessage = JSON.parse('{' + lineSinglePartTrimmed) as SideCarAgentEvent;
+        yield conversationMessage;
       }
-    } catch (e) {
-      console.error('Agent session plan step error:', e);
-      throw e; // Re-throw to handle it at a higher level if needed
     }
   }
 
