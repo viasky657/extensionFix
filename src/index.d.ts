@@ -18,8 +18,9 @@ export interface RangeInFile {
 }
 
 export interface MessagePart {
-  type: 'text';
+  type: 'text' | 'imageUrl';
   text?: string;
+  imageUrl?: { url: string };
 }
 
 export type MessageContent = string | MessagePart[];

@@ -30,6 +30,13 @@ async function resolveEditorContent(
       } else {
         parts.push({ type: 'text', text });
       }
+    } else if (p.type === 'image' && p.attrs) {
+      parts.push({
+        type: 'imageUrl',
+        imageUrl: {
+          url: p.attrs.src,
+        },
+      });
     } else {
       console.warn('Unexpected content type', p.type);
     }

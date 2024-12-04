@@ -365,6 +365,11 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           }
           break;
         }
+        case 'show-toast': {
+          const { level, message } = data;
+          this.ide.showToast(level, message);
+          break;
+        }
       }
     });
 

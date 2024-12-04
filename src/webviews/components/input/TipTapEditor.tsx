@@ -97,7 +97,6 @@ const Tiptap = (props: TipTapEditorProps) => {
       ) &&
       filesize < 10
     ) {
-      console.log('Image is valid');
       // check dimensions
       let _URL = window.URL || window.webkitURL;
       let img = new window.Image();
@@ -115,11 +114,11 @@ const Tiptap = (props: TipTapEditorProps) => {
         };
       });
     } else {
-      console.log('Image needs to be in jpg or png format and less than 10MB in size.');
-      // ideMessenger.post('showToast', [
-      //   'error',
-      //   'Images need to be in jpg or png format and less than 10MB in size.',
-      // ]);
+      vscode.postMessage({
+        type: 'show-toast',
+        level: 'error',
+        message: 'Images need to be in jpg or png format and less than 10MB in size.',
+      });
     }
     return undefined;
   }
@@ -138,7 +137,6 @@ const Tiptap = (props: TipTapEditorProps) => {
                 paste(view, event) {
                   const items = event.clipboardData?.items || [];
                   for (const item of items) {
-                    console.log('clipboard item', item);
                     const file = item.getAsFile();
                     file &&
                       handleImageFile(file).then((resp) => {
@@ -285,7 +283,6 @@ const Tiptap = (props: TipTapEditorProps) => {
 
   useEffect(() => {
     const overListener = () => {
-      console.log('window drag over');
       setShowDragOverMsg(true);
     };
     window.addEventListener('dragover', overListener);
@@ -325,7 +322,6 @@ const Tiptap = (props: TipTapEditorProps) => {
         editor && editor.commands.focus();
       }}
       onDragOver={(e) => {
-        console.log('input div drag over');
         e.preventDefault();
         setShowDragOverMsg(true);
       }}
@@ -335,7 +331,6 @@ const Tiptap = (props: TipTapEditorProps) => {
         }
       }}
       onDragEnter={() => {
-        console.log('input div drag enter');
         setShowDragOverMsg(true);
       }}
       onDrop={(event) => {

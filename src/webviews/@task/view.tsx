@@ -287,7 +287,10 @@ export function TaskView() {
 
                 const [selectedContextItems, _, content] = await resolveEditorContent(editorState);
                 const inputQuery = Array.isArray(content)
-                  ? content.map((c) => c.text).join('\n')
+                  ? content
+                      .filter((p) => p.type === 'text')
+                      .map((c) => c.text)
+                      .join('\n')
                   : content;
 
                 task.sendRequest(inputQuery, sessionId, selectedContextItems);
