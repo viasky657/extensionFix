@@ -240,6 +240,7 @@ export async function provideInteractiveEditorResponse(
 		),
 		userContext: {
 			variables: [],
+			images: [],
 			file_content_map: [],
 			terminal_selection: undefined,
 			folder_paths: [],

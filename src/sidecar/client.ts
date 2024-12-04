@@ -1140,6 +1140,15 @@ export class SideCarClient {
       return textDocument.document.uri.fsPath;
     });
     const currentShell = detectDefaultShell();
+
+    const userContext = await convertVSCodeVariableToSidecar(variables);
+    userContext.images = base64Images.map((imageData) => {
+      return {
+        type: "base64",
+        media_type: "image/jpeg",
+        data: imageData,
+      };
+    });
     // console.log('we are hitting the plan step again and again');
     baseUrl.pathname = '/api/agentic/agent_tool_use';
     const url = baseUrl.toString();
@@ -1148,7 +1157,7 @@ export class SideCarClient {
       exchange_id: exchangeId,
       editor_url: editorUrl,
       query,
-      user_context: await convertVSCodeVariableToSidecar(variables),
+      user_context: userContext,
       agent_mode: agentMode.toString(),
       repo_ref: repoRef.getRepresentation(),
       root_directory: vscode.workspace.rootPath,
@@ -1843,6 +1852,7 @@ export async function convertVSCodeVariableToSidecarHackingForPlan(
         language: fileContent[1],
       };
     }),
+    images: [],
     terminal_selection: undefined,
     folder_paths: folders,
     is_plan_generation: isPlanGeneration,
@@ -1854,7 +1864,7 @@ export async function convertVSCodeVariableToSidecarHackingForPlan(
 }
 
 async function convertVSCodeVariableToSidecar(
-  variables: readonly vscode.ChatPromptReference[]
+  variables: readonly vscode.ChatPromptReference[],
 ): Promise<UserContext> {
   const resolvedFileCache: Map<string, [string, string]> = new Map();
 
@@ -1959,6 +1969,7 @@ async function convertVSCodeVariableToSidecar(
         language: fileContent[1],
       };
     }),
+    images: [],
     terminal_selection: terminalSelection,
     folder_paths: folders,
     is_plan_generation: isPlanGeneration,
@@ -2071,6 +2082,7 @@ async function newConvertVSCodeVariableToSidecar(
     file_content_map: [],
     terminal_selection: undefined,
     folder_paths: [],
+    images: [],
     is_plan_generation: false,
     is_plan_execution_until: null,
     is_plan_append: false,
@@ -2109,13 +2121,13 @@ async function newConvertVSCodeVariableToSidecar(
 
 function getCurrentActiveWindow():
   | {
-      file_path: string;
-      file_content: string;
-      visible_range_content: string;
-      start_line: number;
-      end_line: number;
-      language: string;
-    }
+    file_path: string;
+    file_content: string;
+    visible_range_content: string;
+    start_line: number;
+    end_line: number;
+    language: string;
+  }
   | undefined {
   const activeWindow = vscode.window.activeTextEditor;
   if (activeWindow === undefined) {
