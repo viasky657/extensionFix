@@ -1,12 +1,14 @@
 import Document from '@tiptap/extension-document';
 import History from '@tiptap/extension-history';
+import Image from '@tiptap/extension-image';
 import Paragraph from '@tiptap/extension-paragraph';
 import Placeholder from '@tiptap/extension-placeholder';
 import Text from '@tiptap/extension-text';
+import { Plugin } from '@tiptap/pm/state';
 import { Editor, EditorContent, JSONContent, useEditor } from '@tiptap/react';
 import { useInputHistory } from 'hooks/useInputHistory';
 import useUpdatingRef from 'hooks/useUpdatingRef';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSubmenuContext } from 'store/submenuContext';
 import { SimpleHTMLElementProps } from 'utils/types';
 import { ContextProviderDescription } from '../../../context/providers/types';
@@ -23,16 +25,25 @@ type TipTapEditorProps = SimpleHTMLElementProps<HTMLDivElement> & {
   showCancelButton: boolean;
 };
 
+function getDataUrlForFile(file: File, img: HTMLImageElement): string {
+  const targetWidth = 512;
+  const targetHeight = 512;
+  const scaleFactor = Math.min(targetWidth / img.width, targetHeight / img.height);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = img.width * scaleFactor;
+  canvas.height = img.height * scaleFactor;
+
+  const ctx = canvas.getContext('2d');
+  ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+  const downsizedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+  return downsizedDataUrl;
+}
+
 const Tiptap = (props: TipTapEditorProps) => {
-  const {
-    availableContextProviders,
-    historyKey,
-    onEnter,
-    onClear,
-    onCancel,
-    showCancelButton,
-    ...rest
-  } = props;
+  const { availableContextProviders, historyKey, onEnter, onClear, onCancel, showCancelButton } =
+    props;
   const getSubmenuContextItems = useSubmenuContext((state) => state.getSubmenuContextItems);
   const availableContextProvidersRef = useUpdatingRef(availableContextProviders);
 
@@ -77,12 +88,73 @@ const Tiptap = (props: TipTapEditorProps) => {
     inDropdownRef.current = true;
   };
 
+  async function handleImageFile(file: File): Promise<[HTMLImageElement, string] | undefined> {
+    let filesize = file.size / 1024 / 1024; // filesize in MB
+    // check image type and size
+    if (
+      ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/svg', 'image/webp'].includes(
+        file.type
+      ) &&
+      filesize < 10
+    ) {
+      // check dimensions
+      let _URL = window.URL || window.webkitURL;
+      let img = new window.Image();
+      img.src = _URL.createObjectURL(file);
+
+      return await new Promise((resolve) => {
+        img.onload = function () {
+          const dataUrl = getDataUrlForFile(file, img);
+
+          let image = new window.Image();
+          image.src = dataUrl;
+          image.onload = function () {
+            resolve([image, dataUrl]);
+          };
+        };
+      });
+    } else {
+      vscode.postMessage({
+        type: 'show-toast',
+        level: 'error',
+        message: 'Images need to be in jpg or png format and less than 10MB in size.',
+      });
+    }
+    return undefined;
+  }
+
   const { prevRef, nextRef, addRef } = useInputHistory(historyKey);
 
   const editor = useEditor({
     extensions: [
       Document,
       History,
+      Image.extend({
+        addProseMirrorPlugins() {
+          const plugin = new Plugin({
+            props: {
+              handleDOMEvents: {
+                paste(view, event) {
+                  const items = event.clipboardData?.items || [];
+                  for (const item of items) {
+                    const file = item.getAsFile();
+                    file &&
+                      handleImageFile(file).then((resp) => {
+                        if (!resp) return;
+                        const [_, dataUrl] = resp;
+                        const { schema } = view.state;
+                        const node = schema.nodes.image.create({ src: dataUrl });
+                        const tr = view.state.tr.insert(0, node);
+                        view.dispatch(tr);
+                      });
+                  }
+                },
+              },
+            },
+          });
+          return [plugin];
+        },
+      }),
       Placeholder.configure({
         placeholder: "Ask anything. Use '@' to add context",
       }),
@@ -207,6 +279,25 @@ const Tiptap = (props: TipTapEditorProps) => {
     onCancel();
   });
 
+  const [showDragOverMsg, setShowDragOverMsg] = useState(false);
+
+  useEffect(() => {
+    const overListener = () => {
+      setShowDragOverMsg(true);
+    };
+    window.addEventListener('dragover', overListener);
+
+    const leaveListener = () => {
+      setTimeout(() => setShowDragOverMsg(false), 2000);
+    };
+    window.addEventListener('dragleave', leaveListener);
+
+    return () => {
+      window.removeEventListener('dragover', overListener);
+      window.removeEventListener('dragleave', leaveListener);
+    };
+  }, []);
+
   const insertCharacterWithWhitespace = useCallback(
     (char: string) => {
       if (editor) {
@@ -226,21 +317,76 @@ const Tiptap = (props: TipTapEditorProps) => {
 
   return (
     <div
+      className={`ring-offset-background focus-visible:ring-ring flex min-h-[80px] w-full cursor-text flex-col rounded-xs bg-input-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50`}
       onClick={() => {
         editor && editor.commands.focus();
       }}
-      className={`ring-offset-background focus-visible:ring-ring flex min-h-[80px] w-full flex-col rounded-xs bg-input-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50`}
-      {...rest}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setShowDragOverMsg(true);
+      }}
+      onDragLeave={(e) => {
+        if (e.relatedTarget === null) {
+          setTimeout(() => setShowDragOverMsg(false), 1000);
+        }
+      }}
+      onDragEnter={() => {
+        setShowDragOverMsg(true);
+      }}
+      onDrop={(event) => {
+        if (!editor) {
+          return;
+        }
+
+        setShowDragOverMsg(false);
+        let file = event.dataTransfer.files[0];
+        handleImageFile(file).then((result) => {
+          if (result) {
+            const [_, dataUrl] = result;
+            const { schema } = editor.state;
+            const node = schema.nodes.image.create({ src: dataUrl });
+            const tr = editor.state.tr.insert(0, node);
+            editor.view.dispatch(tr);
+          }
+        });
+        event.preventDefault();
+      }}
     >
       <EditorContent className="h-full w-full flex-1" spellCheck={false} editor={editor} />
       <InputToolbar
         disabled={false}
         onAddContextItem={() => insertCharacterWithWhitespace('@')}
+        onImageFileSelected={(file) => {
+          if (!editor) {
+            return;
+          }
+
+          handleImageFile(file).then((result) => {
+            if (result) {
+              const [_, dataUrl] = result;
+              const { schema } = editor.state;
+              const node = schema.nodes.image.create({ src: dataUrl });
+              editor.commands.command(({ tr }) => {
+                tr.insert(0, node);
+                return true;
+              });
+            }
+          });
+        }}
         onEnter={onEnterRef.current}
         onClear={onClearRef.current}
         onCancel={onCancelRef.current}
         showCancelButton={showCancelButton}
       />
+
+      {showDragOverMsg && (
+        <>
+          <div className="absolute inset-0 flex h-full w-full items-center justify-center bg-badge-background text-foreground opacity-50" />
+          <div className="absolute inset-0 flex h-full w-full items-center justify-center text-foreground">
+            Hold ⇧ to drop image
+          </div>
+        </>
+      )}
     </div>
   );
 };

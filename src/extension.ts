@@ -110,6 +110,7 @@ export async function activate(context: vscode.ExtensionContext) {
         const query = message.query;
         const sessionId = message.sessionId;
         const webviewVariables = message.variables;
+        const base64Images = message.images;
 
         // Convert variables to VSCode format
         const variables: vscode.ChatPromptReference[] = await Promise.all(
@@ -172,7 +173,8 @@ export async function activate(context: vscode.ExtensionContext) {
           projectContext.labels,
           false,
           'workos-fake-id',
-          modelSelection
+          modelSelection,
+          base64Images
         );
         // - have a respose somewhere and the chat model would update
         await agentSessionProvider.reportAgentEventsToChat(true, stream);

@@ -15,6 +15,7 @@ interface TaskFeedback {
   query: string;
   sessionId: string;
   variables: ContextItemWithId[];
+  images: string[];
   modelSelection: {
     model: string;
     provider: {
@@ -84,6 +85,12 @@ interface OpenTerminal {
   id: number;
 }
 
+interface ShowToast {
+  type: 'show-toast';
+  level: 'info' | 'warning' | 'error';
+  message: string;
+}
+
 interface CancelRequest {
   type: 'cancel-request';
   sessionId: string;
@@ -102,7 +109,8 @@ export type ClientRequest =
   | UpdatePreset
   | FetchContextProviders
   | LoadSubmenuItems
-  | GetContextItems;
+  | GetContextItems
+  | ShowToast;
 
 export interface PresetsLoaded {
   type: 'presets-loaded';
@@ -392,7 +400,7 @@ export type NewPreset = BasePreset & {
 export type WorkspaceFolder = {
   name: string;
   fsPath: string;
-}
+};
 
 export interface AppState {
   extensionReady: boolean;

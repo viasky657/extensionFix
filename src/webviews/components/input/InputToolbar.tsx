@@ -1,17 +1,48 @@
+import { useRef } from 'react';
+import ImageIcon from '../../assets/image.svg';
+
 interface InputToolbarProps {
   disabled?: boolean;
   onAddContextItem?: () => void;
+  onImageFileSelected?: (file: File) => void;
   onEnter: () => void;
   onClear: () => void;
   onCancel: () => void;
   showCancelButton: boolean;
 }
 
+const PhotoIcon: React.FunctionComponent<React.SVGProps<SVGSVGElement>> = ImageIcon;
+
 function InputToolbar(props: InputToolbarProps) {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   return (
     <div id="input-toolbar" className="flex items-center justify-between text-xs">
       <div className="flex items-center justify-start gap-2 whitespace-nowrap">
-        <div className="items-center gap-1 text-gray-400 transition-colors duration-200">
+        <div className="flex items-center gap-1 text-gray-400 transition-colors duration-200">
+          {props.onImageFileSelected && (
+            <>
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept=".jpg,.jpeg,.png,.gif,.svg,.webp"
+                onChange={(e) => {
+                  for (const file of e.target.files || []) {
+                    props.onImageFileSelected?.(file);
+                  }
+                }}
+              />
+              <div className="cursor-pointer rounded p-1 text-foreground hover:bg-panel-background">
+                <PhotoIcon
+                  className="h-4 w-4"
+                  onClick={(e) => {
+                    fileInputRef.current?.click();
+                  }}
+                />
+              </div>
+            </>
+          )}
           <div
             onClick={props.onAddContextItem}
             className="flex cursor-pointer items-center rounded text-foreground hover:bg-panel-background"
