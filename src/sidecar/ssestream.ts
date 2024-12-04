@@ -103,6 +103,7 @@ export async function* callServerEventStreamingBufferedGET(url: string): AsyncIt
 
 // auth header may be passed here
 export async function* callServerEventStreamingBufferedPOST(url: string, body: any, headers?: Record<string, string>): AsyncIterableIterator<string> {
+	console.log('callServerEventStreamingBufferedPOST', url, body);
 	const response = await fetch(url, {
 		method: 'POST',
 		headers: {
@@ -122,16 +123,30 @@ export async function* callServerEventStreamingBufferedPOST(url: string, body: a
 
 	try {
 		while (true) {
-			const { value, done } = await reader.read();
+			let chunk;
+			try {
+				chunk = await reader.read();
+			} catch (error) {
+				console.error('Error reading stream:', error);
+				break;
+			}
+
+			const { value, done } = chunk;
 			let newValues: string[] = [];
 			if (value !== undefined) {
-				newValues = bufferedReader.transform(value);
+				try {
+					newValues = bufferedReader.transform(value);
+				} catch (error) {
+					console.error('Error transforming value:', error);
+					continue;
+				}
 			}
 			if (done) {
 				break;
 			}
-			for (const value of newValues) {
-				yield value;
+			// Using traditional for loop
+			for (let i = 0; i < newValues.length; i++) {
+				yield newValues[i];
 			}
 		}
 	} finally {

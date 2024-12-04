@@ -6,6 +6,9 @@ import { AppState as AppStateType, ClientRequest, Event } from '../model';
 import { ProgressIndicator } from 'components/progress-indicator';
 
 function reducer(state: AppStateType, action: Event) {
+  if (action.type !== 'task-terminals') {
+    console.log('action from extension', action);
+  }
   const newState = structuredClone(state);
 
   if (action.type === 'initial-state') {

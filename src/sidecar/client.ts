@@ -1123,62 +1123,92 @@ export class SideCarClient {
     // For the Anthropic API, you can always use 'image/jpeg' as the media_type.
     console.log('Received images as context', base64Images);
 
-    let _modelSelection = modelSelection;
-    if (_modelSelection === undefined) {
+    if (!modelSelection) {
       console.warn('Falling back to hardcoded keys');
-      _modelSelection = MockModelSelection.getConfiguration();
+      modelSelection = MockModelSelection.getConfiguration();
     }
 
-    const sideCarModelConfiguration = getSideCarModelConfiguration(_modelSelection);
+    try {
+      const sideCarModelConfiguration = getSideCarModelConfiguration(modelSelection);
+      console.log('sideCarModelConfiguration', sideCarModelConfiguration);
 
-    console.log('sideCarModelConfiguration', sideCarModelConfiguration);
+      // Safely get file paths with platform-specific handling
+      const allFiles = vscode.workspace.textDocuments.map(textDocument =>
+        vscode.Uri.file(textDocument.uri.fsPath).fsPath
+      );
 
-    const allFiles = vscode.workspace.textDocuments.map((textDocument) => {
-      return textDocument.uri.fsPath;
-    });
-    const openFiles = vscode.window.visibleTextEditors.map((textDocument) => {
-      return textDocument.document.uri.fsPath;
-    });
-    const currentShell = detectDefaultShell();
-    // console.log('we are hitting the plan step again and again');
-    baseUrl.pathname = '/api/agentic/agent_tool_use';
-    const url = baseUrl.toString();
-    const body = {
-      session_id: sessionId,
-      exchange_id: exchangeId,
-      editor_url: editorUrl,
-      query,
-      user_context: await convertVSCodeVariableToSidecar(variables),
-      agent_mode: agentMode.toString(),
-      repo_ref: repoRef.getRepresentation(),
-      root_directory: vscode.workspace.rootPath,
-      project_labels: projectLabels,
-      codebase_search: codebaseSearch,
-      access_token: workosAccessToken,
-      model_configuration: sideCarModelConfiguration,
-      all_files: allFiles,
-      open_files: openFiles,
-      shell: currentShell,
-    };
-    // console.log('sidecar.request', url);
-    const asyncIterableResponse = callServerEventStreamingBufferedPOST(url, body);
-    for await (const line of asyncIterableResponse) {
-      const lineParts = line.split('data:{');
-      for (const lineSinglePart of lineParts) {
-        const lineSinglePartTrimmed = lineSinglePart.trim();
-        if (lineSinglePartTrimmed === '') {
-          continue;
+      const openFiles = vscode.window.visibleTextEditors.map(textEditor =>
+        vscode.Uri.file(textEditor.document.uri.fsPath).fsPath
+      );
+
+      const currentShell = detectDefaultShell();
+      baseUrl.pathname = '/api/agentic/agent_tool_use';
+
+      const body = {
+        session_id: sessionId,
+        exchange_id: exchangeId,
+        editor_url: editorUrl,
+        query,
+        user_context: await convertVSCodeVariableToSidecar(variables),
+        agent_mode: agentMode.toString(),
+        repo_ref: repoRef.getRepresentation(),
+        root_directory: vscode.workspace.rootPath ?
+          vscode.Uri.file(vscode.workspace.rootPath).fsPath : undefined,
+        project_labels: projectLabels,
+        codebase_search: codebaseSearch,
+        access_token: workosAccessToken,
+        model_configuration: sideCarModelConfiguration,
+        all_files: allFiles,
+        open_files: openFiles,
+        shell: currentShell,
+      };
+
+      const asyncIterableResponse = callServerEventStreamingBufferedPOST(
+        baseUrl.toString(),
+        body
+      );
+
+      for await (const line of asyncIterableResponse) {
+        try {
+          // More robust line splitting
+          const lines = line.split(/data:\s*\{/).filter(Boolean);
+
+          for (const partialLine of lines) {
+            const trimmedLine = partialLine.trim();
+            if (!trimmedLine) { continue; }
+
+            try {
+              // Ensure proper JSON structure
+              const jsonStr = trimmedLine.endsWith('}') ?
+                `{${trimmedLine}` :
+                `{${trimmedLine}}`;
+
+              const conversationMessage = JSON.parse(
+                jsonStr
+              ) as SideCarAgentEvent;
+
+              yield conversationMessage;
+            } catch (parseError) {
+              console.error('Error parsing line:', parseError);
+              console.debug('Problematic line:', trimmedLine);
+              continue; // Skip this line and continue with the next
+            }
+          }
+        } catch (lineError) {
+          console.error('Error processing line:', lineError);
+          continue; // Skip this line and continue with the next
         }
-        const conversationMessage = JSON.parse('{' + lineSinglePartTrimmed) as SideCarAgentEvent;
-        yield conversationMessage;
       }
+    } catch (e) {
+      console.error('Agent session plan step error:', e);
+      throw e; // Re-throw to handle it at a higher level if needed
     }
   }
 
   /**
    * Cancels the running request if its not already terminated on the sidecar
    */
-  async *cancelRunningEvent(
+  async * cancelRunningEvent(
     sessionId: string,
     exchangeId: string,
     editorUrl: string,
@@ -1210,7 +1240,7 @@ export class SideCarClient {
     }
   }
 
-  async *agentSessionAgenticEdit(
+  async * agentSessionAgenticEdit(
     query: string,
     sessionId: string,
     exchangeId: string,
@@ -1265,7 +1295,7 @@ export class SideCarClient {
     }
   }
 
-  async *agentSessionEditFeedback(
+  async * agentSessionEditFeedback(
     query: string,
     sessionId: string,
     exchangeId: string,
@@ -1321,7 +1351,7 @@ export class SideCarClient {
     }
   }
 
-  async *agentSessionAnchoredEdit(
+  async * agentSessionAnchoredEdit(
     query: string,
     sessionId: string,
     exchangeId: string,
@@ -1377,7 +1407,7 @@ export class SideCarClient {
     }
   }
 
-  async *handleSessionUndo(sessionId: string, exchangeId: string, editorUrl: string) {
+  async * handleSessionUndo(sessionId: string, exchangeId: string, editorUrl: string) {
     const baseUrl = new URL(this._url);
     baseUrl.pathname = '/api/agentic/user_handle_session_undo';
     const url = baseUrl.toString();
@@ -1395,7 +1425,7 @@ export class SideCarClient {
     });
   }
 
-  async *userFeedbackOnExchange(
+  async * userFeedbackOnExchange(
     sessionId: string,
     exchangeId: string,
     stepIndex: number | undefined,
@@ -1438,7 +1468,7 @@ export class SideCarClient {
    * that. The sidecar can create a new exchange or many new exchanges as required
    * and keep working on the exchange as and when required
    */
-  async *agentSessionChat(
+  async * agentSessionChat(
     query: string,
     sessionId: string,
     exchangeId: string,
@@ -1500,7 +1530,7 @@ export class SideCarClient {
     }
   }
 
-  async *startAgentProbe(
+  async * startAgentProbe(
     query: string,
     variables: readonly vscode.ChatPromptReference[],
     editorUrl: string,
@@ -1596,7 +1626,7 @@ export class SideCarClient {
     });
   }
 
-  async *startAgentCodeEdit(
+  async * startAgentCodeEdit(
     query: string,
     variables: readonly vscode.ChatPromptReference[],
     editorUrl: string,
@@ -2109,13 +2139,13 @@ async function newConvertVSCodeVariableToSidecar(
 
 function getCurrentActiveWindow():
   | {
-      file_path: string;
-      file_content: string;
-      visible_range_content: string;
-      start_line: number;
-      end_line: number;
-      language: string;
-    }
+    file_path: string;
+    file_content: string;
+    visible_range_content: string;
+    start_line: number;
+    end_line: number;
+    language: string;
+  }
   | undefined {
   const activeWindow = vscode.window.activeTextEditor;
   if (activeWindow === undefined) {

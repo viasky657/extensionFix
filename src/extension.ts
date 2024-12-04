@@ -105,84 +105,109 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     panelProvider.onMessageFromWebview(async (message) => {
+      console.log('message from webview', message);
       if (message.type === 'task-feedback') {
-        // here we get the message from the user
-        const query = message.query;
-        const sessionId = message.sessionId;
-        const webviewVariables = message.variables;
-        const base64Images = message.images;
+        try {
+          // here we get the message from the user
+          const query = message.query;
+          const sessionId = message.sessionId;
+          const webviewVariables = message.variables;
 
-        // Convert variables to VSCode format
-        const variables: vscode.ChatPromptReference[] = await Promise.all(
-          webviewVariables
-            .filter((v) => v.id.providerTitle === 'file')
-            .map(async (v) => {
-              const uri = vscode.Uri.parse(v.uri!.value);
-              const document = await vscode.workspace.openTextDocument(uri);
-              const range = new vscode.Range(
-                document.positionAt(0),
-                document.positionAt(document.getText().length)
-              );
+          // Convert variables to VSCode format
+          const variables: vscode.ChatPromptReference[] = await Promise.all(
+            webviewVariables
+              .filter((v) => v.id.providerTitle === 'file')
+              .map(async (v) => {
+                const uri = vscode.Uri.parse(v.uri!.value);
+                const document = await vscode.workspace.openTextDocument(uri);
+                const range = new vscode.Range(
+                  document.positionAt(0),
+                  document.positionAt(document.getText().length)
+                );
 
-              return {
-                id: 'vscode.file',
-                value: { uri, range },
-              };
-            })
-        );
+                return {
+                  id: 'vscode.file',
+                  value: { uri, range },
+                };
+              })
+          );
 
-        // something will create the exchange id
-        const exchangeId = uniqueId();
-        panelProvider.addExchangeRequest(sessionId, exchangeId, query);
+          // something will create the exchange id
+          const exchangeId = uniqueId();
+          panelProvider.addExchangeRequest(sessionId, exchangeId, query);
 
-        const { model, provider } = message.modelSelection;
+          const { model, provider } = message.modelSelection;
 
-        const modelSelection: vscode.ModelSelection = {
-          slowModel: model,
-          fastModel: model,
-          models: {
-            [model]: {
-              name: model,
-              contextLength: 10000,
-              temperature: 0.2,
-              provider: {
-                type: provider.name,
+          const modelSelection = {
+            slowModel: model,
+            fastModel: model,
+            models: {
+              [model]: {
+                name: model,
+                contextLength: 10000,
+                temperature: 0.2,
+                provider: {
+                  type: provider.name,
+                },
               },
             },
-          },
-          providers: {
-            [provider.name]: {
-              name: provider.name,
-              apiBase: provider.apiBase,
-              apiKey: provider.apiKey,
+            providers: {
+              [provider.name]: {
+                name: provider.name,
+                apiBase: provider.apiBase,
+                apiKey: provider.apiKey,
+              },
             },
-          },
-        };
+          };
 
-        panelProvider.setTaskStatus(message.sessionId, false);
+          console.log('model selection', modelSelection);
 
-        // - ping the sidecar over here. currentRepo can be undefined, which will 422 sidecar
-        const stream = SIDECAR_CLIENT!.agentSessionPlanStep(
-          query,
-          sessionId,
-          exchangeId,
-          agentSessionProvider.editorUrl!,
-          AideAgentMode.Chat,
-          variables,
-          currentRepo ?? '',
-          projectContext.labels,
-          false,
-          'workos-fake-id',
-          modelSelection,
-          base64Images
-        );
-        // - have a respose somewhere and the chat model would update
-        await agentSessionProvider.reportAgentEventsToChat(true, stream);
+          panelProvider.setTaskStatus(message.sessionId, false);
 
-        panelProvider.setTaskStatus(message.sessionId, true);
-        // and the model will have a on did change
-        // - the extension needs the state
-        // - on did change chat model gets back over here
+          console.log('set task status', message.sessionId);
+
+          // - ping the sidecar over here. currentRepo can be undefined, which will 422 sidecar
+          const stream = SIDECAR_CLIENT!.agentSessionPlanStep(
+            query,
+            sessionId,
+            exchangeId,
+            agentSessionProvider.editorUrl!,
+            AideAgentMode.Chat,
+            variables,
+            currentRepo ?? '',
+            projectContext.labels,
+            false,
+            'workos-fake-id',
+            modelSelection
+          );
+          // - have a respose somewhere and the chat model would update
+          await agentSessionProvider.reportAgentEventsToChat(true, stream);
+          // - ping the sidecar over here. currentRepo can be undefined, which will 422 sidecar
+          const stream = SIDECAR_CLIENT!.agentSessionPlanStep(
+            query,
+            sessionId,
+            exchangeId,
+            agentSessionProvider.editorUrl!,
+            AideAgentMode.Chat,
+            variables,
+            currentRepo ?? '',
+            projectContext.labels,
+            false,
+            'workos-fake-id',
+            modelSelection,
+            base64Images
+          );
+          // - have a respose somewhere and the chat model would update
+          await agentSessionProvider.reportAgentEventsToChat(true, stream);
+
+          panelProvider.setTaskStatus(message.sessionId, true);
+          // and the model will have a on did change
+          // - the extension needs the state
+          // - on did change chat model gets back over here
+
+        } catch (error) {
+          console.error('Error handling message from webview:', error);
+        }
       }
 
       if (message.type === 'cancel-request') {
