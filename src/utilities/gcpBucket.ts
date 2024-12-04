@@ -27,6 +27,7 @@ async function ensureDirectoryExists(filePath: string): Promise<void> {
 export const downloadFromGCPBucket = async (bucketName: string, srcFilename: string, destFilename: string) => {
 	const storage = new Storage();
 
+
 	const options = {
 		// Specify the source file
 		source: srcFilename,
@@ -36,22 +37,29 @@ export const downloadFromGCPBucket = async (bucketName: string, srcFilename: str
 	};
 
 	await ensureDirectoryExists(destFilename);
-
+	console.log('downloading from gcp bucket', { bucketName, destFilename, options });
 	// Download the file
 	await storage.bucket(bucketName).file(srcFilename).download(options);
 };
 
 
-export const downloadUsingURL = async (bucketName: string, srcFileName: string, destFileName: string) => {
-	const url = `https://storage.googleapis.com/${bucketName}/${srcFileName}`;
-	const response = await axios.get(url, { responseType: 'stream' });
-	const writer = fs.createWriteStream(destFileName);
+export const downloadUsingURL = (bucketName: string, srcFileName: string, destFileName: string) => {
+	return new Promise(async (resolve, reject) => {
+		try {
+			console.log('will download using url');
+			const url = `https://storage.googleapis.com/${bucketName}/${srcFileName}`;
+			const response = await axios.get(url, { responseType: 'stream' });
+			const writer = fs.createWriteStream(destFileName);
+			console.log('downloading from url', { url, destFileName });
+			response.data.pipe(writer);
 
-	response.data.pipe(writer);
 
-	return new Promise((resolve, reject) => {
-		writer.on('finish', resolve);
-		writer.on('error', reject);
+			writer.on('finish', resolve);
+			writer.on('error', reject);
+		}
+		catch (err) {
+			reject(err);
+		}
 	});
 };
 

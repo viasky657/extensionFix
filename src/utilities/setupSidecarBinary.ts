@@ -178,6 +178,7 @@ export async function startSidecarBinaryWithLocal(installLocation: string): Prom
     return true;
   }
 
+
   // this is where the new binaries are stored
   const sidecarBinPath = path.join(installLocation, 'sidecar_bin');
 
@@ -267,6 +268,7 @@ export async function startSidecarBinary(
       try {
         await downloadFromGCPBucket(bucket, fileName, zipDestination);
       } catch (e) {
+        console.log('error downloading from gcp bucket', e);
         await downloadUsingURL(bucket, fileName, zipDestination);
       } finally {
         if (panelProvider.view?.webview) {
