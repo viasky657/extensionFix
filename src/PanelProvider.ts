@@ -93,7 +93,6 @@ export class PanelProvider implements vscode.WebviewViewProvider {
         }
 
         this._view.webview.postMessage({ type: 'open-view', view: View.Task });
-
       }
     });
 
@@ -167,7 +166,6 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
     const providers: IContextProvider[] = [new FileContextProvider({})];
 
-
     // Handle messages from the webview
     webviewView.webview.onDidReceiveMessage(async (data: ClientRequest) => {
       this._onMessageFromWebview.fire(data);
@@ -206,7 +204,10 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
           webviewView.webview.postMessage({
             type: 'workspace-folders',
-            workspaceFolders: vscode.workspace.workspaceFolders?.map(f => ({ fsPath: f.uri.fsPath, name: f.name })),
+            workspaceFolders: vscode.workspace.workspaceFolders?.map((f) => ({
+              fsPath: f.uri.fsPath,
+              name: f.name,
+            })),
           });
           break;
         }
@@ -230,9 +231,15 @@ export class PanelProvider implements vscode.WebviewViewProvider {
               createdOn: new Date().toISOString(),
               id: v4(),
             };
-            const currentPresetNames = new Set(Array.from(this._presets.values()).map((p) => p.name));
+            const currentPresetNames = new Set(
+              Array.from(this._presets.values()).map((p) => p.name)
+            );
             if (currentPresetNames.has(newPreset.name)) {
-              const message = { type: 'add-preset/response', valid: false, error: `Another preset named "${newPreset.name}" already exists` };
+              const message = {
+                type: 'add-preset/response',
+                valid: false,
+                error: `Another preset named "${newPreset.name}" already exists`,
+              };
               webviewView.webview.postMessage(message);
               return;
             }
@@ -256,7 +263,11 @@ export class PanelProvider implements vscode.WebviewViewProvider {
             otherPresets.delete(data.preset.id);
             const otherPresetNames = new Set(Array.from(otherPresets.values()).map((p) => p.name));
             if (otherPresetNames.has(updatedData.name)) {
-              const message = { type: 'update-preset/response', valid: false, error: `Another preset named "${updatedData.name}" already exists` };
+              const message = {
+                type: 'update-preset/response',
+                valid: false,
+                error: `Another preset named "${updatedData.name}" already exists`,
+              };
               webviewView.webview.postMessage(message);
               return;
             }
@@ -738,10 +749,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     this.updateState();
   }
 
-  private async validateModelConfiguration(
-    sidecarClient: SideCarClient,
-    preset: Preset,
-  ) {
+  private async validateModelConfiguration(sidecarClient: SideCarClient, preset: Preset) {
     const modelSelection: vscode.ModelSelection = {
       slowModel: preset.model,
       fastModel: preset.model,
@@ -752,8 +760,8 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           temperature: 0.2,
           provider: {
             type: preset.provider,
-          }
-        }
+          },
+        },
       },
       providers: {
         [preset.provider]: {
@@ -782,7 +790,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           <html lang="en">
           <head>
               <meta charset="UTF-8">
-              <meta http-equiv="Content-Security-Policy" content="default-src ${webview.cspSource}; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}' 'wasm-unsafe-eval';">
+              <meta http-equiv="Content-Security-Policy" content="default-src ${webview.cspSource}; font-src ${webview.cspSource}; img-src ${webview.cspSource} blob: data:; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}' 'wasm-unsafe-eval';">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
               <title>Example View</title>
               <link rel="stylesheet" href="${styleUri}">
