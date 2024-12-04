@@ -73,7 +73,12 @@ export function useTask() {
     return () => window.removeEventListener('message', messageHandler);
   }, []);
 
-  function sendRequest(query: string, sessionId: string, variables: ContextItemWithId[]) {
+  function sendRequest(
+    query: string,
+    sessionId: string,
+    variables: ContextItemWithId[],
+    images: string[]
+  ) {
     if (state.data) {
       const { preset } = state.data.task;
 
@@ -82,6 +87,7 @@ export function useTask() {
         query,
         sessionId,
         variables,
+        images,
         modelSelection: {
           model: preset.model,
           provider: {

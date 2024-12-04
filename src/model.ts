@@ -15,6 +15,7 @@ interface TaskFeedback {
   query: string;
   sessionId: string;
   variables: ContextItemWithId[];
+  images: string[];
   modelSelection: {
     model: string;
     provider: {

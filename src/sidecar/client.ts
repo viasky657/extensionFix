@@ -108,7 +108,9 @@ export class SideCarClient {
     return response.json();
   }
 
-  async validateModelConfiguration(config: ReturnType<typeof getSideCarModelConfiguration>): Promise<{ valid: boolean; error?: string }> {
+  async validateModelConfiguration(
+    config: ReturnType<typeof getSideCarModelConfiguration>
+  ): Promise<{ valid: boolean; error?: string }> {
     const baseUrl = new URL(this._url);
     baseUrl.pathname = '/api/agentic/verify_model_config';
     const url = baseUrl.toString();
@@ -1113,8 +1115,13 @@ export class SideCarClient {
     codebaseSearch: boolean,
     workosAccessToken: string,
     modelSelection?: vscode.ModelSelection,
+    base64Images: string[] = []
   ): AsyncIterableIterator<SideCarAgentEvent> {
     const baseUrl = new URL(this._url);
+
+    // TODO(@skcd): You can consume these images and send them to the sidecar
+    // For the Anthropic API, you can always use 'image/jpeg' as the media_type.
+    console.log('Received images as context', base64Images);
 
     let _modelSelection = modelSelection;
     if (_modelSelection === undefined) {
@@ -1278,7 +1285,7 @@ export class SideCarClient {
     });
     const currentShell = detectDefaultShell();
     const sideCarModelConfiguration = getSideCarModelConfiguration(
-      MockModelSelection.getConfiguration(),
+      MockModelSelection.getConfiguration()
     );
     baseUrl.pathname = '/api/agentic/agent_session_plan_iterate';
     const url = baseUrl.toString();
@@ -1327,7 +1334,7 @@ export class SideCarClient {
   ): AsyncIterableIterator<SideCarAgentEvent> {
     const baseUrl = new URL(this._url);
     const sideCarModelConfiguration = getSideCarModelConfiguration(
-      MockModelSelection.getConfiguration(),
+      MockModelSelection.getConfiguration()
     );
     const allFiles = vscode.workspace.textDocuments.map((textDocument) => {
       return textDocument.uri.fsPath;
@@ -1451,7 +1458,7 @@ export class SideCarClient {
     });
     const currentShell = detectDefaultShell();
     const sideCarModelConfiguration = getSideCarModelConfiguration(
-      MockModelSelection.getConfiguration(),
+      MockModelSelection.getConfiguration()
     );
     console.log('sideCarModelConfiguration', sideCarModelConfiguration);
     baseUrl.pathname = '/api/agentic/agent_session_chat';
@@ -2102,13 +2109,13 @@ async function newConvertVSCodeVariableToSidecar(
 
 function getCurrentActiveWindow():
   | {
-    file_path: string;
-    file_content: string;
-    visible_range_content: string;
-    start_line: number;
-    end_line: number;
-    language: string;
-  }
+      file_path: string;
+      file_content: string;
+      visible_range_content: string;
+      start_line: number;
+      end_line: number;
+      language: string;
+    }
   | undefined {
   const activeWindow = vscode.window.activeTextEditor;
   if (activeWindow === undefined) {

@@ -292,8 +292,17 @@ export function TaskView() {
                       .map((c) => c.text)
                       .join('\n')
                   : content;
+                const base64Images = Array.isArray(content)
+                  ? content
+                      .filter(
+                        (p): p is { type: 'imageUrl'; imageUrl: { url: string } } =>
+                          p.type === 'imageUrl' && p.imageUrl !== undefined
+                      )
+                      .map((c) => c.imageUrl.url.split(',')[1])
+                      .filter((url): url is string => url !== undefined)
+                  : [];
 
-                task.sendRequest(inputQuery, sessionId, selectedContextItems);
+                task.sendRequest(inputQuery, sessionId, selectedContextItems, base64Images);
 
                 // Clear the editor after sending
                 editor.commands.clearContent();
