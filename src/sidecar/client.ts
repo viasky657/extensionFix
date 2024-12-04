@@ -1163,40 +1163,50 @@ export class SideCarClient {
         shell: currentShell,
       };
 
-      const asyncIterableResponse = callServerEventStreamingBufferedPOST(
-        baseUrl.toString(),
-        body
-      );
+    const allFiles = vscode.workspace.textDocuments.map((textDocument) => {
+      return textDocument.uri.fsPath;
+    });
+    const openFiles = vscode.window.visibleTextEditors.map((textDocument) => {
+      return textDocument.document.uri.fsPath;
+    });
+    const currentShell = detectDefaultShell();
 
-      for await (const line of asyncIterableResponse) {
-        try {
-          // More robust line splitting
-          const lines = line.split(/data:\s*\{/).filter(Boolean);
-
-          for (const partialLine of lines) {
-            const trimmedLine = partialLine.trim();
-            if (!trimmedLine) { continue; }
-
-            try {
-              // Ensure proper JSON structure
-              const jsonStr = trimmedLine.endsWith('}') ?
-                `{${trimmedLine}` :
-                `{${trimmedLine}}`;
-
-              const conversationMessage = JSON.parse(
-                jsonStr
-              ) as SideCarAgentEvent;
-
-              yield conversationMessage;
-            } catch (parseError) {
-              console.error('Error parsing line:', parseError);
-              console.debug('Problematic line:', trimmedLine);
-              continue; // Skip this line and continue with the next
-            }
-          }
-        } catch (lineError) {
-          console.error('Error processing line:', lineError);
-          continue; // Skip this line and continue with the next
+    const userContext = await convertVSCodeVariableToSidecar(variables);
+    userContext.images = base64Images.map((imageData) => {
+      return {
+        type: "base64",
+        media_type: "image/jpeg",
+        data: imageData,
+      };
+    });
+    // console.log('we are hitting the plan step again and again');
+    baseUrl.pathname = '/api/agentic/agent_tool_use';
+    const url = baseUrl.toString();
+    const body = {
+      session_id: sessionId,
+      exchange_id: exchangeId,
+      editor_url: editorUrl,
+      query,
+      user_context: userContext,
+      agent_mode: agentMode.toString(),
+      repo_ref: repoRef.getRepresentation(),
+      root_directory: vscode.workspace.rootPath,
+      project_labels: projectLabels,
+      codebase_search: codebaseSearch,
+      access_token: workosAccessToken,
+      model_configuration: sideCarModelConfiguration,
+      all_files: allFiles,
+      open_files: openFiles,
+      shell: currentShell,
+    };
+    // console.log('sidecar.request', url);
+    const asyncIterableResponse = callServerEventStreamingBufferedPOST(url, body);
+    for await (const line of asyncIterableResponse) {
+      const lineParts = line.split('data:{');
+      for (const lineSinglePart of lineParts) {
+        const lineSinglePartTrimmed = lineSinglePart.trim();
+        if (lineSinglePartTrimmed === '') {
+          continue;
         }
       }
     } catch (e) {
@@ -1873,6 +1883,7 @@ export async function convertVSCodeVariableToSidecarHackingForPlan(
         language: fileContent[1],
       };
     }),
+    images: [],
     terminal_selection: undefined,
     folder_paths: folders,
     is_plan_generation: isPlanGeneration,
@@ -1884,7 +1895,7 @@ export async function convertVSCodeVariableToSidecarHackingForPlan(
 }
 
 async function convertVSCodeVariableToSidecar(
-  variables: readonly vscode.ChatPromptReference[]
+  variables: readonly vscode.ChatPromptReference[],
 ): Promise<UserContext> {
   const resolvedFileCache: Map<string, [string, string]> = new Map();
 
@@ -1989,6 +2000,7 @@ async function convertVSCodeVariableToSidecar(
         language: fileContent[1],
       };
     }),
+    images: [],
     terminal_selection: terminalSelection,
     folder_paths: folders,
     is_plan_generation: isPlanGeneration,
@@ -2101,6 +2113,7 @@ async function newConvertVSCodeVariableToSidecar(
     file_content_map: [],
     terminal_selection: undefined,
     folder_paths: [],
+    images: [],
     is_plan_generation: false,
     is_plan_execution_until: null,
     is_plan_append: false,
