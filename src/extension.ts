@@ -112,6 +112,7 @@ export async function activate(context: vscode.ExtensionContext) {
           const query = message.query;
           const sessionId = message.sessionId;
           const webviewVariables = message.variables;
+          const base64Images = message.images;
 
           // Convert variables to VSCode format
           const variables: vscode.ChatPromptReference[] = await Promise.all(
@@ -165,23 +166,6 @@ export async function activate(context: vscode.ExtensionContext) {
           panelProvider.setTaskStatus(message.sessionId, false);
 
           console.log('set task status', message.sessionId);
-
-          // - ping the sidecar over here. currentRepo can be undefined, which will 422 sidecar
-          const stream = SIDECAR_CLIENT!.agentSessionPlanStep(
-            query,
-            sessionId,
-            exchangeId,
-            agentSessionProvider.editorUrl!,
-            AideAgentMode.Chat,
-            variables,
-            currentRepo ?? '',
-            projectContext.labels,
-            false,
-            'workos-fake-id',
-            modelSelection
-          );
-          // - have a respose somewhere and the chat model would update
-          await agentSessionProvider.reportAgentEventsToChat(true, stream);
           // - ping the sidecar over here. currentRepo can be undefined, which will 422 sidecar
           const stream = SIDECAR_CLIENT!.agentSessionPlanStep(
             query,
