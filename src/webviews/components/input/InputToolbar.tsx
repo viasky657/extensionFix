@@ -34,6 +34,7 @@ function InputToolbar(props: InputToolbarProps) {
                 }}
               />
               <div className="cursor-pointer rounded p-1 text-foreground hover:bg-panel-background">
+                <span className="sr-only">Upload image</span>
                 <PhotoIcon
                   className="h-4 w-4"
                   onClick={(e) => {
