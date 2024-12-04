@@ -1,5 +1,5 @@
 <div id="sotaswe-logo" align="center">
-    <img src="./assets/logo:small.png" alt="SOTA SWE Logo" width="200"/>
+    <img src="./assets/logo-small.png" alt="SOTA SWE Logo" width="200"/>
     <h1>SOTA SWE</h1>
 </div>
 
