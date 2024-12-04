@@ -31,13 +31,13 @@ export function TaskView() {
 
   function onUserSaysNo() {
     if (task.data) {
-      task.sendRequest('No', task.data.task.sessionId, []);
+      task.sendRequest('No', task.data.task.sessionId, [], []);
     }
   }
 
   function onUserSaysYes() {
     if (task.data) {
-      task.sendRequest('Yes', task.data.task.sessionId, []);
+      task.sendRequest('Yes', task.data.task.sessionId, [], []);
     }
   }
 
@@ -62,20 +62,32 @@ export function TaskView() {
   }, []);
 
   const exchangesContainerRef = React.useRef<HTMLDivElement>(null);
+  const [userInitiatedScroll, setUserInitiatedScroll] = React.useState(false);
   const [userDidScroll, setUserDidScroll] = React.useState(false);
 
   React.useEffect(() => {
     const exchangesContainer = exchangesContainerRef.current;
+    console.log({ userDidScroll });
     if (!userDidScroll && exchangesContainer) {
       exchangesContainer.scrollTop = exchangesContainer.scrollHeight;
     }
   }, [exchanges, terminals.length]);
 
+  function handleUserEvent() {
+    setUserInitiatedScroll(true);
+  }
+
   function handleMessagesScroll(event: React.UIEvent<HTMLDivElement>) {
-    const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
-    const scrolledToBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 1;
-    // Reset `userDidScroll` if they went all the way down to the bottom
-    setUserDidScroll(!scrolledToBottom);
+    console.log({ userInitiatedScroll });
+    if (userInitiatedScroll) {
+      const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
+      const scrolledToBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 10;
+      // Reset `userDidScroll` if they went all the way down to the bottom
+      setUserDidScroll(!scrolledToBottom);
+    } else {
+      setUserDidScroll(false);
+    }
+    setUserInitiatedScroll(false);
   }
 
   React.useEffect(() => {
@@ -213,6 +225,10 @@ export function TaskView() {
         </header>
         <div
           className="flex flex-grow flex-col gap-2 overflow-x-hidden overflow-y-scroll"
+          onWheel={handleUserEvent}
+          onMouseDown={handleUserEvent}
+          onTouchStart={handleUserEvent}
+          onKeyDown={handleUserEvent}
           onScroll={handleMessagesScroll}
           ref={exchangesContainerRef}
         >
@@ -233,16 +249,17 @@ export function TaskView() {
               </ol>
             )}
           </section>
-          {!task.data?.task.complete && (
-            <span
-              aria-live="polite"
-              className="-mb-2 flex items-center gap-2 rounded-xs bg-panel-background px-2 py-1 text-description"
-            >
-              <Spinner className="h-3 w-3" />
-              Generating
-            </span>
-          )}
+
           <div className="sticky bottom-0 bg-sidebar-background p-2">
+            {!task.data?.task.complete && (
+              <span
+                aria-live="polite"
+                className="mb-0.5 flex items-center gap-2 rounded-xs bg-panel-background px-2 py-1 text-description"
+              >
+                <Spinner className="h-3 w-3" />
+                Generating
+              </span>
+            )}
             {showActions && (
               <div
                 aria-live="assertive"
