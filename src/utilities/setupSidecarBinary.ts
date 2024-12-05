@@ -248,7 +248,12 @@ export async function startSidecarBinary(
 
   console.log('will download sidecar binary');
 
-  // First, check if the server is already downloaded
+  try {
+    await fs.promises.rm(sidecarDestination, { recursive: true, force: true });
+    console.log(`Cleaned up old sidecar at ${sidecarDestination} successfully!`);
+  } catch (err) {
+    console.error(`Error while deleting ${sidecarDestination}:`, err);
+  }
 
   if (panelProvider.view?.webview) {
     panelProvider.view.webview.postMessage({
