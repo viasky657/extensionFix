@@ -2000,8 +2000,6 @@ async function convertVSCodeVariableToSidecar(
   // TODO(codestory): Fill this in properly
   const terminalSelection = undefined;
 
-  const folders: string[] = [];  // Add this before return
-
   return {
     variables: sidecarVariables,
     file_content_map: Array.from(resolvedFileCache.entries()).map(([filePath, fileContent]) => {

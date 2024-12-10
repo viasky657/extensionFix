@@ -24,7 +24,9 @@ async function extension() {
       'path',
       'fs',
       'http',
-      'net'
+      'net',
+      'date-fns',
+      '@radix-ui/*'
     ],
     outfile: 'dist/extension.js',
     // logLevel: 'silent',

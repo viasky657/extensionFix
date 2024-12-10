@@ -1,4 +1,4 @@
-import { ChatPromptReference, Uri, ChatRequest, WorkspaceEdit, MarkdownString, Command, ChatResponseStream, CancellationToken, ProviderResult, ChatResult, ChatParticipant, Range, Event, Position, Disposable, DocumentSelector, CodeLensProvider, InlayHintsProvider, Thenable } from "vscode";
+import { ChatPromptReference, Uri, ChatRequest, WorkspaceEdit, MarkdownString, Command, ChatResponseStream, CancellationToken, ProviderResult, ChatResult, ChatParticipant, Range } from "vscode";
 import { Provider } from "./model";
 
 /*---------------------------------------------------------------------------------------------
@@ -427,6 +427,7 @@ declare module 'vscode' {
 export interface ClientRequest {
 	type: string;
 	sessionId: string;
+	fs_file_path?: string;
 	variables?: { id: { providerTitle: string }, uri?: { value: string } }[];
 	images?: string[];
 	query?: string;
