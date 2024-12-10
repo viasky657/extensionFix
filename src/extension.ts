@@ -16,6 +16,8 @@ import {
 import { sidecarUseSelfRun } from './utilities/sidecarUrl';
 import { getUniqueId } from './utilities/uniqueId';
 import { ProjectContext } from './utilities/workspaceContext';
+import { HistoryService } from './services/history';
+import { ClientRequest } from './types';
 
 export let SIDECAR_CLIENT: SideCarClient | null = null;
 
@@ -104,7 +106,7 @@ export async function activate(context: vscode.ExtensionContext) {
     });
 
   context.subscriptions.push(
-    panelProvider.onMessageFromWebview(async (message) => {
+    panelProvider.onMessageFromWebview(async (message: ClientRequest) => {
       console.log('message from webview', message);
       if (message.type === 'task-feedback') {
         try {
@@ -116,7 +118,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
           // Convert variables to VSCode format
           const variables: vscode.ChatPromptReference[] = await Promise.all(
-            webviewVariables
+            (webviewVariables || [])
               .filter((v) => v.id.providerTitle === 'file')
               .map(async (v) => {
                 const uri = vscode.Uri.parse(v.uri!.value);
@@ -135,9 +137,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
           // something will create the exchange id
           const exchangeId = uniqueId();
-          panelProvider.addExchangeRequest(sessionId, exchangeId, query);
+          panelProvider.addExchangeRequest(sessionId, exchangeId, query || '');
 
-          const { model, provider } = message.modelSelection;
+          const { model='', provider = {name: ''} } = message.modelSelection || {};
 
           const modelSelection = {
             slowModel: model,
@@ -147,9 +149,14 @@ export async function activate(context: vscode.ExtensionContext) {
                 name: model,
                 contextLength: 10000,
                 temperature: 0.2,
+                model: model,
                 provider: {
                   type: provider.name,
                 },
+                permissions: {
+                  mode: message.modelSelection?.permissionMode || 'ask',
+                  autoApprove: message.modelSelection?.permissionMode === 'auto',
+                }
               },
             },
             providers: {
@@ -163,12 +170,15 @@ export async function activate(context: vscode.ExtensionContext) {
 
           console.log('model selection', modelSelection);
 
-          panelProvider.setTaskStatus(message.sessionId, false);
+          panelProvider.setTaskStatus(sessionId, true);
+          // and the model will have a on did change
+          // - the extension needs the state
+          // - on did change chat model gets back over here
 
           console.log('set task status', message.sessionId);
           // - ping the sidecar over here. currentRepo can be undefined, which will 422 sidecar
           const stream = SIDECAR_CLIENT!.agentSessionPlanStep(
-            query,
+            query || '',
             sessionId,
             exchangeId,
             agentSessionProvider.editorUrl!,
@@ -176,7 +186,7 @@ export async function activate(context: vscode.ExtensionContext) {
             variables,
             currentRepo ?? '',
             projectContext.labels,
-            false,
+            modelSelection.models[model].permissions.autoApprove,
             'workos-fake-id',
             modelSelection,
             base64Images
@@ -215,6 +225,21 @@ export async function activate(context: vscode.ExtensionContext) {
     panelProvider.onDidWebviewBecomeVisible(() => {
       // @theskcd we update the view state here
       panelProvider.updateState();
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('aide.clearHistory', async () => {
+      const response = await vscode.window.showWarningMessage(
+        'Are you sure you want to clear all chat history?',
+        'Yes',
+        'No'
+      );
+      
+      if (response === 'Yes') {
+        await HistoryService.clearHistory();
+        vscode.window.showInformationMessage('Chat history cleared');
+      }
     })
   );
 }

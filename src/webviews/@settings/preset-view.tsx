@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import * as React from 'react';
-import { AnthropicModels, NewPreset, Permissions, Preset, Provider, View } from '../../model';
+import { AnthropicModels, NewPreset, PermissionMode, Permissions, Preset, Provider, ProviderType, View } from '../../model';
 import { PresetForm } from './form';
 import { getPresets, PresetsData, usePresets } from './use-preset';
 import { processFormData } from 'utils/form';
@@ -9,6 +9,19 @@ import { Button } from 'components/button';
 import { LoaderData } from 'utils/types';
 import { ProgressIndicator } from 'components/progress-indicator';
 import { Spinner } from 'components/spinner';
+import { logError } from '../../completions/logger';
+
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      button: React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>;
+      aside: React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
+      dl: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDListElement>, HTMLDListElement>;
+      dt: React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
+      dd: React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
+    }
+  }
+}
 
 type ViewData = {
   presetsData: PresetsData;
@@ -64,10 +77,8 @@ export function PresetView() {
       } else {
         setFormErrors([['Validation Error', response?.error || 'Unknown error']]);
       }
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        setFormErrors(printValidationIssues(err.issues));
-      }
+    } catch (unknownError) {
+      logError(unknownError instanceof Error ? unknownError : new Error(unknownError as string));
     } finally {
       setIsSubmitting(false);
     }
@@ -105,7 +116,7 @@ export function PresetView() {
           <div className="absolute inset-0 -z-10 rounded-sm bg-error-foreground opacity-25" />
           <div className="absolute inset-0 -z-10 rounded-sm border border-error-foreground opacity-50" />
           <dl className="p-2">
-            {formErrors.map(([id, message]) => (
+            {formErrors.map(([id, message]: [string, string]) => (
               <React.Fragment key={id}>
                 <dt className="mt-4 font-medium text-foreground first:mt-0">{id}</dt>
                 <dd className="mt-1 text-foreground">{message}</dd>
@@ -145,21 +156,43 @@ const NewPresetSchema = z.object({
   permissions: z.custom<Permissions>(),
   customInstructions: z.string(),
   name: z.string(),
+  temperature: z.number().min(0).max(1),
 });
 
 // Full Preset schema (with id and createdOn)
 const PresetSchema = NewPresetSchema.extend({
   id: z.string(),
   createdOn: z.string(),
+  temperature: z.number()
+    .min(0, "Temperature must be at least 0")
+    .max(1, "Temperature must not exceed 1")
+    .default(0.2),
+  permissions: z.object({
+    mode: z.nativeEnum(PermissionMode),
+    autoApprove: z.boolean(),
+    codeEditing: z.boolean(),
+    fileAccess: z.boolean(),
+    terminalCommands: z.boolean()
+  })
 });
 
 function parsePresetFormData(formData: FormData): Preset | NewPreset {
-  const processed = processFormData(formData);
-  console.log({ processed });
-
-  if (formData.has('id')) {
-    return { type: 'preset', ...PresetSchema.parse(processed) };
-  } else {
-    return { type: 'new-preset', ...NewPresetSchema.parse(processed) };
-  }
+  const data = processFormData(formData);
+  return {
+    ...data,
+    type: 'new-preset',
+    provider: data.provider as ProviderType,
+    model: String(data.model),
+    apiKey: String(data.apiKey),
+    name: String(data.name),
+    customInstructions: String(data.customInstructions || ''),
+    temperature: Number(data.temperature) || 0.2,
+    permissions: {
+      mode: data.permissionMode as PermissionMode,
+      autoApprove: data.autoApprove === 'on',
+      codeEditing: data.codeEditing === 'on',
+      fileAccess: data.fileAccess === 'on',
+      terminalCommands: data.terminalCommands === 'on',
+    }
+  };
 }

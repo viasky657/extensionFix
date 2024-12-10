@@ -50,6 +50,16 @@
         "command": "sota-swe.go-to-settings",
         "title": "Show settings",
         "icon": "$(settings-gear)"
+      },
+      {
+        "command": "aide.clearHistory",
+        "title": "Clear Chat History",
+        "category": "Aide"
+      },
+      {
+        "command": "sota-swe.go-to-history",
+        "title": "Show History",
+        "category": "SotaSWE"
       }
     ],
     "menus": {
@@ -63,6 +73,11 @@
           "command": "sota-swe.go-to-new-task",
           "when": "view == sota-swe-panel",
           "group": "navigation@0"
+        },
+        {
+          "command": "sota-swe.go-to-history",
+          "when": "view == sota-swe-panel",
+          "group": "navigation@1"
         }
       ]
     },

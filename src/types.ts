@@ -1,4 +1,4 @@
-import { ChatPromptReference, Uri, ChatRequest, WorkspaceEdit, MarkdownString, Command, ChatResponseStream, CancellationToken, ProviderResult, ChatResult, ChatParticipant, Range } from "vscode";
+import { ChatPromptReference, Uri, ChatRequest, WorkspaceEdit, MarkdownString, Command, ChatResponseStream, CancellationToken, ProviderResult, ChatResult, ChatParticipant, Range, Event, Position, Disposable, DocumentSelector, CodeLensProvider, InlayHintsProvider, Thenable } from "vscode";
 import { Provider } from "./model";
 
 /*---------------------------------------------------------------------------------------------
@@ -125,6 +125,7 @@ export interface AideAgentRequest extends ChatRequest {
 	readonly mode: AideAgentMode;
 	readonly scope: AideAgentScope;
 	readonly references: readonly AideAgentPromptReference[];
+	readonly query: string;
 }
 
 export enum AideButtonLook {
@@ -390,6 +391,9 @@ declare module 'vscode' {
 		fastModel: string;
 		models: LanguageModels;
 		providers: ModelProviders;
+		csAuthentication?: {
+			getSession(): Thenable<CSAuthenticationSession | undefined>;
+		};
 	}
 
 	export interface ProviderSpecificConfiguration {
@@ -419,3 +423,27 @@ declare module 'vscode' {
 		export const onDidChangeConfiguration: Event<ModelSelection>;
 	}
 }
+
+export type ClientRequest = {
+	type: 'task-feedback' | 'cancel-request' | 'open-file';
+	query?: string;
+	sessionId: string;
+	variables?: any[];
+	images?: string[];
+	modelSelection?: {
+		model: string;
+		provider: {
+			name: string;
+			apiBase?: string;
+			apiKey?: string;
+		};
+		permissionMode?: 'ask' | 'auto';
+	};
+	fs_file_path?: string;
+};
+
+export type SideCarAgentEvent = {
+	type: 'message' | 'code-edit' | 'error';
+	message?: string;
+	// ... other properties
+};

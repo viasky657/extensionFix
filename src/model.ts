@@ -5,7 +5,7 @@ export enum View {
   Preset = 'preset',
   Welcome = 'welcome',
   Settings = 'settings',
-  // History = 'history',
+  History = 'history',
 }
 
 export type ViewType = `${View}`;
@@ -110,7 +110,8 @@ export type ClientRequest =
   | FetchContextProviders
   | LoadSubmenuItems
   | GetContextItems
-  | ShowToast;
+  | ShowToast
+  | { type: 'get-history' };
 
 export interface PresetsLoaded {
   type: 'presets-loaded';
@@ -185,6 +186,11 @@ interface WorkspaceFolders {
   workspaceFolders?: WorkspaceFolder[];
 }
 
+export interface SideCarAgentEvent {
+  type: 'response' | 'request' | 'error';
+  message?: string;
+}
+
 export type Event =
   | WorkspaceFolders
   | SidecarDownloading
@@ -199,7 +205,8 @@ export type Event =
   | TaskUpdate
   | SidecarReadyState
   | AddPresetResponse
-  | UpdatePresetResponse;
+  | UpdatePresetResponse
+  | { type: 'get-history/response', history: Task[] };
 
 export type NewSessionRequest = {
   type: 'new-request';
@@ -361,19 +368,18 @@ export enum AnthropicModels {
 
 export type Models = `${AnthropicModels}`;
 
-export enum PermissionState {
-  Always = 'always',
+export enum PermissionMode {
   Ask = 'ask',
-  // Never = "never",
+  Auto = 'auto'
 }
 
-type PermissionStateType = `${PermissionState}`;
-
-export type Permissions = {
-  codeEditing: PermissionStateType;
-  listFiles: PermissionStateType;
-  terminalCommands: PermissionStateType;
-};
+export interface Permissions {
+  mode: PermissionMode;
+  autoApprove: boolean;
+  codeEditing: boolean;
+  fileAccess: boolean;
+  terminalCommands: boolean;
+}
 
 export type ProviderType = `${Provider}`;
 
@@ -391,10 +397,14 @@ export type Preset = BasePreset & {
   type: 'preset';
   id: string;
   createdOn: string;
+  provider: ProviderType;
+  permissions: Permissions;
+  temperature: number;
 };
 
 export type NewPreset = BasePreset & {
   type: 'new-preset';
+  temperature: number;
 };
 
 export type WorkspaceFolder = {
@@ -409,4 +419,11 @@ export interface AppState {
   currentTask?: Task;
   activePreset?: Preset;
   workspaceFolders?: WorkspaceFolder[];
+}
+
+export interface ModelSelection {
+  model: string;
+  provider: Provider;
+  permissionMode: 'ask' | 'auto';
+  // ... other existing properties
 }

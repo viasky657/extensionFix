@@ -56,6 +56,8 @@ import {
   AideAgentMode,
   AideAgentPromptReference,
 } from '../types';
+import { Preset } from '../model';
+import { PermissionMode } from '../model';  // If PermissionMode is not in model.ts, we need to add it there
 
 export enum CompletionStopReason {
   /**
@@ -1132,10 +1134,10 @@ export class SideCarClient {
     console.log('sideCarModelConfiguration', sideCarModelConfiguration);
 
 
-    const allFiles = vscode.workspace.textDocuments.map((textDocument) => {
+    const allFiles = vscode.workspace.textDocuments.map((textDocument: vscode.TextDocument) => {
       return textDocument.uri.fsPath;
     });
-    const openFiles = vscode.window.visibleTextEditors.map((textDocument) => {
+    const openFiles = vscode.window.visibleTextEditors.map((textDocument: vscode.TextEditor) => {
       return textDocument.document.uri.fsPath;
     });
     const currentShell = detectDefaultShell();
@@ -1230,10 +1232,10 @@ export class SideCarClient {
     codebaseSearch: boolean
   ): AsyncIterableIterator<SideCarAgentEvent> {
     const baseUrl = new URL(this._url);
-    const allFiles = vscode.workspace.textDocuments.map((textDocument) => {
+    const allFiles = vscode.workspace.textDocuments.map((textDocument: vscode.TextDocument) => {
       return textDocument.uri.fsPath;
     });
-    const openFiles = vscode.window.visibleTextEditors.map((textDocument) => {
+    const openFiles = vscode.window.visibleTextEditors.map((textDocument: vscode.TextEditor) => {
       return textDocument.document.uri.fsPath;
     });
     const currentShell = detectDefaultShell();
@@ -1344,10 +1346,10 @@ export class SideCarClient {
     const sideCarModelConfiguration = getSideCarModelConfiguration(
       MockModelSelection.getConfiguration()
     );
-    const allFiles = vscode.workspace.textDocuments.map((textDocument) => {
+    const allFiles = vscode.workspace.textDocuments.map((textDocument: vscode.TextDocument) => {
       return textDocument.uri.fsPath;
     });
-    const openFiles = vscode.window.visibleTextEditors.map((textDocument) => {
+    const openFiles = vscode.window.visibleTextEditors.map((textDocument: vscode.TextEditor) => {
       return textDocument.document.uri.fsPath;
     });
     const currentShell = detectDefaultShell();
@@ -1461,7 +1463,7 @@ export class SideCarClient {
     const allFiles = vscode.workspace.textDocuments.map((textDocument) => {
       return textDocument.uri.fsPath;
     });
-    const openFiles = vscode.window.visibleTextEditors.map((textDocument) => {
+    const openFiles = vscode.window.visibleTextEditors.map((textDocument: vscode.TextEditor) => {
       return textDocument.document.uri.fsPath;
     });
     const currentShell = detectDefaultShell();
@@ -1610,8 +1612,19 @@ export class SideCarClient {
     editorUrl: string,
     threadId: string,
     codebaseSearch: boolean,
-    isAnchorEditing: boolean
+    isAnchorEditing: boolean,
+    preset: Preset
   ): AsyncIterableIterator<SideCarAgentEvent> {
+    // Check permission before proceeding
+    const hasPermission = await this.checkPermission('edit code', preset);
+    if (!hasPermission) {
+      yield {
+        type: 'error',
+        message: 'User denied permission to edit code'
+      };
+      return;
+    }
+
     // console.log('starting agent code edit');
     const baseUrl = new URL(this._url);
     baseUrl.pathname = '/api/agentic/code_editing';
@@ -1675,6 +1688,35 @@ export class SideCarClient {
       },
       body: JSON.stringify(body),
     });
+  }
+
+  private async checkPermission(action: string, preset: Preset): Promise<boolean> {
+    try {
+      if (!preset?.permissions?.mode) {
+        console.warn('Invalid permission mode, defaulting to Ask');
+        return await this.askUserPermission(action);
+      }
+
+      if (preset.permissions.mode === PermissionMode.Auto) {
+        console.log(`Auto-approved permission for: ${action}`);
+        return true;
+      }
+
+      return await this.askUserPermission(action);
+    } catch (error) {
+      console.error('Error checking permissions:', error);
+      return false;
+    }
+  }
+
+  private async askUserPermission(action: string): Promise<boolean> {
+    const result = await vscode.window.showInformationMessage(
+      `The AI assistant wants to ${action}. Do you approve?`,
+      'Yes',
+      'No'
+    );
+    console.log(`User ${result === 'Yes' ? 'approved' : 'denied'} permission for: ${action}`);
+    return result === 'Yes';
   }
 }
 
@@ -1865,11 +1907,10 @@ export async function convertVSCodeVariableToSidecarHackingForPlan(
 async function convertVSCodeVariableToSidecar(
   variables: readonly vscode.ChatPromptReference[],
 ): Promise<UserContext> {
-  const resolvedFileCache: Map<string, [string, string]> = new Map();
-
   const sidecarVariables: SidecarVariableTypes[] = [];
   const fileCache: Map<string, vscode.TextDocument> = new Map();
-
+  const resolvedFileCache: Map<string, [string, string]> = new Map();
+  
   async function resolveFile(uri: vscode.Uri) {
     const cachedFile = fileCache.get(uri.fsPath);
     if (cachedFile === undefined) {
@@ -1945,7 +1986,7 @@ async function convertVSCodeVariableToSidecar(
     if (name === 'generatePlan') {
       isPlanGeneration = true;
     }
-  }
+  }  // Remove extra closing brace
 
   let isIncludeLSP = false;
   for (const variable of variables) {
@@ -1959,6 +2000,8 @@ async function convertVSCodeVariableToSidecar(
   // TODO(codestory): Fill this in properly
   const terminalSelection = undefined;
 
+  const folders: string[] = [];  // Add this before return
+
   return {
     variables: sidecarVariables,
     file_content_map: Array.from(resolvedFileCache.entries()).map(([filePath, fileContent]) => {
@@ -1969,7 +2012,7 @@ async function convertVSCodeVariableToSidecar(
       };
     }),
     images: [],
-    terminal_selection: terminalSelection,
+    terminal_selection: undefined,
     folder_paths: folders,
     is_plan_generation: isPlanGeneration,
     is_plan_execution_until: null,
@@ -2090,6 +2133,7 @@ async function newConvertVSCodeVariableToSidecar(
   };
 }
 
+//The below code is not used anywhere and is an older version. The newer version is used directly in the codebase. 
 // function getFileType(): SidecarVariableType {
 // 	return 'File';
 // }

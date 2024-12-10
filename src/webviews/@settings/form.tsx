@@ -1,4 +1,4 @@
-import { AnthropicModels, PermissionState, Preset, Provider, ProviderType } from '../../model';
+import { AnthropicModels, Permissions, Preset, Provider, ProviderType, PermissionMode } from '../../model';
 import * as React from 'react';
 import { Checkbox } from 'components/checkbox';
 import { Select, Option, SelectProps } from 'components/select';
@@ -8,12 +8,30 @@ import { cn } from 'utils/cn';
 import { PresetLogo } from 'components/preset';
 import { CheckedState } from '@radix-ui/react-checkbox';
 import { capitalize } from 'utils/string';
+import { Slider } from '../@components/slider';
+
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      form: React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement>;
+      input: React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>;
+      label: React.DetailedHTMLProps<React.LabelHTMLAttributes<HTMLLabelElement>, HTMLLabelElement>;
+      p: React.DetailedHTMLProps<React.HTMLAttributes<HTMLParagraphElement>, HTMLParagraphElement>;
+      fieldset: React.DetailedHTMLProps<React.FieldsetHTMLAttributes<HTMLFieldSetElement>, HTMLFieldSetElement>;
+      legend: React.DetailedHTMLProps<React.HTMLAttributes<HTMLLegendElement>, HTMLLegendElement>;
+      span: React.DetailedHTMLProps<React.HTMLAttributes<HTMLSpanElement>, HTMLSpanElement>;
+      div: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
+    }
+  }
+}
 
 interface PresetFormProps
   extends React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement> {
   formId: string;
+  onSubmit?: (event: React.FormEvent<HTMLFormElement>) => Promise<void>;
   initialData?: Preset;
   onPresetNameChange?: (name: string) => void;
+  className?: string;
 }
 
 export function PresetForm(props: PresetFormProps) {
@@ -59,10 +77,10 @@ export function PresetForm(props: PresetFormProps) {
           value={selectedProvider}
           onValueChange={onProviderChange}
         >
-          {Object.values(Provider).map((provider) => (
-            <Option key={provider} value={provider}>
+          {Object.keys(Provider).filter(key => isNaN(Number(key))).map((provider) => (
+            <Option key={provider} value={Provider[provider as keyof typeof Provider]}>
               <div className="flex gap-2">
-                <PresetLogo className="flex-shrink-0 translate-y-1" provider={provider} />
+                <PresetLogo className="flex-shrink-0 translate-y-1" provider={Provider[provider as keyof typeof Provider]} />
                 {capitalize(provider)}
               </div>
             </Option>
@@ -126,25 +144,42 @@ export function PresetForm(props: PresetFormProps) {
           />
       </label>
 
-      {/* Hidden permission inputs with default values */}
-      <input
-        type="hidden"
-        id="permissions.list-files"
-        name="permissions[listFiles]"
-        value={PermissionState.Always}
-      />
-      <input
-        type="hidden"
-        id="code-editing"
-        name="permissions[codeEditing]"
-        value={PermissionState.Always}
-      />
-      <input
-        type="hidden"
-        id="permissions.terminal-commands"
-        name="permissions[terminalCommands]"
-        value={PermissionState.Always}
-      />
+      <div className="space-y-1">
+        <label htmlFor="temperature" className="text-sm font-medium text-foreground">
+          Temperature
+        </label>
+        <div className="flex items-center gap-4">
+          <Slider
+            id="temperature"
+            name="temperature"
+            min={0}
+            max={1}
+            step={0.1}
+            defaultValue={[initialData?.temperature ?? 0.2]}
+            value={[initialData?.temperature ?? 0.2]}
+            onValueChange={([value]: [number]) => {
+              if (!initialData) return;
+              const updatedPreset: Preset = {
+                ...initialData,
+                temperature: value,
+                type: 'preset',
+                provider: initialData.provider,
+                permissions: initialData.permissions,
+              };
+              vscode.postMessage({
+                type: 'update-preset',
+                preset: updatedPreset
+              });
+            }}
+          />
+          <span className="w-12 text-sm text-description">
+            {initialData?.temperature?.toFixed(1) ?? "0.2"}
+          </span>
+        </div>
+        <p className="text-xs text-description">
+          Controls randomness in responses. Lower values are more focused, higher values more creative.
+        </p>
+      </div>
 
       <label htmlFor="name">
         <p className="font-medium text-foreground">Preset name</p>
@@ -169,31 +204,4 @@ export function PresetForm(props: PresetFormProps) {
       </label>
     </form>
   );
-}
-
-export function PermissionSelect(props: SelectProps) {
-  return (
-    <Select {...props}>
-      {Object.values(PermissionState).map((ps) => (
-        <Option key={ps} value={ps}>
-          <div className="flex items-start gap-2">
-            <span
-              className={`codicon codicon-${getPermissionCodiconId(ps)} translate-y-0.5 text-description opacity-75`}
-              aria-hidden
-            />
-            {ps}
-          </div>
-        </Option>
-      ))}
-    </Select>
-  );
-}
-
-function getPermissionCodiconId(permissionState: PermissionState) {
-  switch (permissionState) {
-    case PermissionState.Always:
-      return 'check-all';
-    case PermissionState.Ask:
-      return 'comment';
-  }
 }

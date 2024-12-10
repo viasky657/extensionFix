@@ -6,6 +6,7 @@ import { cn } from 'utils/cn';
 import { Link, useLoaderData } from 'react-router-dom';
 import { PresetLogo } from 'components/preset';
 import { LoaderData } from 'utils/types';
+import { useState } from 'react';
 
 type ViewData = PresetsData;
 
@@ -13,12 +14,58 @@ export async function loadSettings(): Promise<ViewData> {
   return await getPresets();
 }
 
+interface PermissionMode {
+  value: 'ask' | 'auto';
+  label: string;
+  description: string;
+}
+
+const permissionModes: PermissionMode[] = [
+  {
+    value: 'ask',
+    label: 'Ask for Permission',
+    description: 'The agent will ask for permission before making any changes to the codebase.'
+  },
+  {
+    value: 'auto',
+    label: 'Automatic',
+    description: 'The agent will automatically apply changes without asking for permission.'
+  }
+];
+
 export function SettingsView() {
   const initialData = useLoaderData() as LoaderData<typeof loadSettings>;
   const { data, setActivePreset } = usePresets(initialData);
+  const [permissionMode, setPermissionMode] = useState<'ask' | 'auto'>('ask');
 
   const presetsArray = Array.from(data.presets.values()).sort(
     (a, b) => new Date(b.createdOn).getTime() - new Date(a.createdOn).getTime()
+  );
+
+  const permissionModeSection = (
+    <div className="mb-4">
+      <h3 className="text-sm font-medium mb-2">Permission Mode</h3>
+      <div className="space-y-2">
+        {permissionModes.map((mode) => (
+          <div key={mode.value} className="flex items-start">
+            <div className="flex items-center h-5">
+              <input
+                type="radio"
+                name="permission-mode"
+                value={mode.value}
+                checked={permissionMode === mode.value}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPermissionMode(e.target.value as 'ask' | 'auto')}
+                className="focus:ring-primary h-4 w-4 text-primary border-gray-300"
+              />
+            </div>
+            <div className="ml-3">
+              <label className="font-medium text-gray-700">{mode.label}</label>
+              <p className="text-gray-500 text-sm">{mode.description}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 
   return (
@@ -52,6 +99,7 @@ export function SettingsView() {
           </Button>
         </div>
       )}
+      {permissionModeSection}
     </main>
   );
 }
@@ -99,4 +147,14 @@ function PresetItem(props: PresetItemProps) {
       </button>
     </div>
   );
+}
+
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      label: React.DetailedHTMLProps<React.LabelHTMLAttributes<HTMLLabelElement>, HTMLLabelElement>;
+      div: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
+      p: React.DetailedHTMLProps<React.HTMLAttributes<HTMLParagraphElement>, HTMLParagraphElement>;
+    }
+  }
 }

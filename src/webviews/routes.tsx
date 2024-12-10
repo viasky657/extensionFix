@@ -5,6 +5,7 @@ import { createMemoryRouter, useLocation, useNavigate } from 'react-router-dom';
 import { View, Event } from '../model';
 import { loadSettings, SettingsView } from '@settings/settings-view';
 import * as React from 'react';
+import { HistoryView, loadHistory } from './@history/history-view';
 
 export const router = createMemoryRouter(
   [
@@ -20,10 +21,11 @@ export const router = createMemoryRouter(
           path: View.Task,
           element: <TaskView />,
         },
-        // {
-        //   path: View.History,
-        //   element: <TaskView />,
-        // },
+        {
+          path: View.History,
+          element: <HistoryView />,
+          loader: loadHistory,
+        },
         {
           path: View.Settings,
           loader: loadSettings,

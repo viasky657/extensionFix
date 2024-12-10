@@ -13,11 +13,13 @@ import {
   ToolParameterType,
   ToolTypeType,
   View,
+  PermissionMode,
 } from './model';
 import { SideCarClient } from './sidecar/client';
 import { getSideCarModelConfiguration } from './sidecar/types';
 import { TerminalManager } from './terminal/TerminalManager';
 import { getNonce } from './webviews/utils/nonce';
+import { HistoryService } from './services/history';
 
 const getDefaultTask = (activePreset: Preset) => ({
   query: '',
@@ -65,11 +67,11 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     this._extensionUri = context.extensionUri;
     this.ide = new VSCodeIDE();
 
-    // const goToHistory = vscode.commands.registerCommand('sota-swe.go-to-history', () => {
-    //   if (this._view) {
-    //     this._view.webview.postMessage({ type: 'open-view', view: View.History });
-    //   }
-    // });
+    const goToHistory = vscode.commands.registerCommand('sota-swe.go-to-history', () => {
+      if (this._view) {
+        this._view.webview.postMessage({ type: 'open-view', view: View.History });
+      }
+    });
 
     const openNewTask = vscode.commands.registerCommand('sota-swe.go-to-new-task', () => {
       if (this._view) {
@@ -103,7 +105,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     });
 
     // load presets
-    context.subscriptions.push(openNewTask, goToSettings);
+    context.subscriptions.push(openNewTask, goToSettings, goToHistory);
     const presetsArray = (this.context.globalState.get('presets') as Preset[]) || [];
     presetsArray.forEach((preset) => {
       this._presets.set(preset.id, preset);
@@ -204,7 +206,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
 
           webviewView.webview.postMessage({
             type: 'workspace-folders',
-            workspaceFolders: vscode.workspace.workspaceFolders?.map((f) => ({
+            workspaceFolders: vscode.workspace.workspaceFolders?.map((f: vscode.WorkspaceFolder) => ({
               fsPath: f.uri.fsPath,
               name: f.name,
             })),
@@ -258,7 +260,11 @@ export class PanelProvider implements vscode.WebviewViewProvider {
         case 'update-preset': {
           if (this.sidecarClient && this._presets.has(data.preset.id)) {
             const previousData = this._presets.get(data.preset.id);
-            const updatedData = { ...previousData, ...data.preset };
+            const updatedData = { 
+              ...previousData, 
+              ...data.preset,
+              temperature: Number(data.preset.temperature),
+            };
             const otherPresets = new Map(this._presets);
             otherPresets.delete(data.preset.id);
             const otherPresetNames = new Set(Array.from(otherPresets.values()).map((p) => p.name));
@@ -368,6 +374,14 @@ export class PanelProvider implements vscode.WebviewViewProvider {
         case 'show-toast': {
           const { level, message } = data;
           this.ide.showToast(level, message);
+          break;
+        }
+        case 'get-history': {
+          const history = await HistoryService.getHistory();
+          this._view?.webview.postMessage({
+            type: 'get-history/response',
+            history,
+          });
           break;
         }
       }
@@ -622,6 +636,10 @@ export class PanelProvider implements vscode.WebviewViewProvider {
   }
 
   public setTaskStatus(sessionId: string, complete: boolean) {
+    if (!sessionId) {
+      console.warn('Attempted to set task status with undefined sessionId');
+      return;
+    }
     if (this._runningTask && this._runningTask.sessionId === sessionId) {
       this._runningTask.complete = complete;
       // we update our webview with the latest state
@@ -754,7 +772,21 @@ export class PanelProvider implements vscode.WebviewViewProvider {
     this.updateState();
   }
 
+  private validatePermissions(preset: Preset): boolean {
+    return (
+      typeof preset.permissions === 'object' &&
+      Object.values(PermissionMode).includes(preset.permissions.mode) &&
+      typeof preset.permissions.autoApprove === 'boolean' &&
+      typeof preset.permissions.codeEditing === 'boolean' &&
+      typeof preset.permissions.fileAccess === 'boolean' &&
+      typeof preset.permissions.terminalCommands === 'boolean'
+    );
+  }
+
   private async validateModelConfiguration(sidecarClient: SideCarClient, preset: Preset) {
+    if (!this.validatePermissions(preset)) {
+      throw new Error('Invalid permissions configuration');
+    }
     const modelSelection: vscode.ModelSelection = {
       slowModel: preset.model,
       fastModel: preset.model,
@@ -762,7 +794,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
         [preset.model]: {
           name: preset.model,
           contextLength: 10000,
-          temperature: 0.2,
+          temperature: preset.temperature,
           provider: {
             type: preset.provider,
           },
@@ -775,6 +807,7 @@ export class PanelProvider implements vscode.WebviewViewProvider {
           apiKey: preset.apiKey,
         },
       },
+      permissions: preset.permissions
     };
     const sideCarModelConfiguration = getSideCarModelConfiguration(modelSelection);
     return await sidecarClient.validateModelConfiguration(sideCarModelConfiguration);

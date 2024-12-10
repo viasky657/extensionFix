@@ -52,6 +52,10 @@ export function usePresets(initialData: PresetsData) {
     return new Promise<{ valid: boolean; error?: string }>((resolve) => {
       const handleMessage = (event: MessageEvent<Event>) => {
         if (event.data.type === 'update-preset/response') {
+          if (typeof preset.temperature !== 'number') {
+            resolve({ valid: false, error: 'Invalid temperature value' });
+            return;
+          }
           presets.execute();
           resolve({ valid: event.data.valid, error: event.data.error });
           window.removeEventListener('message', handleMessage);

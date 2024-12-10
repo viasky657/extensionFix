@@ -169,7 +169,7 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 	private async isPortOpen(port: number): Promise<boolean> {
 		return new Promise((resolve, _) => {
 			const s = net.createServer();
-			s.once('error', (err) => {
+			s.once('error', (err: Error) => {
 				s.close();
 				// @ts-ignore
 				if (err['code'] === 'EADDRINUSE') {
@@ -461,7 +461,20 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 		// check here that we do not look at the user info over here if the llm keys are set
 		const session = await vscode.csAuthentication.getSession();
 		const token = session?.accessToken ?? '';
-		const stream = SIDECAR_CLIENT!.agentSessionEditFeedback(iterationQuery, sessionId, exchangeId, this.editorUrl!, AideAgentMode.Edit, references, this.currentRepoRef, this.projectContext.labels, token);
+		if (!SIDECAR_CLIENT) {
+			throw new Error('SIDECAR_CLIENT not initialized');
+		}
+		const stream = SIDECAR_CLIENT.agentSessionEditFeedback(
+			iterationQuery, 
+			sessionId,
+			exchangeId,
+			this.editorUrl!,
+			AideAgentMode.Edit,
+			references,
+			this.currentRepoRef,
+			this.projectContext.labels,
+			token
+		);
 		this.reportAgentEventsToChat(true, stream);
 	}
 
@@ -530,7 +543,7 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 				platform: os.platform(),
 				product: 'extension',
 				email,
-				query: event.prompt,
+				query: event.query,
 				mode: event.mode,
 			},
 		});
@@ -547,7 +560,7 @@ export class AideAgentSessionProvider implements AideSessionParticipant {
 	 * depending on the agent mode
 	 */
 	private async streamResponse(event: AideAgentRequest, sessionId: string, editorUrl: string, workosAccessToken: string) {
-		const prompt = event.prompt;
+		const prompt = event.query;
 		const exchangeIdForEvent = event.exchangeId;
 		const agentMode = event.mode;
 		const variables = event.references;
