@@ -427,3 +427,9 @@ export interface ModelSelection {
   permissionMode: 'ask' | 'auto';
   // ... other existing properties
 }
+
+export enum PermissionState {
+  Ask = 'ask',
+  Auto = 'auto',
+  Deny = 'deny'
+}

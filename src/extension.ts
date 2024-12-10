@@ -119,8 +119,11 @@ export async function activate(context: vscode.ExtensionContext) {
           // Convert variables to VSCode format
           const variables: vscode.ChatPromptReference[] = await Promise.all(
             (webviewVariables || [])
-              .filter((v) => v.id.providerTitle === 'file')
-              .map(async (v) => {
+              .filter((v: { id: { providerTitle: string } }) => v.id.providerTitle === 'file')
+              .map(async (v: { 
+                id: { providerTitle: string }, 
+                uri?: { value: string } 
+              }) => {
                 const uri = vscode.Uri.parse(v.uri!.value);
                 const document = await vscode.workspace.openTextDocument(uri);
                 const range = new vscode.Range(

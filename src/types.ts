@@ -424,23 +424,22 @@ declare module 'vscode' {
 	}
 }
 
-export type ClientRequest = {
-	type: 'task-feedback' | 'cancel-request' | 'open-file';
-	query?: string;
+export interface ClientRequest {
+	type: string;
 	sessionId: string;
-	variables?: any[];
+	variables?: { id: { providerTitle: string }, uri?: { value: string } }[];
 	images?: string[];
+	query?: string;
 	modelSelection?: {
-		model: string;
-		provider: {
+		model?: string;
+		provider?: {
 			name: string;
 			apiBase?: string;
 			apiKey?: string;
 		};
-		permissionMode?: 'ask' | 'auto';
+		permissionMode?: string;
 	};
-	fs_file_path?: string;
-};
+}
 
 export type SideCarAgentEvent = {
 	type: 'message' | 'code-edit' | 'error';

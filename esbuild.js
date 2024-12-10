@@ -17,7 +17,15 @@ async function extension() {
     sourcemap: !production,
     sourcesContent: false,
     platform: 'node',
-    external: ['vscode'],
+    external: [
+      'vscode',
+      'lodash',
+      'os',
+      'path',
+      'fs',
+      'http',
+      'net'
+    ],
     outfile: 'dist/extension.js',
     // logLevel: 'silent',
     plugins: [
