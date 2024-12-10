@@ -2,9 +2,8 @@
     <img src="./assets/logo-small.png" alt="SOTA SWE Logo" width="200"/>
     <h1>SOTA SWE</h1>
 </div>
-
+ This is an experimental branch to add several new features and fix bugs so it should fix: Openrouter model:model match variable error; it will add: permission for each agent addition or change to the codebase so it will require user approval for each action, it will still have the auto approval mode, it will also have a history save and the user can see all the steps that the agent has taken and what new files were added, etc., the user may also change the temperature value for the agentic system to adjust to different models that may be used for the system which may function better at higher or lower values. 
 **SotaSWE is a VSCode extension built atop [the leading agentic framework](https://github.com/codestoryai/sidecar) on SWE-bench Lite.**
-
 ![Latest release](https://img.shields.io/github/v/release/codestoryai/extension?label=version)
 ![Discord Shield](https://discord.com/api/guilds/1138070673756004464/widget.png?style=shield)
 
