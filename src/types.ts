@@ -1,5 +1,8 @@
-import { ChatPromptReference, Uri, ChatRequest, WorkspaceEdit, MarkdownString, Command, ChatResponseStream, CancellationToken, ProviderResult, ChatResult, ChatParticipant, Range } from "vscode";
-import { Provider } from "./model";
+import * as vscode from "vscode";
+import { Disposable } from 'vscode';
+
+import { ChatPromptReference, Uri, ChatRequest, WorkspaceEdit, MarkdownString, Command, ChatResponseStream, CancellationToken, ProviderResult, ChatResult, ChatParticipant, Range, Event, Position, Thenable } from "vscode";
+import { Provider, ModelSelection } from "./model";
 
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
@@ -426,20 +429,12 @@ declare module 'vscode' {
 
 export interface ClientRequest {
 	type: string;
-	sessionId: string;
+	sessionId?: string;
 	fs_file_path?: string;
 	variables?: { id: { providerTitle: string }, uri?: { value: string } }[];
 	images?: string[];
 	query?: string;
-	modelSelection?: {
-		model?: string;
-		provider?: {
-			name: string;
-			apiBase?: string;
-			apiKey?: string;
-		};
-		permissionMode?: string;
-	};
+	modelSelection?: ModelSelection;
 }
 
 export type SideCarAgentEvent = {

@@ -370,7 +370,8 @@ export type Models = `${AnthropicModels}`;
 
 export enum PermissionMode {
   Ask = 'ask',
-  Auto = 'auto'
+  Auto = 'auto',
+  Deny = 'deny'
 }
 
 export interface Permissions {
@@ -422,10 +423,14 @@ export interface AppState {
 }
 
 export interface ModelSelection {
-  model: string;
-  provider: Provider;
-  permissionMode: 'ask' | 'auto';
-  // ... other existing properties
+  model?: string;
+  provider?: {
+    name: string;
+    apiBase?: string;
+    apiKey?: string;
+  };
+  permissionMode?: PermissionMode;
+  permissions?: string[];
 }
 
 export enum PermissionState {

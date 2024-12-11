@@ -56,14 +56,13 @@ export class VSCodeIDEUtils {
         return this._cachedPath;
     }
 
-    private _workspaceDirectories: string[] | undefined = undefined;
+    private _workspaceDirectories: string[] = [];
     getWorkspaceDirectories(): string[] {
-        if (this._workspaceDirectories === undefined) {
+        if (this._workspaceDirectories.length === 0) {
             this._workspaceDirectories =
-                vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath) ||
+                vscode.workspace.workspaceFolders?.map((folder: vscode.WorkspaceFolder) => folder.uri.fsPath) ||
                 [];
         }
-
         return this._workspaceDirectories;
     }
 

@@ -19,6 +19,7 @@ async function extension() {
     platform: 'node',
     external: [
       'vscode',
+      '@vscode/*',
       'lodash',
       'os',
       'path',
